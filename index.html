@@ -22,7 +22,6 @@
     --text-dark: #0f172a;
     --text-muted: #475569;
     --border-color: #e2e8f0;
-    --header-height: 110px;
     --accent-title-dark: #1e3a8a; /* Azul Escuro Suave */
     --accent-title-green: #2E4F4F; /* Verde Sálvia Escuro */
 }
@@ -170,6 +169,27 @@ footer{
     transform: translateY(0);
 }
 
+.header-btn:focus-visible,
+.modal-option-btn:focus-visible {
+    outline: 3px solid #93c5fd;
+    outline-offset: 2px;
+}
+
+.header-btn-support {
+    width: auto;
+    padding: 0 18px;
+    gap: 8px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+}
+
+.header-btn-support .support-icon {
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
 .add-btn{
     background: linear-gradient(135deg, #2e5bd6, #2563eb);
     color: white;
@@ -213,7 +233,6 @@ footer{
 /* Cabeçalho das Colunas com Gradiente Modernizado (mais escuro em cima e suave/claro em baixo) */
 .calculator-table th{
     position: static;
-    z-index: 90;
     background: linear-gradient(180deg, #0b8ee6 50%, #3b82f6 100%); 
     color: #ffffff;      
     padding:12px 8px;
@@ -552,8 +571,13 @@ tr[data-type="simple"] .result-cell {
     top: 12px;
     right: 16px;
     font-size: 22px;
+    line-height: 1;
     cursor: pointer;
     color: #94a3b8;
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: inherit;
 }
 
 .modal-close:hover {
@@ -587,6 +611,44 @@ tr[data-type="simple"] .result-cell {
     color: white;
     border-color: var(--accent-title-dark);
     transform: translateY(-1px);
+}
+
+.modal-option-btn {
+    font-family: inherit;
+}
+
+.modal-option-icon {
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: #e0e7ff;
+    font-size: 1.15rem;
+    transition: background 0.2s;
+}
+
+.modal-option-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.modal-option-text small {
+    font-size: 12px;
+    font-weight: 500;
+    color: #64748b;
+    transition: color 0.2s;
+}
+
+.modal-option-btn:hover .modal-option-icon {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.modal-option-btn:hover .modal-option-text small {
+    color: #dbeafe;
 }
 
 .modal-footer {
@@ -651,6 +713,15 @@ tr[data-type="simple"] .result-cell {
         justify-content: flex-end;
     }
 
+    .header-btn-support {
+        width: 44px;
+        padding: 0;
+    }
+
+    .header-btn-support .support-label {
+        display: none;
+    }
+
     .tanb-calculator {
         overflow-x: auto;
     }
@@ -692,6 +763,176 @@ tr[data-type="simple"] .result-cell {
     }
 }
 
+/* ===== Telemóvel: tabela em cartões, sem deslizar na horizontal ===== */
+@media screen and (max-width: 768px) {
+    button { touch-action: manipulation; }
+
+    body { padding: 10px 10px 84px; }
+
+    .tanb-calculator { overflow-x: visible; }
+
+    .calculator-table { display: block; min-width: 0; table-layout: auto; }
+    .calculator-table thead { display: none; }
+    .calculator-table tbody,
+    .calculator-table tfoot { display: block; }
+
+    .calculator-table tbody tr > td,
+    .calculator-table tfoot tr > td {
+        display: block;
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        padding: 0;
+        border: 0;
+        text-align: left;
+        white-space: normal;
+    }
+
+    .calculator-table td[data-label]::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: 4px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+    }
+
+    /* Cada linha da simulação passa a ser um cartão */
+    .calculator-table tbody tr {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin: 12px;
+        padding: 14px;
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+    }
+
+    .calculator-table tbody tr > td:nth-child(1) {
+        grid-column: 1; grid-row: 1;
+        display: flex; align-items: baseline; gap: 6px;
+        align-self: center;
+        font-size: 1.05rem; font-weight: 700;
+        color: var(--primary-blue);
+    }
+    .calculator-table tbody tr > td:nth-child(1) small { font-size: 11px !important; }
+    .calculator-table tbody tr > td:nth-child(2) { grid-column: 1 / -1; grid-row: 2; }
+    .calculator-table tbody tr > td:nth-child(3) { grid-column: 1; grid-row: 3; }
+    .calculator-table tbody tr > td:nth-child(4) { grid-column: 2; grid-row: 3; }
+    .calculator-table tbody tr > td:nth-child(5) { grid-column: 1; grid-row: 4; }
+    .calculator-table tbody tr > td:nth-child(6) { grid-column: 2; grid-row: 4; }
+    .calculator-table tbody tr > td:nth-child(7) { grid-column: 1; grid-row: 5; }
+    .calculator-table tbody tr > td:nth-child(8) { grid-column: 2; grid-row: 5; }
+    .calculator-table tbody tr > td:nth-child(9) { grid-column: 2; grid-row: 1; justify-self: end; }
+
+    .calculator-table tbody tr > td.result-cell {
+        background: rgba(255, 255, 255, 0.75);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 8px 10px;
+        font-size: 15px;
+    }
+
+    .calculator-table input { padding: 12px 8px; }
+
+    .delete-btn { height: 40px; min-width: 56px; }
+
+    /* Linha de totais */
+    .calculator-table tfoot tr.total-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin: 12px;
+        padding: 12px;
+        border: 2px solid #f59e0b;
+        border-radius: 14px;
+    }
+    .calculator-table tfoot tr.total-row.is-hidden {
+        border: 0;
+        padding: 0;
+    }
+    .calculator-table tfoot .total-row > td:first-child {
+        grid-column: 1 / -1;
+        padding: 0 !important;
+    }
+    .calculator-table tfoot .total-row > td#total-montante { grid-column: 1 / -1; }
+    .calculator-table tfoot .total-row > td.total-hidden,
+    .calculator-table tfoot .total-row > td:last-child { display: none; }
+    .calculator-table tfoot .total-row > td[data-label]::before { color: #b45309; }
+
+    .toggle-total-btn {
+        min-height: 46px;
+        border-radius: 12px;
+        font-size: 14px;
+    }
+
+    /* Botões de ação empilhados e fáceis de tocar */
+    .calculator-table tfoot tr.action-row {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin: 12px;
+        padding: 14px;
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+    }
+    .calculator-table tfoot .action-row > td:first-child { display: none; }
+
+    .buttons-container {
+        flex-direction: column !important;
+        flex-wrap: nowrap;
+        width: 100%;
+        gap: 10px !important;
+    }
+    .buttons-container .add-btn {
+        width: 100% !important;
+        height: 48px;
+        justify-content: center;
+        white-space: normal;
+    }
+    .clear-total-btn {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        height: 44px;
+        flex-direction: row;
+        gap: 6px;
+        margin-top: 0 !important;
+    }
+
+    /* Instruções e janelas */
+    .instructions { padding: 20px 16px; }
+    .instructions-header { padding: 12px 16px; }
+    .instructions h3 { font-size: 1.15rem; }
+    .info-explain-btn {
+        flex: 1 1 100%;
+        justify-content: center;
+        padding: 12px 16px;
+    }
+
+    .modal-content {
+        padding: 22px 18px;
+        max-height: 88vh;
+        overflow-y: auto;
+    }
+    .modal-close {
+        top: 8px;
+        right: 8px;
+        padding: 6px 12px;
+        font-size: 26px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .calculator-header { padding: 14px; }
+    .header-icon-box { display: none; }
+    .header-actions-right { gap: 8px; }
+    .calculator-title { font-size: 1rem; }
+    .header-badge { font-size: 0.6rem; }
+}
+
 .calculator-table input::placeholder{color:#cbd5e1;font-style:italic;opacity:1;}
 
 @media print {
@@ -715,7 +956,7 @@ tr[data-type="simple"] .result-cell {
         margin-bottom: 25px;
         border-bottom: 2px solid var(--text-dark);
     }
-    .print-only-header h1 {
+    .print-only-header h2 {
         font-size: 20px;
         font-weight: 700;
         color: var(--text-dark);
@@ -839,6 +1080,10 @@ tr[data-type="simple"] .result-cell {
         print-color-adjust: exact;
         display: table-row !important;
     }
+
+    .total-row.is-hidden {
+        display: none !important;
+    }
     
     .total-row td {
         font-size: 11px !important;
@@ -866,7 +1111,7 @@ tr[data-type="simple"] .result-cell {
 <body>
 
     <div class="print-only-header">
-        <h1>Simulador de Juros (TANB & Juros Compostos)</h1>
+        <h2>Simulador de Juros (TANB & Juros Compostos)</h2>
         <p>Relatório de Simulações</p>
     </div>
 
@@ -876,12 +1121,18 @@ tr[data-type="simple"] .result-cell {
                 <div class="header-icon-box">💰</div>
                 <div>
                     <span class="header-badge">Simulador de juros</span>
-                    <h2 class="calculator-title">TANB & Juros Compostos</h2>
+                    <h1 class="calculator-title">TANB & Juros Compostos</h1>
                 </div>
             </div>
             <div class="header-actions-right">
-                <button class="header-btn" onclick="printTable()" title="Imprimir simulações" aria-label="Imprimir simulações">🖨️</button>
-                <button class="header-btn" onclick="openAboutModal()" title="Informação" aria-label="Informações sobre a aplicação">ℹ️</button>
+                <button class="header-btn header-btn-support" onclick="printTable()" title="Imprimir simulações" aria-label="Imprimir simulações">
+                    <span class="support-icon" aria-hidden="true">🖨️</span>
+                    <span class="support-label">Imprimir</span>
+                </button>
+                <button class="header-btn header-btn-support" onclick="openAboutModal()" title="Suporte" aria-label="Abrir suporte: sugestões, reportar problema ou contacto">
+                    <span class="support-icon" aria-hidden="true">💬</span>
+                    <span class="support-label">Suporte</span>
+                </button>
             </div>
         </div>
         
@@ -908,13 +1159,13 @@ tr[data-type="simple"] .result-cell {
                     <td id="toggle-button-cell">
                         <button class="toggle-total-btn" id="toggle-btn-element" onclick="toggleTotals()">Mostrar total</button>
                     </td>
-                    <td class="total-data total-hidden" id="total-montante"></td>
-                    <td class="total-data total-hidden" id="total-tanb"></td>
-                    <td class="total-data total-hidden" id="total-dias"></td>
-                    <td class="total-data total-hidden" id="total-brutos"></td>
-                    <td class="total-data total-hidden" id="total-retencao"></td>
-                    <td class="total-data total-hidden" id="total-liquidos"></td>
-                    <td class="total-data total-hidden" id="total-dia"></td>
+                    <td class="total-data total-hidden" id="total-montante" data-label="Montante total"></td>
+                    <td class="total-data total-hidden" id="total-tanb" data-label="TANB média"></td>
+                    <td class="total-data total-hidden" id="total-dias" data-label="Dias médios"></td>
+                    <td class="total-data total-hidden" id="total-brutos" data-label="Juros brutos"></td>
+                    <td class="total-data total-hidden" id="total-retencao" data-label="Retenção"></td>
+                    <td class="total-data total-hidden" id="total-liquidos" data-label="Juros líquidos"></td>
+                    <td class="total-data total-hidden" id="total-dia" data-label="Líquido por dia"></td>
                     <td class="total-data total-hidden" id="total-blank-last"></td>
                 </tr>
                 <tr class="action-row">
@@ -970,7 +1221,7 @@ tr[data-type="simple"] .result-cell {
     <!-- Janela Modal: TANB -->
     <div id="tanb-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="tanb-modal-title" onclick="closeModalOnOverlay(event, 'tanb-modal')">
         <div class="modal-content">
-            <span class="modal-close" onclick="closeModal('tanb-modal')">&times;</span>
+            <button type="button" class="modal-close" aria-label="Fechar" onclick="closeModal('tanb-modal')">&times;</button>
             <h3 id="tanb-modal-title">📊 O que é a TANB?</h3>
             <p>A <strong>TANB (Taxa Anual Nominal Bruta)</strong> é a taxa de juro de referência utilizada para depósitos e investimentos a um ano, antes de qualquer dedução fiscal.</p>
             <p>É designada por <em>"nominal"</em> porque reflete o ganho bruto teórico sem considerar o reinvestimento de juros, e <em>"bruta"</em> porque não inclui a retenção do imposto (como a taxa de 28% em Portugal).</p>
@@ -980,7 +1231,7 @@ tr[data-type="simple"] .result-cell {
     <!-- Janela Modal: Juros Compostos -->
     <div id="compound-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="compound-modal-title" onclick="closeModalOnOverlay(event, 'compound-modal')">
         <div class="modal-content">
-            <span class="modal-close" onclick="closeModal('compound-modal')">&times;</span>
+            <button type="button" class="modal-close" aria-label="Fechar" onclick="closeModal('compound-modal')">&times;</button>
             <h3 id="compound-modal-title">📈 O que são Juros Compostos?</h3>
             <p>Trata-se do efeito comummente conhecido como <strong>"juros sobre juros"</strong>.</p>
             <p>Em vez de receber os rendimentos apenas no final do período, os juros gerados periodicamente são somados ao capital inicial. Nos períodos seguintes, os juros passam a incidir sobre o novo saldo acumulado, gerando um crescimento exponencial do seu investimento ao longo do tempo.</p>
@@ -990,24 +1241,27 @@ tr[data-type="simple"] .result-cell {
     <!-- Janela Modal de Suporte -->
     <div id="about-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="about-modal-title" onclick="closeAboutModal(event)">
         <div class="modal-content" style="text-align: center;">
-            <span class="modal-close" onclick="toggleAboutModal(false)">&times;</span>
-            <h3 id="about-modal-title" style="justify-content: center;">ℹ️ Suporte:</h3>
+            <button type="button" class="modal-close" aria-label="Fechar" onclick="toggleAboutModal(false)">&times;</button>
+            <h3 id="about-modal-title" style="justify-content: center;">💬 Suporte</h3>
             <p style="text-align: center; margin-bottom: 20px;">Selecione uma opção:</p>
             
             <div class="modal-menu-options">
                 <button class="modal-option-btn" onclick="sendEmail('Sugestões')">
-                    💡 Sugestões
+                    <span class="modal-option-icon" aria-hidden="true">💡</span>
+                    <span class="modal-option-text"><strong>Sugestões</strong><small>Ideias para melhorar o simulador</small></span>
                 </button>
                 <button class="modal-option-btn" onclick="sendEmail('Reportar Problema')">
-                    🐛 Reportar Problema
+                    <span class="modal-option-icon" aria-hidden="true">🐛</span>
+                    <span class="modal-option-text"><strong>Reportar Problema</strong><small>Algo não funciona como esperado</small></span>
                 </button>
                 <button class="modal-option-btn" onclick="sendEmail('Contacto')">
-                    ✉️ Contacto (E-mail)
+                    <span class="modal-option-icon" aria-hidden="true">✉️</span>
+                    <span class="modal-option-text"><strong>Contacto (E-mail)</strong><small>Enviar mensagem diretamente</small></span>
                 </button>
             </div>
 
             <div class="modal-footer">
-                Versão: <span class="version-highlight">V23</span>
+                Versão: <span class="version-highlight">V24</span>
             </div>
         </div>
     </div>
@@ -1019,23 +1273,23 @@ tr[data-type="simple"] .result-cell {
     let currentTotals = { montante: 0, tanbMed: 0, diasMed: 0, brutos: 0, retencao: 0, liquidos: 0, dia: 0 };
 
     /* Converte strings PT (com espaços, pontos de milhar e vírgulas) num float de forma segura */
-    function parsePtNumber(val) {
+    function parsePtNumber(val, isPercent = false) {
         if (!val) return 0;
         let clean = val.toString().replace(/[€%\s\u00a0\u202f]/g, '');
         if (clean.includes('.') && clean.includes(',')) {
             clean = clean.replace(/\./g, '').replace(',', '.');
         } else if (clean.includes(',')) {
             clean = clean.replace(',', '.');
+        } else if (!isPercent && /^\d{1,3}(\.\d{3})+$/.test(clean)) {
+            /* só pontos e grupos de 3 dígitos (ex.: 10.000) = separador de milhar */
+            clean = clean.replace(/\./g, '');
         }
         return parseFloat(clean) || 0;
     }
 
-    function updateHeaderOffset() {
-        const header = document.querySelector('.calculator-header');
-        if (header) {
-            const h = header.offsetHeight;
-            document.documentElement.style.setProperty('--header-height', `${h}px`);
-        }
+    /* Formata números ao estilo português (vírgula decimal) */
+    function fmt(n, decimals = 2) {
+        return n.toLocaleString('pt-PT', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
     }
 
     function openAboutModal() {
@@ -1094,7 +1348,7 @@ tr[data-type="simple"] .result-cell {
         const isCompound = row.getAttribute('data-type') === 'compound';
         
         const montante = parsePtNumber(row.cells[1].querySelector('input').value);
-        const tanb = parsePtNumber(row.cells[2].querySelector('input').value);
+        const tanb = parsePtNumber(row.cells[2].querySelector('input').value, true);
         const dias = parseInt(row.cells[3].querySelector('input').value) || 0;
         
         if (montante === 0 || tanb === 0 || dias === 0) {
@@ -1125,10 +1379,10 @@ tr[data-type="simple"] .result-cell {
                 ganhoDia = valorReceber / dias;
             }
             
-            row.cells[4].textContent = jurosBrutos.toFixed(2) + " €";
-            row.cells[5].textContent = retencao.toFixed(2) + " €";
-            row.cells[6].textContent = valorReceber.toFixed(2) + " €";
-            row.cells[7].textContent = ganhoDia.toFixed(4) + " €";
+            row.cells[4].textContent = fmt(jurosBrutos) + " €";
+            row.cells[5].textContent = fmt(retencao) + " €";
+            row.cells[6].textContent = fmt(valorReceber) + " €";
+            row.cells[7].textContent = fmt(ganhoDia, 4) + " €";
         }
 
         updateTotals();
@@ -1149,14 +1403,14 @@ tr[data-type="simple"] .result-cell {
 
         newRow.innerHTML = `
             <td class="row-index"></td>
-            <td><input type="text" placeholder="10 000 €" inputmode="decimal" oninput="handleLiveInput(this)" onfocus="editMoney(this)" onblur="formatMoney(this)"></td>
-            <td><input type="text" placeholder="%" inputmode="decimal" oninput="handleLiveInput(this)" onfocus="editPercent(this)" onblur="formatPercent(this)"></td>
-            <td><input type="number" placeholder="Dias" min="1" step="1" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g,''); calculateRow(this)" onfocus="this.select()"></td>
-            <td class="result-cell">---</td>
-            <td class="result-cell">---</td>
-            <td class="result-cell">---</td>
-            <td class="result-cell">---</td>
-            <td><button class="delete-btn" onclick="deleteRow(this)"> ❌</button></td>
+            <td data-label="Montante a investir (€)"><input type="text" enterkeyhint="next" placeholder="10 000 €" inputmode="decimal" oninput="handleLiveInput(this)" onfocus="editMoney(this)" onblur="formatMoney(this)"></td>
+            <td data-label="% Taxa anual"><input type="text" enterkeyhint="next" placeholder="%" inputmode="decimal" oninput="handleLiveInput(this)" onfocus="editPercent(this)" onblur="formatPercent(this)"></td>
+            <td data-label="Dias"><input type="number" enterkeyhint="done" placeholder="Dias" min="1" step="1" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g,''); calculateRow(this)" onfocus="this.select()"></td>
+            <td class="result-cell" data-label="Juros brutos">---</td>
+            <td class="result-cell" data-label="Retenção (28%)">---</td>
+            <td class="result-cell" data-label="Juros líquidos">---</td>
+            <td class="result-cell" data-label="Líquido por dia">---</td>
+            <td><button class="delete-btn" onclick="deleteRow(this)" aria-label="Eliminar linha" title="Eliminar linha"> ❌</button></td>
         `;
         
         tbody.appendChild(newRow);
@@ -1196,7 +1450,7 @@ tr[data-type="simple"] .result-cell {
 
     function clearAllRows() {
         if(confirm("Tem a certeza que deseja limpar todas as simulações e redefinir a tabela?")) {
-            localStorage.removeItem('simulador_depositos_data');
+            try { localStorage.removeItem('simulador_depositos_data'); } catch (e) {}
             initTableDefaultRows();
         }
     }
@@ -1220,11 +1474,12 @@ tr[data-type="simple"] .result-cell {
         let somaProdutosTanb = 0;
         let somaProdutosDias = 0;
         let linhasComDadosValidos = 0;
+        let montanteValido = 0;
 
         rows.forEach(row => {
             const isCompound = row.getAttribute('data-type') === 'compound';
             const montante = parsePtNumber(row.cells[1].querySelector('input').value);
-            const tanb = parsePtNumber(row.cells[2].querySelector('input').value);
+            const tanb = parsePtNumber(row.cells[2].querySelector('input').value, true);
             const dias = parseInt(row.cells[3].querySelector('input').value) || 0;
 
             totalM += montante;
@@ -1232,6 +1487,7 @@ tr[data-type="simple"] .result-cell {
             if (montante > 0 && tanb > 0 && dias > 0) {
                 somaProdutosTanb += (montante * tanb);
                 somaProdutosDias += (montante * dias);
+                montanteValido += montante;
                 linhasComDadosValidos++;
 
                 const TAXA_RETENCAO = 0.28;
@@ -1259,8 +1515,8 @@ tr[data-type="simple"] .result-cell {
             }
         });
 
-        let tanbPonderada = (totalM > 0 && linhasComDadosValidos > 0) ? (somaProdutosTanb / totalM) : 0;
-        let diasPonderados = (totalM > 0 && linhasComDadosValidos > 0) ? (somaProdutosDias / totalM) : 0;
+        let tanbPonderada = (montanteValido > 0 && linhasComDadosValidos > 0) ? (somaProdutosTanb / montanteValido) : 0;
+        let diasPonderados = (montanteValido > 0 && linhasComDadosValidos > 0) ? (somaProdutosDias / montanteValido) : 0;
 
         currentTotals = { 
             montante: totalM, 
@@ -1287,19 +1543,19 @@ tr[data-type="simple"] .result-cell {
             document.getElementById('total-tanb').textContent = "---";
             document.getElementById('total-dias').textContent = "---";
         } else {
-            document.getElementById('total-montante').textContent = currentTotals.montante.toLocaleString('pt-PT', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' €';
+            document.getElementById('total-montante').textContent = fmt(currentTotals.montante) + ' €';
             
             document.getElementById('total-tanb').innerHTML = currentTotals.tanbMed > 0 ? 
-                'Média Pond.<br><span style="font-size:15px; font-weight:700;">' + currentTotals.tanbMed.toLocaleString('pt-PT', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' %</span>' : "---";
+                'Média Pond.<br><span style="font-size:15px; font-weight:700;">' + fmt(currentTotals.tanbMed) + ' %</span>' : "---";
             
             document.getElementById('total-dias').innerHTML = currentTotals.diasMed > 0 ? 
                 'Média Pond.<br><span style="font-size:15px; font-weight:700;">' + Math.round(currentTotals.diasMed) + ' d</span>' : "---";
         }
 
-        document.getElementById('total-brutos').textContent = currentTotals.brutos > 0 ? currentTotals.brutos.toFixed(2) + ' €' : "---";
-        document.getElementById('total-retencao').textContent = currentTotals.retencao > 0 ? currentTotals.retencao.toFixed(2) + ' €' : "---";
-        document.getElementById('total-liquidos').textContent = currentTotals.liquidos > 0 ? currentTotals.liquidos.toFixed(2) + ' €' : "---";
-        document.getElementById('total-dia').textContent = currentTotals.dia > 0 ? currentTotals.dia.toFixed(4) + ' €' : "---";
+        document.getElementById('total-brutos').textContent = currentTotals.brutos > 0 ? fmt(currentTotals.brutos) + ' €' : "---";
+        document.getElementById('total-retencao').textContent = currentTotals.retencao > 0 ? fmt(currentTotals.retencao) + ' €' : "---";
+        document.getElementById('total-liquidos').textContent = currentTotals.liquidos > 0 ? fmt(currentTotals.liquidos) + ' €' : "---";
+        document.getElementById('total-dia').textContent = currentTotals.dia > 0 ? fmt(currentTotals.dia, 4) + ' €' : "---";
         document.getElementById('total-blank-last').textContent = "";
     }
 
@@ -1333,13 +1589,17 @@ tr[data-type="simple"] .result-cell {
                 dias: row.cells[3].querySelector('input').value
             });
         });
-        localStorage.setItem('simulador_depositos_data', JSON.stringify(state));
+        try {
+            localStorage.setItem('simulador_depositos_data', JSON.stringify(state));
+        } catch (e) {
+            /* armazenamento indisponível: a app continua a funcionar sem guardar */
+        }
     }
 
     function loadStateFromLocalStorage() {
-        const saved = localStorage.getItem('simulador_depositos_data');
-        if (!saved) return false;
         try {
+            const saved = localStorage.getItem('simulador_depositos_data');
+            if (!saved) return false;
             const data = JSON.parse(saved);
             if (!Array.isArray(data) || data.length === 0) return false;
 
@@ -1372,12 +1632,12 @@ function formatMoney(input){
 
 function editMoney(input){
     let n = parsePtNumber(input.value);
-    input.value = n > 0 ? n.toString() : '';
+    input.value = n > 0 ? n.toString().replace('.', ',') : '';
     input.select();
 }
 
 function formatPercent(input){
-    let n = parsePtNumber(input.value);
+    let n = parsePtNumber(input.value, true);
     if(input.value.trim() === '' || isNaN(n) || n === 0) {
         if (input.value.trim() === '') input.value = '';
         calculateRow(input);
@@ -1388,8 +1648,8 @@ function formatPercent(input){
 }
 
 function editPercent(input){
-    let n = parsePtNumber(input.value);
-    input.value = n > 0 ? n.toString() : '';
+    let n = parsePtNumber(input.value, true);
+    input.value = n > 0 ? n.toString().replace('.', ',') : '';
     input.select();
 }
 
@@ -1403,6 +1663,12 @@ function updatePageFooter() {
 
 function printTable() {
     const rows = document.querySelectorAll('#calculator-table tbody tr');
+
+    const temDados = [...rows].some(r => r.cells[4].textContent.trim() !== "---");
+    if (!temDados) {
+        alert('Preencha pelo menos uma linha da simulação antes de imprimir.');
+        return;
+    }
     
     rows.forEach(row => {
         const jurosBrutos = row.cells[4].textContent.trim();
@@ -1428,11 +1694,7 @@ function printTable() {
     window.print();
 }
 
-window.addEventListener('resize', updateHeaderOffset);
-
 window.onload = function(){
-    updateHeaderOffset();
-
     if (!loadStateFromLocalStorage()) {
         initTableDefaultRows();
     }
