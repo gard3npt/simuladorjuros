@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Simulador de juros para depósitos: compare TANB e juros compostos, com retenção na fonte, juros líquidos e taxa anual efetiva.">
+    <meta name="theme-color" content="#1e3a8a">
 
     <title>Simulador de Juros</title>
 
     <link rel="icon"
-          href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
+          href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E💰%3C/text%3E%3C/svg%3E">
 
     <style>
-       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
 :root {
     --primary-blue: #1e3a8a;
     --primary-dark: #172554;
@@ -23,7 +23,6 @@
     --text-muted: #475569;
     --border-color: #e2e8f0;
     --accent-title-dark: #1e3a8a; /* Azul Escuro Suave */
-    --accent-title-green: #2E4F4F; /* Verde Sálvia Escuro */
 }
 
 *{
@@ -33,7 +32,7 @@
 }
 
 body{
-    font-family:'Inter',sans-serif;
+    font-family:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
     background:linear-gradient(135deg, var(--bg-dark-1), var(--bg-dark-2));
     min-height:100vh;
     padding:40px 20px 60px 20px; 
@@ -246,17 +245,21 @@ footer{
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-.calculator-table th:nth-child(2), .calculator-table td:nth-child(2),
-.calculator-table th:nth-child(5), .calculator-table td:nth-child(5),
-.calculator-table th:nth-child(6), .calculator-table td:nth-child(6),
-.calculator-table th:nth-child(7), .calculator-table td:nth-child(7),
-.calculator-table th:nth-child(8), .calculator-table td:nth-child(8) {
-    width: 13%; 
+.calculator-table th:nth-child(2), .calculator-table td:nth-child(2) {
+    width: 12.5%;
 }
 
-.calculator-table th:nth-child(3), .calculator-table td:nth-child(3),
+.calculator-table th:nth-child(3), .calculator-table td:nth-child(3) {
+    width: 8%;
+}
+
 .calculator-table th:nth-child(4), .calculator-table td:nth-child(4) {
-    width: 9%; 
+    width: 6.5%;
+}
+
+.calculator-table th:nth-child(n+5):nth-child(-n+10),
+.calculator-table td:nth-child(n+5):nth-child(-n+10) {
+    width: 9%;
 }
 
 .calculator-table th:first-child,
@@ -312,6 +315,11 @@ tr[data-type="simple"]:hover {
 .result-cell{
     font-weight:600;
     text-align: center;
+    font-size: 14px;
+}
+
+.calculator-table td.result-cell {
+    padding: 14px 4px;
 }
 
 tr[data-type="simple"] .result-cell {
@@ -374,7 +382,7 @@ tr[data-type="simple"] .result-cell {
     max-width: 75px;
 }
 
-#total-tanb, #total-dias {
+#total-tanb, #total-dias, #total-taxa {
     white-space: normal !important; 
     line-height: 1.3;
 }
@@ -600,6 +608,7 @@ tr[data-type="simple"] .result-cell {
     color: #1e293b;
     cursor: pointer;
     transition: 0.2s;
+    font-family: inherit;
     text-align: left;
     display: flex;
     align-items: center;
@@ -611,10 +620,6 @@ tr[data-type="simple"] .result-cell {
     color: white;
     border-color: var(--accent-title-dark);
     transform: translateY(-1px);
-}
-
-.modal-option-btn {
-    font-family: inherit;
 }
 
 .modal-option-icon {
@@ -764,7 +769,7 @@ tr[data-type="simple"] .result-cell {
 }
 
 /* ===== Telemóvel: tabela em cartões, sem deslizar na horizontal ===== */
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 1200px) {
     button { touch-action: manipulation; }
 
     body { padding: 10px 10px 84px; }
@@ -825,7 +830,9 @@ tr[data-type="simple"] .result-cell {
     .calculator-table tbody tr > td:nth-child(6) { grid-column: 2; grid-row: 4; }
     .calculator-table tbody tr > td:nth-child(7) { grid-column: 1; grid-row: 5; }
     .calculator-table tbody tr > td:nth-child(8) { grid-column: 2; grid-row: 5; }
-    .calculator-table tbody tr > td:nth-child(9) { grid-column: 2; grid-row: 1; justify-self: end; }
+    .calculator-table tbody tr > td:nth-child(9) { grid-column: 1; grid-row: 6; }
+    .calculator-table tbody tr > td:nth-child(10) { grid-column: 2; grid-row: 6; }
+    .calculator-table tbody tr > td:nth-child(11) { grid-column: 2; grid-row: 1; justify-self: end; }
 
     .calculator-table tbody tr > td.result-cell {
         background: rgba(255, 255, 255, 0.75);
@@ -933,7 +940,7 @@ tr[data-type="simple"] .result-cell {
     .header-badge { font-size: 0.6rem; }
 }
 
-.calculator-table input::placeholder{color:#cbd5e1;font-style:italic;opacity:1;}
+.calculator-table input::placeholder{color:#94a3b8;font-style:italic;opacity:1;}
 
 @media print {
     @page {
@@ -1003,14 +1010,16 @@ tr[data-type="simple"] .result-cell {
         display: table !important;
     }
 
-    .calculator-table th:nth-child(1), .calculator-table td:nth-child(1) { width: 6% !important; text-align: center !important; display: table-cell !important;}   
-    .calculator-table th:nth-child(2), .calculator-table td:nth-child(2) { width: 14% !important; text-align: right !important; display: table-cell !important;}  
-    .calculator-table th:nth-child(3), .calculator-table td:nth-child(3) { width: 9% !important; text-align: center !important; display: table-cell !important;}   
-    .calculator-table th:nth-child(4), .calculator-table td:nth-child(4) { width: 8% !important; text-align: center !important; display: table-cell !important;}   
-    .calculator-table th:nth-child(5), .calculator-table td:nth-child(5) { width: 16% !important; text-align: right !important; display: table-cell !important;}  
-    .calculator-table th:nth-child(6), .calculator-table td:nth-child(6) { width: 15% !important; text-align: right !important; display: table-cell !important;}  
-    .calculator-table th:nth-child(7), .calculator-table td:nth-child(7) { width: 16% !important; text-align: right !important; display: table-cell !important;}  
-    .calculator-table th:nth-child(8), .calculator-table td:nth-child(8) { width: 16% !important; text-align: right !important; display: table-cell !important;}  
+        .calculator-table th:nth-child(1), .calculator-table td:nth-child(1) { width: 5% !important; text-align: center !important; display: table-cell !important;}
+    .calculator-table th:nth-child(2), .calculator-table td:nth-child(2) { width: 12% !important; text-align: right !important; display: table-cell !important;}
+    .calculator-table th:nth-child(3), .calculator-table td:nth-child(3) { width: 8% !important; text-align: center !important; display: table-cell !important;}
+    .calculator-table th:nth-child(4), .calculator-table td:nth-child(4) { width: 6% !important; text-align: center !important; display: table-cell !important;}
+    .calculator-table th:nth-child(5), .calculator-table td:nth-child(5) { width: 11.5% !important; text-align: right !important; display: table-cell !important;}
+    .calculator-table th:nth-child(6), .calculator-table td:nth-child(6) { width: 11.5% !important; text-align: right !important; display: table-cell !important;}
+    .calculator-table th:nth-child(7), .calculator-table td:nth-child(7) { width: 11.5% !important; text-align: right !important; display: table-cell !important;}
+    .calculator-table th:nth-child(8), .calculator-table td:nth-child(8) { width: 11.5% !important; text-align: right !important; display: table-cell !important;}
+    .calculator-table th:nth-child(9), .calculator-table td:nth-child(9) { width: 11.5% !important; text-align: right !important; display: table-cell !important;}
+    .calculator-table th:nth-child(10), .calculator-table td:nth-child(10) { width: 11.5% !important; text-align: right !important; display: table-cell !important;}
 
     .calculator-table th:last-child, 
     .calculator-table td:last-child {
@@ -1104,11 +1113,262 @@ tr[data-type="simple"] .result-cell {
     
     .total-row td:nth-child(2) { text-align: right !important; }
     .total-row td:nth-child(5), .total-row td:nth-child(6), 
-    .total-row td:nth-child(7), .total-row td:nth-child(8) { text-align: right !important; }
+    .total-row td:nth-child(7), .total-row td:nth-child(8),
+    .total-row td:nth-child(9), .total-row td:nth-child(10) { text-align: right !important; }
+}
+
+/* ===== V25: definições, avisos, exportação e feedback ===== */
+.settings-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 14px 18px;
+    padding: 14px 24px;
+    background: #f1f5f9;
+    border-bottom: 1px solid var(--border-color);
+}
+.settings-bar label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+.settings-bar input,
+.settings-bar select {
+    height: 40px;
+    padding: 0 10px;
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--text-dark);
+    background: #fff;
+}
+.settings-bar input { width: 90px; text-align: center; }
+.settings-bar input:focus,
+.settings-bar select:focus {
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 4px rgba(30,58,138,.15);
+    outline: none;
+}
+.tool-actions { margin-left: auto; display: flex; gap: 10px; }
+.tool-btn {
+    height: 40px;
+    padding: 0 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    background: #fff;
+    color: #1e293b;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.tool-btn:hover {
+    background: var(--accent-title-dark);
+    border-color: var(--accent-title-dark);
+    color: #fff;
+}
+
+.aviso {
+    margin: 0;
+    padding: 10px 24px;
+    background: #fef2f2;
+    color: #991b1b;
+    border-bottom: 1px solid #fecaca;
+    font-size: 13px;
+    font-weight: 600;
+}
+.aviso[hidden] { display: none; }
+
+.calculator-table input.input-error,
+.settings-bar input.input-error {
+    border-color: #dc2626;
+    background: #fef2f2;
+}
+.calculator-table input.input-error:focus { box-shadow: 0 0 0 4px rgba(220,38,38,.18); }
+
+.best-row .c-taxa::after { content: " 🏆"; }
+
+.calc-note {
+    margin: 0;
+    padding: 12px 24px;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--text-muted);
+    background: #f8fafc;
+    border-top: 1px solid var(--border-color);
+}
+
+.toast {
+    position: fixed;
+    left: 50%;
+    bottom: 76px;
+    transform: translateX(-50%) translateY(10px);
+    max-width: calc(100% - 24px);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    background: #0f172a;
+    color: #fff;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 10px 30px rgba(0,0,0,.35);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .2s, transform .2s, visibility .2s;
+    z-index: 1100;
+}
+.toast.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
+.toast button {
+    background: none;
+    border: 0;
+    color: #93c5fd;
+    font: inherit;
+    font-weight: 800;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.noscript-msg { color: #fff; text-align: center; padding: 20px; font-weight: 600; }
+
+button:focus-visible,
+select:focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }
+
+@media (max-width: 768px) {
+    .settings-bar { padding: 12px 16px; }
+    .settings-bar label { flex: 1 1 140px; }
+    .settings-bar input, .settings-bar select { width: 100%; }
+    .tool-actions { margin-left: 0; width: 100%; }
+    .tool-btn { flex: 1; }
+    .aviso, .calc-note { padding-left: 16px; padding-right: 16px; }
+}
+
+@media print {
+    .settings-bar, .aviso, .calc-note, .toast, .noscript-msg { display: none !important; }
+}
+
+/* ===== V25.1: campos mais compactos e retenção no cabeçalho ===== */
+.calculator-table tbody input {
+    font-size: 15px;
+    padding: 10px 4px;
+}
+
+@media (min-width: 1201px) {
+    .calculator-table tbody td:nth-child(-n+4) { padding: 10px 5px; }
+}
+
+@media (max-width: 1200px) {
+    .calculator-table tbody input { padding: 11px 8px; }
+}
+
+#th-ret label { display: block; }
+.th-ret-field { display: inline-flex; align-items: center; gap: 3px; margin-top: 4px; }
+#cfg-ret {
+    width: 54px;
+    height: 28px;
+    padding: 0 4px;
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--text-dark);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+}
+#cfg-ret:focus {
+    outline: none;
+    border-color: #fff;
+    background: #fff;
+    transform: none;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.55);
+}
+
+/* Em ecrãs pequenos a tabela vira cartões: o cabeçalho fica só com a retenção */
+@media screen and (max-width: 1200px) {
+    .calculator-table thead { display: block; }
+    .calculator-table thead tr { display: flex; justify-content: center; }
+    .calculator-table thead th { display: none; }
+    .calculator-table thead th#th-ret {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: auto;
+        padding: 8px 16px;
+        border-radius: 0 0 12px 12px;
+    }
+    #th-ret label { display: inline; }
+    .th-ret-field { margin-top: 0; }
+}
+
+@media print {
+    #cfg-ret { color: #fff !important; background: transparent !important; font-size: 11px !important; }
+}
+
+/* ===== V25.2: cores das linhas TANB (azul) e juros compostos (verde) ===== */
+tr[data-type="simple"] { background-color: #eff6ff; }
+tr[data-type="simple"]:hover { background-color: #dbeafe !important; }
+.compound-row { background-color: #ecfdf5; }
+.compound-row:hover { background-color: #d1fae5 !important; }
+
+tr[data-type="simple"] .result-cell { color: #1e40af; }
+.compound-row .result-cell { color: #047857; }
+
+tr[data-type="simple"] input { border-color: #bfdbfe; }
+.compound-row input { border-color: #a7f3d0; }
+tr[data-type="simple"] input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, .18);
+}
+.compound-row input:focus {
+    border-color: #059669;
+    box-shadow: 0 0 0 4px rgba(5, 150, 105, .18);
+}
+
+.tipo-tag {
+    display: inline-block;
+    margin-top: 3px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .03em;
+}
+tr[data-type="simple"] .tipo-tag { background: #dbeafe; color: #1e40af; }
+.compound-row .tipo-tag { background: #d1fae5; color: #047857; }
+
+@media (min-width: 1201px) {
+    tr[data-type="simple"] td:first-child { box-shadow: inset 4px 0 0 #3b82f6; }
+    .compound-row td:first-child { box-shadow: inset 4px 0 0 #10b981; }
+}
+
+@media screen and (max-width: 1200px) {
+    .calculator-table tbody tr[data-type="simple"] { border-color: #bfdbfe; border-left: 5px solid #3b82f6; }
+    .calculator-table tbody tr.compound-row { border-color: #a7f3d0; border-left: 5px solid #10b981; }
+}
+
+@media print {
+    tr[data-type="simple"] { background-color: #eff6ff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .compound-row { background-color: #ecfdf5 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .tipo-tag { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
 </style>
 </head>
 <body>
+
+    <noscript><p class="noscript-msg">O Simulador de Juros precisa de JavaScript ativo para funcionar.</p></noscript>
 
     <div class="print-only-header">
         <h2>Simulador de Juros (TANB & Juros Compostos)</h2>
@@ -1125,10 +1385,6 @@ tr[data-type="simple"] .result-cell {
                 </div>
             </div>
             <div class="header-actions-right">
-                <button class="header-btn header-btn-support" onclick="printTable()" title="Imprimir simulações" aria-label="Imprimir simulações">
-                    <span class="support-icon" aria-hidden="true">🖨️</span>
-                    <span class="support-label">Imprimir</span>
-                </button>
                 <button class="header-btn header-btn-support" onclick="openAboutModal()" title="Suporte" aria-label="Abrir suporte: sugestões, reportar problema ou contacto">
                     <span class="support-icon" aria-hidden="true">💬</span>
                     <span class="support-label">Suporte</span>
@@ -1136,6 +1392,28 @@ tr[data-type="simple"] .result-cell {
             </div>
         </div>
         
+        <div class="settings-bar" role="group" aria-label="Definições da simulação">
+<label>Base (juros simples)
+                <select id="cfg-base" onchange="aplicarConfig()">
+                    <option value="360">360 dias</option>
+                    <option value="365">365 dias</option>
+                </select>
+            </label>
+            <label>Capitalização (compostos)
+                <select id="cfg-cap" onchange="aplicarConfig()">
+                    <option value="diaria">Diária</option>
+                    <option value="mensal">Mensal</option>
+                    <option value="anual">Anual</option>
+                </select>
+            </label>
+            <div class="tool-actions">
+                <button type="button" class="tool-btn" onclick="exportCSV()" title="Exportar para CSV (Excel)">⬇️ Exportar CSV</button>
+                <button type="button" class="tool-btn" onclick="copyResults()" title="Copiar resultados">📋 Copiar</button>
+                <button type="button" class="tool-btn" onclick="printTable()" title="Imprimir simulações">🖨️ Imprimir</button>
+            </div>
+        </div>
+        <p class="aviso" id="aviso" role="status" aria-live="polite" hidden></p>
+
         <table class="calculator-table" id="calculator-table">
             <thead>
                 <tr>
@@ -1144,9 +1422,11 @@ tr[data-type="simple"] .result-cell {
                     <th>% Taxa Anual</th>
                     <th>Dias</th>
                     <th>Juros<br>Brutos (€)</th>
-                    <th>Retenção<br>(28%)</th>
+                    <th id="th-ret"><label for="cfg-ret">Retenção</label><span class="th-ret-field"><input type="text" id="cfg-ret" inputmode="decimal" value="28" autocomplete="off" aria-label="Taxa de retenção em percentagem" onchange="aplicarConfig()"><b>%</b></span></th>
                     <th>Juros<br>Líquidos (€)</th>
                     <th>Juro Líquido<br>por Dia (€)</th>
+                    <th title="Capital mais juros líquidos">Montante<br>Final (€)</th>
+                    <th title="Taxa anual equivalente do ganho líquido (já com retenção e capitalização)">Taxa Líq.<br>Anual Efetiva</th>
                     <th>Ação</th>
                 </tr>
             </thead>
@@ -1166,11 +1446,13 @@ tr[data-type="simple"] .result-cell {
                     <td class="total-data total-hidden" id="total-retencao" data-label="Retenção"></td>
                     <td class="total-data total-hidden" id="total-liquidos" data-label="Juros líquidos"></td>
                     <td class="total-data total-hidden" id="total-dia" data-label="Líquido por dia"></td>
+                    <td class="total-data total-hidden" id="total-final" data-label="Montante final"></td>
+                    <td class="total-data total-hidden" id="total-taxa" data-label="Taxa líq. anual efetiva"></td>
                     <td class="total-data total-hidden" id="total-blank-last"></td>
                 </tr>
                 <tr class="action-row">
                     <td></td>
-                    <td colspan="7">
+                    <td colspan="9">
                         <div class="buttons-container">
                             <button class="add-btn" onclick="addRow(false)">Adicionar linha TANB</button>
                             <button class="add-btn add-compound-btn" onclick="addRow(true)">Adicionar linha de juros compostos</button>
@@ -1183,6 +1465,8 @@ tr[data-type="simple"] .result-cell {
             </tfoot>
         </table>
  
+        <p class="calc-note" id="nota-calculo">ℹ️ Linhas TANB: juros simples, base de <span class="base-txt">360</span> dias. Linhas verdes: juros compostos com capitalização <span class="cap-txt">diária</span> (ano de 365 dias). Retenção de <span class="ret-pct">28</span>% aplicada a todas as linhas. Só as linhas completas e válidas entram nos totais. Simulação meramente informativa; não substitui as condições contratuais da instituição financeira.</p>
+
         <div class="instructions">
             <div class="info-buttons-container">
                 <button class="info-explain-btn" onclick="showTanbInfo()">💡 O que é a TANB?</button>
@@ -1202,18 +1486,28 @@ tr[data-type="simple"] .result-cell {
             <hr>
             
             <ul>
-                <li><strong>Linhas TANB Simples (Padrão Cinzento/Azul):</strong> O cálculo dos juros simples baseia-se na convenção do <strong>ano comercial de 360 dias</strong>.</li>
-                <li><strong>Linhas Verdes (Compostas):</strong> Representam investimentos onde o cálculo utiliza o <strong>ano civil de 365 dias</strong>. Os juros são capitalizados e o imposto (28%) é deduzido diariamente, reinvestindo o ganho líquido de forma contínua.</li>
+                <li><strong>Linhas TANB Simples (Azul):</strong> O cálculo dos juros simples baseia-se na convenção do <strong>ano de <span class="base-txt">360</span> dias</strong> (configurável nas definições).</li>
+                <li><strong>Linhas Verdes (Compostas):</strong> Representam investimentos onde o cálculo utiliza o <strong>ano civil de 365 dias</strong>. Os juros são capitalizados com periodicidade <strong class="cap-txt">diária</strong> (configurável) e o imposto (<span class="ret-pct">28</span>%) é deduzido em cada período, reinvestindo o ganho líquido.</li>
             </ul>
             
             <hr>
             
             <ul>
                 <li><strong>Juros Brutos (€):</strong> Valor total ganho sem a retenção na fonte.</li>
-                <li><strong>Retenção na fonte (€):</strong> Em conformidade com a regulamentação fiscal portuguesa, a taxa de retenção é de 28%;</li>
+                <li><strong>Retenção na fonte (€):</strong> Em conformidade com a regulamentação fiscal portuguesa, a taxa de retenção por defeito é de <span class="ret-pct">28</span>% (configurável);</li>
                 <li><strong>Juros Líquidos (€):</strong> Lucro real calculado referente aos dias colocados já livre de impostos;</li>
                 <li><strong>Juro Líquido por dia (€):</strong> Lucro automaticamente calculado como valor médio ganho por dia já com a retenção na fonte.</li>
-                <li><strong>Ação:</strong> Eliminar a linha de simulação.</li>
+                <li><strong>Montante Final (€):</strong> Capital investido mais os juros líquidos;</li>
+                <li><strong>Taxa Líq. Anual Efetiva (%):</strong> Taxa anual equivalente do ganho líquido; permite comparar linhas com prazos e tipos de juros diferentes. A linha com a melhor taxa (quando há duas ou mais) fica assinalada com 🏆;</li>
+                <li><strong>Ação:</strong> Eliminar a linha de simulação (é possível anular logo a seguir).</li>
+            </ul>
+
+            <hr>
+
+            <ul>
+                <li><strong>Definições:</strong> Ajuste a retenção, a base dos juros simples (360 ou 365 dias) e a capitalização dos juros compostos (diária, mensal ou anual);</li>
+                <li><strong>Exportar CSV / Copiar:</strong> Exporte ou copie as linhas calculadas. Para obter um PDF, use <strong>Imprimir</strong> e escolha "Guardar como PDF";</li>
+                <li><strong>Limites:</strong> Montante até 1 000 000 000 000 €, taxa até 100 % e prazo até 36 500 dias.</li>
             </ul>
         </div>
     </div>
@@ -1239,9 +1533,9 @@ tr[data-type="simple"] .result-cell {
     </div>
 
     <!-- Janela Modal de Suporte -->
-    <div id="about-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="about-modal-title" onclick="closeAboutModal(event)">
+    <div id="about-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="about-modal-title" onclick="closeModalOnOverlay(event, 'about-modal')">
         <div class="modal-content" style="text-align: center;">
-            <button type="button" class="modal-close" aria-label="Fechar" onclick="toggleAboutModal(false)">&times;</button>
+            <button type="button" class="modal-close" aria-label="Fechar" onclick="closeModal('about-modal')">&times;</button>
             <h3 id="about-modal-title" style="justify-content: center;">💬 Suporte</h3>
             <p style="text-align: center; margin-bottom: 20px;">Selecione uma opção:</p>
             
@@ -1261,16 +1555,31 @@ tr[data-type="simple"] .result-cell {
             </div>
 
             <div class="modal-footer">
-                Versão: <span class="version-highlight">V24</span>
+                Versão: <span class="version-highlight">V25</span>
             </div>
         </div>
     </div>
 
     <div class="print-only-footer" id="dynamic-print-footer"></div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
         
     <script>
+    const MAX_DIAS = 36500, MAX_TAXA = 100, MAX_MONTANTE = 1e12;
+    const CHAVE = 'simulador_depositos_data';
+    const CAPS = ['diaria', 'mensal', 'anual'];
+    const PERIODOS_ANO = { diaria: 365, mensal: 12, anual: 1 };
+    const NOME_CAP = { diaria: 'diária', mensal: 'mensal', anual: 'anual' };
+
+    let cfg = { retencao: 28, base: 360, cap: 'diaria' };
     let totalsVisible = false;
-    let currentTotals = { montante: 0, tanbMed: 0, diasMed: 0, brutos: 0, retencao: 0, liquidos: 0, dia: 0 };
+    let currentTotals = { montante: 0, tanbMed: 0, diasMed: 0, brutos: 0, retencao: 0, liquidos: 0, dia: 0, final: 0, taxaMed: 0 };
+    let toastTimer = null;
+    let ultimoFoco = null;
+
+    const byId = (id) => document.getElementById(id);
+    const linhas = () => [...document.querySelectorAll('#calculator-table tbody tr')];
+    const pctTxt = (n) => String(n).replace('.', ',');
 
     /* Converte strings PT (com espaços, pontos de milhar e vírgulas) num float de forma segura */
     function parsePtNumber(val, isPercent = false) {
@@ -1292,107 +1601,211 @@ tr[data-type="simple"] .result-cell {
         return n.toLocaleString('pt-PT', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
     }
 
-    function openAboutModal() {
-        toggleAboutModal(true);
-    }
+    /* ===== Cálculo (única fonte de verdade) ===== */
+    function calcular(montante, tanb, dias, composto) {
+        if (!(montante > 0 && tanb > 0 && dias > 0)) return null;
+        const ret = cfg.retencao / 100;
+        let brutos, liquidos;
 
-    function toggleAboutModal(show) {
-        const modal = document.getElementById('about-modal');
-        if (show) modal.classList.add('active');
-        else modal.classList.remove('active');
-    }
-
-    function closeAboutModal(event) {
-        if (event.target.id === 'about-modal') {
-            toggleAboutModal(false);
+        if (composto) {
+            const m = PERIODOS_ANO[cfg.cap];
+            const periodos = dias * m / 365;
+            const finalBruto = montante * Math.pow(1 + (tanb / 100 / m) * (1 - ret), periodos);
+            liquidos = finalBruto - montante;
+            brutos = liquidos / (1 - ret);
+        } else {
+            brutos = montante * (tanb / 100) * (dias / cfg.base);
+            liquidos = brutos * (1 - ret);
         }
+
+        const final = montante + liquidos;
+        const r = {
+            brutos: brutos,
+            retencao: brutos - liquidos,
+            liquidos: liquidos,
+            ganhoDia: liquidos / dias,
+            final: final,
+            taxaAnual: (Math.pow(final / montante, 365 / dias) - 1) * 100
+        };
+        return Object.values(r).every(Number.isFinite) ? r : null;
     }
 
-    function showTanbInfo() {
-        openModal('tanb-modal');
+    function lerLinha(row) {
+        const inputs = row.querySelectorAll('input');
+        return {
+            inputs: inputs,
+            composto: row.getAttribute('data-type') === 'compound',
+            montante: parsePtNumber(inputs[0].value),
+            tanb: parsePtNumber(inputs[1].value, true),
+            dias: parseInt(inputs[2].value, 10) || 0
+        };
     }
 
-    function showCompoundInfo() {
-        openModal('compound-modal');
+    /* Valida os campos de uma linha, assinala os erros e devolve as mensagens */
+    function validarLinha(row, d) {
+        const idx = linhas().indexOf(row) + 1;
+        const msgs = [];
+        const regra = (input, n, max, nome, unidade) => {
+            const txt = input.value.trim();
+            let msg = '';
+            if (txt !== '' && (!/\d/.test(txt) || n < 0)) {
+                msg = nome + ' inválido';
+            } else if (n > max) {
+                msg = nome + ' acima do máximo (' + fmt(max, 0) + unidade + ')';
+            }
+            input.classList.toggle('input-error', msg !== '');
+            input.setAttribute('aria-invalid', msg !== '' ? 'true' : 'false');
+            input.title = msg;
+            if (msg) msgs.push('Linha ' + idx + ': ' + msg);
+        };
+        regra(d.inputs[0], d.montante, MAX_MONTANTE, 'Montante', ' €');
+        regra(d.inputs[1], d.tanb, MAX_TAXA, 'Taxa', ' %');
+        regra(d.inputs[2], d.dias, MAX_DIAS, 'Dias', '');
+        return msgs;
     }
+
+    function calcularLinha(row) {
+        const d = lerLinha(row);
+        const erros = validarLinha(row, d);
+        const completa = d.montante > 0 && d.tanb > 0 && d.dias > 0;
+        const r = erros.length ? null : calcular(d.montante, d.tanb, d.dias, d.composto);
+        if (!erros.length && completa && !r) {
+            erros.push('Linha ' + (linhas().indexOf(row) + 1) + ': resultado fora do intervalo calculável');
+        }
+        row._erros = erros;
+        row._res = r;
+
+        const c = (cls) => row.querySelector('.' + cls);
+        c('c-brutos').textContent = r ? fmt(r.brutos) + ' €' : '---';
+        c('c-ret').textContent = r ? fmt(r.retencao) + ' €' : '---';
+        c('c-liq').textContent = r ? fmt(r.liquidos) + ' €' : '---';
+        c('c-dia').textContent = r ? fmt(r.ganhoDia, 4) + ' €' : '---';
+        c('c-final').textContent = r ? fmt(r.final) + ' €' : '---';
+        c('c-taxa').textContent = r ? fmt(r.taxaAnual) + ' %' : '---';
+        return r;
+    }
+
+    function mostrarAvisos() {
+        const el = byId('aviso');
+        const msgs = linhas().flatMap(row => row._erros || []);
+        el.textContent = msgs.join(' • ');
+        el.hidden = msgs.length === 0;
+    }
+
+    function recalcularTudo(guardar = true) {
+        linhas().forEach(calcularLinha);
+        updateTotals();
+        mostrarAvisos();
+        if (guardar) saveStateToLocalStorage();
+    }
+
+    function calculateRow(inputElement) {
+        const row = inputElement.closest('tr');
+        if (!row || row.parentElement.tagName === 'TFOOT') return;
+        calcularLinha(row);
+        updateTotals();
+        mostrarAvisos();
+        saveStateToLocalStorage();
+    }
+
+    function handleLiveInput(input) {
+        calculateRow(input);
+    }
+
+    /* ===== Definições ===== */
+    function sincronizarControlos() {
+        byId('cfg-ret').value = pctTxt(cfg.retencao);
+        byId('cfg-base').value = String(cfg.base);
+        byId('cfg-cap').value = cfg.cap;
+    }
+
+    function atualizarRotulos() {
+        const p = pctTxt(cfg.retencao);
+        document.querySelectorAll('.ret-pct').forEach(e => { e.textContent = p; });
+        document.querySelectorAll('.base-txt').forEach(e => { e.textContent = cfg.base; });
+        document.querySelectorAll('.cap-txt').forEach(e => { e.textContent = NOME_CAP[cfg.cap]; });
+        linhas().forEach(row => { row.querySelector('.c-ret').dataset.label = 'Retenção (' + p + '%)'; });
+    }
+
+    function aplicarConfig() {
+        const campo = byId('cfg-ret');
+        const txt = campo.value.trim();
+        const r = parsePtNumber(txt, true);
+        if (!/\d/.test(txt) || r < 0 || r > 99.9) {
+            toast('Retenção inválida: indique um valor entre 0 e 99,9.');
+            campo.value = pctTxt(cfg.retencao);
+        } else {
+            cfg.retencao = r;
+            campo.value = pctTxt(r);
+        }
+        cfg.base = parseInt(byId('cfg-base').value, 10) === 365 ? 365 : 360;
+        cfg.cap = CAPS.includes(byId('cfg-cap').value) ? byId('cfg-cap').value : 'diaria';
+        atualizarRotulos();
+        recalcularTudo();
+    }
+
+    /* ===== Janelas (modais) com gestão de foco ===== */
+    function openAboutModal() { openModal('about-modal'); }
+    function showTanbInfo() { openModal('tanb-modal'); }
+    function showCompoundInfo() { openModal('compound-modal'); }
 
     function openModal(id) {
-        const modal = document.getElementById(id);
-        if (modal) modal.classList.add('active');
+        const modal = byId(id);
+        if (!modal) return;
+        ultimoFoco = document.activeElement;
+        modal.classList.add('active');
+        const alvo = modal.querySelector('.modal-close') || modal;
+        alvo.focus();
     }
 
     function closeModal(id) {
-        const modal = document.getElementById(id);
-        if (modal) modal.classList.remove('active');
+        const modal = byId(id);
+        if (!modal) return;
+        modal.classList.remove('active');
+        if (ultimoFoco && typeof ultimoFoco.focus === 'function') ultimoFoco.focus();
+        ultimoFoco = null;
     }
 
     function closeModalOnOverlay(event, id) {
-        if (event.target.id === id) {
-            closeModal(id);
-        }
+        if (event.target.id === id) closeModal(id);
     }
 
     function sendEmail(tipo) {
         const email = "jardimhelder@hotmail.com";
         const assunto = encodeURIComponent(`Simulador de Juros (TANB & Juros Compostos) - [${tipo}]`);
         const corpo = encodeURIComponent(`Olá,\n\nRelativamente à opção "${tipo}":\n\n"Descreva aqui o que pretende"`);
-        
+
+        closeModal('about-modal');
         window.location.href = `mailto:${email}?subject=${assunto}&body=${corpo}`;
-        toggleAboutModal(false);
     }
 
-    function calculateRow(inputElement) {
-        const row = inputElement.closest('tr');
-        if (!row || row.parentElement.tagName === 'TFOOT') return;
-        
-        const isCompound = row.getAttribute('data-type') === 'compound';
-        
-        const montante = parsePtNumber(row.cells[1].querySelector('input').value);
-        const tanb = parsePtNumber(row.cells[2].querySelector('input').value, true);
-        const dias = parseInt(row.cells[3].querySelector('input').value) || 0;
-        
-        if (montante === 0 || tanb === 0 || dias === 0) {
-            row.cells[4].textContent = "---";
-            row.cells[5].textContent = "---";
-            row.cells[6].textContent = "---";
-            row.cells[7].textContent = "---";
-        } else {
-            const TAXA_RETENCAO = 0.28;
-            let jurosBrutos = 0;
-            let retencao = 0;
-            let valorReceber = 0;
-            let ganhoDia = 0;
+    /* ===== Mensagens (substituem alert/confirm) ===== */
+    function esconderToast() {
+        byId('toast').classList.remove('show');
+    }
 
-            if (isCompound) {
-                const i_diario = (tanb / 100) / 365;
-                const montanteFinal = montante * Math.pow(1 + i_diario * (1 - TAXA_RETENCAO), dias);
-                
-                valorReceber = montanteFinal - montante;
-                jurosBrutos = valorReceber / (1 - TAXA_RETENCAO);
-                retencao = jurosBrutos * TAXA_RETENCAO;
-                ganhoDia = valorReceber / dias;
-            } else {
-                const BASE_ANO = 360; 
-                jurosBrutos = montante * (tanb / 100) * (dias / BASE_ANO);
-                retencao = jurosBrutos * TAXA_RETENCAO;
-                valorReceber = jurosBrutos - retencao;
-                ganhoDia = valorReceber / dias;
-            }
-            
-            row.cells[4].textContent = fmt(jurosBrutos) + " €";
-            row.cells[5].textContent = fmt(retencao) + " €";
-            row.cells[6].textContent = fmt(valorReceber) + " €";
-            row.cells[7].textContent = fmt(ganhoDia, 4) + " €";
+    function toast(msg, acaoTxt, acaoFn) {
+        const el = byId('toast');
+        el.textContent = '';
+        const span = document.createElement('span');
+        span.textContent = msg;
+        el.appendChild(span);
+        if (acaoTxt) {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.textContent = acaoTxt;
+            b.onclick = () => { esconderToast(); acaoFn(); };
+            el.appendChild(b);
         }
-
-        updateTotals();
-        saveStateToLocalStorage();
+        el.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(esconderToast, acaoTxt ? 8000 : 4000);
     }
-        
+
+    /* ===== Linhas ===== */
     function addRow(isCompound = false, saveState = true) {
-        const table = document.getElementById('calculator-table');
-        const tbody = table.querySelector('tbody');
-        
+        const tbody = document.querySelector('#calculator-table tbody');
+
         const newRow = document.createElement('tr');
         if (isCompound) {
             newRow.setAttribute('data-type', 'compound');
@@ -1403,166 +1816,149 @@ tr[data-type="simple"] .result-cell {
 
         newRow.innerHTML = `
             <td class="row-index"></td>
-            <td data-label="Montante a investir (€)"><input type="text" enterkeyhint="next" placeholder="10 000 €" inputmode="decimal" oninput="handleLiveInput(this)" onfocus="editMoney(this)" onblur="formatMoney(this)"></td>
-            <td data-label="% Taxa anual"><input type="text" enterkeyhint="next" placeholder="%" inputmode="decimal" oninput="handleLiveInput(this)" onfocus="editPercent(this)" onblur="formatPercent(this)"></td>
+            <td data-label="Montante a investir (€)"><input type="text" enterkeyhint="next" placeholder="10 000 €" inputmode="decimal" autocomplete="off" oninput="handleLiveInput(this)" onfocus="editMoney(this)" onblur="formatMoney(this)"></td>
+            <td data-label="% Taxa anual"><input type="text" enterkeyhint="next" placeholder="%" inputmode="decimal" autocomplete="off" oninput="handleLiveInput(this)" onfocus="editPercent(this)" onblur="formatPercent(this)"></td>
             <td data-label="Dias"><input type="number" enterkeyhint="done" placeholder="Dias" min="1" step="1" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g,''); calculateRow(this)" onfocus="this.select()"></td>
-            <td class="result-cell" data-label="Juros brutos">---</td>
-            <td class="result-cell" data-label="Retenção (28%)">---</td>
-            <td class="result-cell" data-label="Juros líquidos">---</td>
-            <td class="result-cell" data-label="Líquido por dia">---</td>
-            <td><button class="delete-btn" onclick="deleteRow(this)" aria-label="Eliminar linha" title="Eliminar linha"> ❌</button></td>
+            <td class="result-cell c-brutos" data-label="Juros brutos">---</td>
+            <td class="result-cell c-ret" data-label="Retenção">---</td>
+            <td class="result-cell c-liq" data-label="Juros líquidos">---</td>
+            <td class="result-cell c-dia" data-label="Líquido por dia">---</td>
+            <td class="result-cell c-final" data-label="Montante final">---</td>
+            <td class="result-cell c-taxa" data-label="Taxa líq. anual efetiva">---</td>
+            <td><button type="button" class="delete-btn" onclick="deleteRow(this)" title="Eliminar linha">❌</button></td>
         `;
-        
+
         tbody.appendChild(newRow);
         updateRowNumbers();
+        atualizarRotulos();
         updateTotals();
         if (saveState) saveStateToLocalStorage();
         return newRow;
     }
 
-    function handleLiveInput(input) {
-        calculateRow(input);
-    }
-
     function deleteRow(button) {
         const row = button.closest('tr');
-        if (document.querySelectorAll('#calculator-table tbody tr').length > 1) {
-            row.remove();
-            updateRowNumbers();
-            updateTotals();
-            saveStateToLocalStorage();
-        } else {
-            alert('É necessário manter pelo menos uma linha de investimento.');
+        if (linhas().length <= 1) {
+            toast('É necessário manter pelo menos uma linha de investimento.');
+            return;
         }
+        const antes = lerEstado();
+        row.remove();
+        updateRowNumbers();
+        recalcularTudo();
+        toast('Linha eliminada.', 'Anular', () => aplicarEstado(antes));
     }
-        
+
     function updateRowNumbers() {
-        const rows = document.querySelectorAll('#calculator-table tbody tr');
-        rows.forEach((row, index) => {
-            const isCompound = row.getAttribute('data-type') === 'compound';
-            if (isCompound) {
-                row.cells[0].innerHTML = (index + 1) + '<br><small style="font-size:9px;color:#059669;font-weight:bold;">Comp.</small>';
-            } else {
-                row.cells[0].innerHTML = (index + 1) + '<br><small style="font-size:9px;color:#1e3a8a;font-weight:bold;">TANB</small>';
-            }
+        linhas().forEach((row, index) => {
+            const n = index + 1;
+            const comp = row.getAttribute('data-type') === 'compound';
+            row.cells[0].innerHTML = n + '<br><small class="tipo-tag">' + (comp ? 'Comp.' : 'TANB') + '</small>';
+            const inp = row.querySelectorAll('input');
+            inp[0].setAttribute('aria-label', 'Linha ' + n + ': montante a investir em euros');
+            inp[1].setAttribute('aria-label', 'Linha ' + n + ': taxa anual em percentagem');
+            inp[2].setAttribute('aria-label', 'Linha ' + n + ': número de dias');
+            row.querySelector('.delete-btn').setAttribute('aria-label', 'Eliminar linha ' + n);
         });
     }
 
     function clearAllRows() {
-        if(confirm("Tem a certeza que deseja limpar todas as simulações e redefinir a tabela?")) {
-            try { localStorage.removeItem('simulador_depositos_data'); } catch (e) {}
-            initTableDefaultRows();
-        }
+        const antes = lerEstado();
+        try { localStorage.removeItem(CHAVE); } catch (e) {}
+        initTableDefaultRows();
+        toast('Simulações limpas.', 'Anular', () => aplicarEstado(antes));
     }
 
     function initTableDefaultRows() {
         const tbody = document.querySelector('#calculator-table tbody');
         tbody.innerHTML = '';
-        
-        addRow(false, false); 
-        addRow(false, false); 
-        addRow(false, false); 
-        addRow(true, false);  
-        
-        updateTotals();
-        saveStateToLocalStorage();
+
+        addRow(false, false);
+        addRow(false, false);
+        addRow(false, false);
+        addRow(true, false);
+
+        recalcularTudo();
     }
 
+    /* ===== Totais ===== */
     function updateTotals() {
-        const rows = document.querySelectorAll('#calculator-table tbody tr');
-        let totalM = 0, totalB = 0, totalR = 0, totalL = 0, totalD = 0;
-        let somaProdutosTanb = 0;
-        let somaProdutosDias = 0;
-        let linhasComDadosValidos = 0;
-        let montanteValido = 0;
+        const t = { montante: 0, tanbMed: 0, diasMed: 0, brutos: 0, retencao: 0, liquidos: 0, dia: 0, final: 0, taxaMed: 0 };
+        let sTanb = 0, sDias = 0, sTaxa = 0, validas = 0;
+        let melhor = null, minTaxa = Infinity, maxTaxa = -Infinity;
 
-        rows.forEach(row => {
-            const isCompound = row.getAttribute('data-type') === 'compound';
-            const montante = parsePtNumber(row.cells[1].querySelector('input').value);
-            const tanb = parsePtNumber(row.cells[2].querySelector('input').value, true);
-            const dias = parseInt(row.cells[3].querySelector('input').value) || 0;
+        /* Regra única: só contam as linhas completas e válidas */
+        linhas().forEach(row => {
+            row.classList.remove('best-row');
+            row.removeAttribute('title');
+            const r = row._res;
+            if (!r) return;
+            const d = lerLinha(row);
 
-            totalM += montante;
+            t.montante += d.montante;
+            t.brutos += r.brutos;
+            t.retencao += r.retencao;
+            t.liquidos += r.liquidos;
+            t.dia += r.ganhoDia;
+            t.final += r.final;
+            sTanb += d.montante * d.tanb;
+            sDias += d.montante * d.dias;
+            sTaxa += d.montante * r.taxaAnual;
+            validas++;
 
-            if (montante > 0 && tanb > 0 && dias > 0) {
-                somaProdutosTanb += (montante * tanb);
-                somaProdutosDias += (montante * dias);
-                montanteValido += montante;
-                linhasComDadosValidos++;
-
-                const TAXA_RETENCAO = 0.28;
-                let jurosBrutos = 0, retencao = 0, valorReceber = 0, ganhoDia = 0;
-
-                if (isCompound) {
-                    const i_diario = (tanb / 100) / 365;
-                    const montanteFinal = montante * Math.pow(1 + i_diario * (1 - TAXA_RETENCAO), dias);
-                    valorReceber = montanteFinal - montante;
-                    jurosBrutos = valorReceber / (1 - TAXA_RETENCAO);
-                    retencao = jurosBrutos * TAXA_RETENCAO;
-                    ganhoDia = valorReceber / dias;
-                } else {
-                    const BASE_ANO = 360; 
-                    jurosBrutos = montante * (tanb / 100) * (dias / BASE_ANO);
-                    retencao = jurosBrutos * TAXA_RETENCAO;
-                    valorReceber = jurosBrutos - retencao;
-                    ganhoDia = valorReceber / dias;
-                }
-
-                totalB += jurosBrutos;
-                totalR += retencao;
-                totalL += valorReceber;
-                totalD += ganhoDia;
-            }
+            minTaxa = Math.min(minTaxa, r.taxaAnual);
+            if (r.taxaAnual > maxTaxa) { maxTaxa = r.taxaAnual; melhor = row; }
         });
 
-        let tanbPonderada = (montanteValido > 0 && linhasComDadosValidos > 0) ? (somaProdutosTanb / montanteValido) : 0;
-        let diasPonderados = (montanteValido > 0 && linhasComDadosValidos > 0) ? (somaProdutosDias / montanteValido) : 0;
+        if (t.montante > 0) {
+            t.tanbMed = sTanb / t.montante;
+            t.diasMed = sDias / t.montante;
+            t.taxaMed = sTaxa / t.montante;
+        }
 
-        currentTotals = { 
-            montante: totalM, 
-            tanbMed: tanbPonderada, 
-            diasMed: diasPonderados, 
-            brutos: totalB, 
-            retencao: totalR, 
-            liquidos: totalL, 
-            dia: totalD 
-        };
+        if (validas >= 2 && melhor && maxTaxa - minTaxa > 1e-9) {
+            melhor.classList.add('best-row');
+            melhor.title = 'Melhor taxa líquida anual efetiva';
+        }
+
+        currentTotals = t;
         renderTotals();
     }
 
     function renderTotals() {
         const cells = document.querySelectorAll('.total-data');
-        
+
         if (!totalsVisible) {
             cells.forEach(cell => cell.textContent = "");
             return;
         }
 
-        if (currentTotals.montante === 0) {
-            document.getElementById('total-montante').textContent = "---";
-            document.getElementById('total-tanb').textContent = "---";
-            document.getElementById('total-dias').textContent = "---";
+        const t = currentTotals;
+        const media = (v, txt) => v > 0 ? 'Média Pond.<br><span style="font-size:15px; font-weight:700;">' + txt + '</span>' : "---";
+
+        if (t.montante === 0) {
+            byId('total-montante').textContent = "---";
+            byId('total-tanb').textContent = "---";
+            byId('total-dias').textContent = "---";
         } else {
-            document.getElementById('total-montante').textContent = fmt(currentTotals.montante) + ' €';
-            
-            document.getElementById('total-tanb').innerHTML = currentTotals.tanbMed > 0 ? 
-                'Média Pond.<br><span style="font-size:15px; font-weight:700;">' + fmt(currentTotals.tanbMed) + ' %</span>' : "---";
-            
-            document.getElementById('total-dias').innerHTML = currentTotals.diasMed > 0 ? 
-                'Média Pond.<br><span style="font-size:15px; font-weight:700;">' + Math.round(currentTotals.diasMed) + ' d</span>' : "---";
+            byId('total-montante').textContent = fmt(t.montante) + ' €';
+            byId('total-tanb').innerHTML = media(t.tanbMed, fmt(t.tanbMed) + ' %');
+            byId('total-dias').innerHTML = media(t.diasMed, Math.round(t.diasMed) + ' d');
         }
 
-        document.getElementById('total-brutos').textContent = currentTotals.brutos > 0 ? fmt(currentTotals.brutos) + ' €' : "---";
-        document.getElementById('total-retencao').textContent = currentTotals.retencao > 0 ? fmt(currentTotals.retencao) + ' €' : "---";
-        document.getElementById('total-liquidos').textContent = currentTotals.liquidos > 0 ? fmt(currentTotals.liquidos) + ' €' : "---";
-        document.getElementById('total-dia').textContent = currentTotals.dia > 0 ? fmt(currentTotals.dia, 4) + ' €' : "---";
-        document.getElementById('total-blank-last').textContent = "";
+        byId('total-brutos').textContent = t.brutos > 0 ? fmt(t.brutos) + ' €' : "---";
+        byId('total-retencao').textContent = t.retencao > 0 ? fmt(t.retencao) + ' €' : "---";
+        byId('total-liquidos').textContent = t.liquidos > 0 ? fmt(t.liquidos) + ' €' : "---";
+        byId('total-dia').textContent = t.dia > 0 ? fmt(t.dia, 4) + ' €' : "---";
+        byId('total-final').textContent = t.final > 0 ? fmt(t.final) + ' €' : "---";
+        byId('total-taxa').innerHTML = t.montante > 0 && t.taxaMed > 0 ? media(t.taxaMed, fmt(t.taxaMed) + ' %') : "---";
+        byId('total-blank-last').textContent = "";
     }
 
     function toggleTotals() {
         totalsVisible = !totalsVisible;
-        const btn = document.getElementById('toggle-btn-element');
-        const totalRow = document.getElementById('total-row-element');
+        const btn = byId('toggle-btn-element');
+        const totalRow = byId('total-row-element');
         const cells = document.querySelectorAll('.total-data');
 
         if (totalsVisible) {
@@ -1574,23 +1970,48 @@ tr[data-type="simple"] .result-cell {
             totalRow.classList.add('is-hidden');
             cells.forEach(cell => cell.classList.add('total-hidden'));
         }
-        
+
         renderTotals();
     }
 
-    function saveStateToLocalStorage() {
-        const rows = document.querySelectorAll('#calculator-table tbody tr');
-        const state = [];
-        rows.forEach(row => {
-            state.push({
-                isCompound: row.getAttribute('data-type') === 'compound',
-                montante: row.cells[1].querySelector('input').value,
-                tanb: row.cells[2].querySelector('input').value,
-                dias: row.cells[3].querySelector('input').value
-            });
+    /* ===== Estado guardado ===== */
+    function lerEstado() {
+        return {
+            cfg: { retencao: cfg.retencao, base: cfg.base, cap: cfg.cap },
+            rows: linhas().map(row => {
+                const i = row.querySelectorAll('input');
+                return {
+                    isCompound: row.getAttribute('data-type') === 'compound',
+                    montante: i[0].value,
+                    tanb: i[1].value,
+                    dias: i[2].value
+                };
+            })
+        };
+    }
+
+    function aplicarEstado(estado) {
+        const c = estado.cfg || {};
+        if (typeof c.retencao === 'number' && c.retencao >= 0 && c.retencao <= 99.9) cfg.retencao = c.retencao;
+        if (c.base === 360 || c.base === 365) cfg.base = c.base;
+        if (CAPS.includes(c.cap)) cfg.cap = c.cap;
+        sincronizarControlos();
+
+        document.querySelector('#calculator-table tbody').innerHTML = '';
+        estado.rows.forEach(item => {
+            const row = addRow(!!item.isCompound, false);
+            const i = row.querySelectorAll('input');
+            if (item.montante) i[0].value = String(item.montante);
+            if (item.tanb) i[1].value = String(item.tanb);
+            if (item.dias) i[2].value = String(item.dias);
         });
+        atualizarRotulos();
+        recalcularTudo();
+    }
+
+    function saveStateToLocalStorage() {
         try {
-            localStorage.setItem('simulador_depositos_data', JSON.stringify(state));
+            localStorage.setItem(CHAVE, JSON.stringify(lerEstado()));
         } catch (e) {
             /* armazenamento indisponível: a app continua a funcionar sem guardar */
         }
@@ -1598,151 +2019,216 @@ tr[data-type="simple"] .result-cell {
 
     function loadStateFromLocalStorage() {
         try {
-            const saved = localStorage.getItem('simulador_depositos_data');
+            const saved = localStorage.getItem(CHAVE);
             if (!saved) return false;
-            const data = JSON.parse(saved);
-            if (!Array.isArray(data) || data.length === 0) return false;
-
-            const tbody = document.querySelector('#calculator-table tbody');
-            tbody.innerHTML = '';
-
-            data.forEach(item => {
-                const row = addRow(item.isCompound, false);
-                if (item.montante) row.cells[1].querySelector('input').value = item.montante;
-                if (item.tanb) row.cells[2].querySelector('input').value = item.tanb;
-                if (item.dias) row.cells[3].querySelector('input').value = item.dias;
-                calculateRow(row.cells[1].querySelector('input'));
-            });
+            let data = JSON.parse(saved);
+            if (Array.isArray(data)) data = { rows: data };
+            if (!data || !Array.isArray(data.rows) || data.rows.length === 0) return false;
+            aplicarEstado(data);
             return true;
-        } catch(e) {
+        } catch (e) {
             return false;
         }
     }
 
-function formatMoney(input){
-    let n = parsePtNumber(input.value);
-    if(input.value.trim() === '' || isNaN(n) || n === 0) {
-        if (input.value.trim() === '') input.value = '';
-        calculateRow(input);
-        return;
-    }
-    input.value = n.toLocaleString('pt-PT',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €';
-    calculateRow(input);
-}
-
-function editMoney(input){
-    let n = parsePtNumber(input.value);
-    input.value = n > 0 ? n.toString().replace('.', ',') : '';
-    input.select();
-}
-
-function formatPercent(input){
-    let n = parsePtNumber(input.value, true);
-    if(input.value.trim() === '' || isNaN(n) || n === 0) {
-        if (input.value.trim() === '') input.value = '';
-        calculateRow(input);
-        return;
-    }
-    input.value = n.toLocaleString('pt-PT',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' %';
-    calculateRow(input);
-}
-
-function editPercent(input){
-    let n = parsePtNumber(input.value, true);
-    input.value = n > 0 ? n.toString().replace('.', ',') : '';
-    input.select();
-}
-
-function updatePageFooter() {
-    const currentYear = new Date().getFullYear();
-    const pageFooter = document.getElementById('page-footer');
-    if (pageFooter) {
-        pageFooter.innerHTML = `© ${currentYear} Agajota`;
-    }
-}
-
-function printTable() {
-    const rows = document.querySelectorAll('#calculator-table tbody tr');
-
-    const temDados = [...rows].some(r => r.cells[4].textContent.trim() !== "---");
-    if (!temDados) {
-        alert('Preencha pelo menos uma linha da simulação antes de imprimir.');
-        return;
-    }
-    
-    rows.forEach(row => {
-        const jurosBrutos = row.cells[4].textContent.trim();
-        if (jurosBrutos === "---") {
-            row.classList.add('empty-print-row');
-        } else {
-            row.classList.remove('empty-print-row');
-        }
-    });
-
-    const agora = new Date();
-    const dia = String(agora.getDate()).padStart(2, '0');
-    const mes = String(agora.getMonth() + 1).padStart(2, '0');
-    const ano = agora.getFullYear();
-    const horas = String(agora.getHours()).padStart(2, '0');
-    const minutos = String(agora.getMinutes()).padStart(2, '0');
-    
-    const dataHoraFormatada = `${dia}/${mes}/${ano}, ${horas}:${minutos}`;
-
-    const footerPrint = document.getElementById('dynamic-print-footer');
-    footerPrint.innerHTML = `© ${ano} Agajota | 💰 Simulador de Juros | ${dataHoraFormatada}`;
-
-    window.print();
-}
-
-window.onload = function(){
-    if (!loadStateFromLocalStorage()) {
-        initTableDefaultRows();
-    }
-
-    updatePageFooter();
-
-    const totalRow = document.getElementById('total-row-element');
-    if (totalRow) {
-        totalRow.classList.add('is-hidden');
-    }
-
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            document.querySelectorAll('.modal-overlay.active').forEach(modal => {
-                modal.classList.remove('active');
-            });
-        }
-    });
-
-    document.addEventListener('keydown', function(e){
-        if (e.target.tagName === 'INPUT' && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
-            e.preventDefault();
+    /* ===== Campos de montante e percentagem ===== */
+    function formatMoney(input){
+        let n = parsePtNumber(input.value);
+        if(input.value.trim() === '' || isNaN(n) || n === 0) {
+            if (input.value.trim() === '') input.value = '';
+            calculateRow(input);
             return;
         }
-        if (e.key !== 'Enter') return;
-        
-        const input = e.target;
-        if (input.tagName !== 'INPUT') return;
-        
-        const row = input.closest('tr');
-        if (!row || row.parentElement.tagName === 'TFOOT') return;
+        input.value = n.toLocaleString('pt-PT',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €';
+        calculateRow(input);
+    }
 
-        const inputs = [...row.querySelectorAll('input')];
-        let idx = inputs.indexOf(input);
-        
-        if (idx === 2) { 
-            e.preventDefault();
-            input.blur();
+    function editMoney(input){
+        let n = parsePtNumber(input.value);
+        input.value = n > 0 ? n.toString().replace('.', ',') : '';
+        input.select();
+    }
+
+    function formatPercent(input){
+        let n = parsePtNumber(input.value, true);
+        if(input.value.trim() === '' || isNaN(n) || n === 0) {
+            if (input.value.trim() === '') input.value = '';
+            calculateRow(input);
             return;
         }
-        
-        if (idx < inputs.length - 1){
-            e.preventDefault();
-            inputs[idx+1].focus();
-            inputs[idx+1].select();
+        input.value = n.toLocaleString('pt-PT',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' %';
+        calculateRow(input);
+    }
+
+    function editPercent(input){
+        let n = parsePtNumber(input.value, true);
+        input.value = n > 0 ? n.toString().replace('.', ',') : '';
+        input.select();
+    }
+
+    function updatePageFooter() {
+        const currentYear = new Date().getFullYear();
+        const pageFooter = byId('page-footer');
+        if (pageFooter) {
+            pageFooter.innerHTML = `© ${currentYear} Agajota`;
         }
-    });
-};
+    }
+
+    /* ===== Exportar, copiar e imprimir ===== */
+    function tabelaDados() {
+        const num = (n, d = 2) => n.toFixed(d).replace('.', ',');
+        const cab = ['#', 'Tipo', 'Montante (€)', 'Taxa anual (%)', 'Dias', 'Juros brutos (€)',
+            'Retenção ' + pctTxt(cfg.retencao) + '% (€)', 'Juros líquidos (€)', 'Líquido por dia (€)',
+            'Montante final (€)', 'Taxa líquida anual efetiva (%)'];
+        const corpo = [];
+        linhas().forEach((row, i) => {
+            const r = row._res;
+            if (!r) return;
+            const d = lerLinha(row);
+            corpo.push([i + 1, d.composto ? 'Composto' : 'TANB', num(d.montante), num(d.tanb), d.dias,
+                num(r.brutos), num(r.retencao), num(r.liquidos), num(r.ganhoDia, 4), num(r.final), num(r.taxaAnual)]);
+        });
+        return { cab: cab, corpo: corpo };
+    }
+
+    function exportCSV() {
+        const { cab, corpo } = tabelaDados();
+        if (!corpo.length) {
+            toast('Preencha pelo menos uma linha da simulação antes de exportar.');
+            return;
+        }
+        const csv = '\uFEFF' + [cab, ...corpo].map(l => l.join(';')).join('\r\n');
+        const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'simulacao-juros-' + new Date().toISOString().slice(0, 10) + '.csv';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        toast('Ficheiro CSV exportado.');
+    }
+
+    function copiarTexto(t) {
+        if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(t);
+        return new Promise((resolve, reject) => {
+            const ta = document.createElement('textarea');
+            ta.value = t;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy') ? resolve() : reject(); } catch (e) { reject(e); }
+            ta.remove();
+        });
+    }
+
+    function copyResults() {
+        const { cab, corpo } = tabelaDados();
+        if (!corpo.length) {
+            toast('Preencha pelo menos uma linha da simulação antes de copiar.');
+            return;
+        }
+        const texto = [cab, ...corpo].map(l => l.join('\t')).join('\n');
+        copiarTexto(texto)
+            .then(() => toast('Resultados copiados (podem ser colados numa folha de cálculo).'))
+            .catch(() => toast('Não foi possível copiar. Experimente exportar o CSV.'));
+    }
+
+    function printTable() {
+        const rows = linhas();
+
+        if (!rows.some(r => r._res)) {
+            toast('Preencha pelo menos uma linha da simulação antes de imprimir.');
+            return;
+        }
+
+        rows.forEach(row => row.classList.toggle('empty-print-row', !row._res));
+
+        const agora = new Date();
+        const dia = String(agora.getDate()).padStart(2, '0');
+        const mes = String(agora.getMonth() + 1).padStart(2, '0');
+        const ano = agora.getFullYear();
+        const horas = String(agora.getHours()).padStart(2, '0');
+        const minutos = String(agora.getMinutes()).padStart(2, '0');
+
+        const dataHoraFormatada = `${dia}/${mes}/${ano}, ${horas}:${minutos}`;
+
+        const sub = document.querySelector('.print-only-header p');
+        if (sub) {
+            sub.textContent = 'Relatório de Simulações • Retenção ' + pctTxt(cfg.retencao) + '% • Juros simples: base ' + cfg.base + ' dias • Compostos: capitalização ' + NOME_CAP[cfg.cap];
+        }
+
+        byId('dynamic-print-footer').innerHTML = `© ${ano} Agajota | 💰 Simulador de Juros | ${dataHoraFormatada} | Valores meramente informativos`;
+
+        window.print();
+    }
+
+    /* ===== Arranque ===== */
+    window.onload = function(){
+        if (!loadStateFromLocalStorage()) {
+            sincronizarControlos();
+            initTableDefaultRows();
+        }
+        atualizarRotulos();
+        updatePageFooter();
+
+        const totalRow = byId('total-row-element');
+        if (totalRow) {
+            totalRow.classList.add('is-hidden');
+        }
+
+        /* Esc fecha a janela aberta; Tab fica preso dentro dela */
+        document.addEventListener('keydown', function(e) {
+            const modal = document.querySelector('.modal-overlay.active');
+            if (!modal) return;
+            if (e.key === 'Escape') {
+                closeModal(modal.id);
+                return;
+            }
+            if (e.key === 'Tab') {
+                const f = [...modal.querySelectorAll('button, [href], input, select, textarea')].filter(el => !el.disabled);
+                if (!f.length) return;
+                const primeiro = f[0], ultimo = f[f.length - 1];
+                if (e.shiftKey && document.activeElement === primeiro) {
+                    e.preventDefault();
+                    ultimo.focus();
+                } else if (!e.shiftKey && document.activeElement === ultimo) {
+                    e.preventDefault();
+                    primeiro.focus();
+                }
+            }
+        });
+
+        document.addEventListener('keydown', function(e){
+            if (e.target.tagName === 'INPUT' && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+                e.preventDefault();
+                return;
+            }
+            if (e.key !== 'Enter') return;
+
+            const input = e.target;
+            if (input.tagName !== 'INPUT') return;
+
+            const row = input.closest('tr');
+            if (!row || row.parentElement.tagName === 'TFOOT') return;
+
+            const inputs = [...row.querySelectorAll('input')];
+            let idx = inputs.indexOf(input);
+
+            if (idx === 2) {
+                e.preventDefault();
+                input.blur();
+                return;
+            }
+
+            if (idx < inputs.length - 1){
+                e.preventDefault();
+                inputs[idx+1].focus();
+                inputs[idx+1].select();
+            }
+        });
+    };
 </script>
 
 <footer id="page-footer"></footer>
