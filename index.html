@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Simulador de juros para depósitos: compare TANB e juros compostos, com retenção na fonte, juros líquidos e taxa anual efetiva.">
     <meta name="theme-color" content="#1e3a8a">
+    <meta name="google-adsense-account" content="ca-pub-4094039418988922">
 
     <title>Simulador de Juros</title>
 
@@ -1364,6 +1365,68 @@ tr[data-type="simple"] .tipo-tag { background: #dbeafe; color: #1e40af; }
     .compound-row { background-color: #ecfdf5 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .tipo-tag { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+
+/* ===== V25.3: publicidade (AdSense) e consentimento ===== */
+.ad-wrap {
+    margin: 0;
+    padding: 14px 24px;
+    background: #f8fafc;
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+}
+.ad-wrap[hidden], .consent-banner[hidden] { display: none; }
+.ad-wrap:has(ins[data-ad-status="unfilled"]) { display: none; }
+.ad-label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #94a3b8;
+}
+.consent-banner {
+    position: fixed;
+    left: 50%;
+    bottom: 72px;
+    transform: translateX(-50%);
+    width: min(560px, calc(100% - 24px));
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 18px;
+    background: #0f172a;
+    color: #e2e8f0;
+    border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.4);
+    font-size: 13.5px;
+    line-height: 1.5;
+    z-index: 1200;
+}
+.consent-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.consent-actions button {
+    height: 40px;
+    padding: 0 18px;
+    border: 1px solid #475569;
+    border-radius: 10px;
+    background: transparent;
+    color: #e2e8f0;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+.consent-actions .consent-accept { background: #2563eb; border-color: #2563eb; color: #fff; }
+#page-footer { gap: 10px; font-size: 14px; }
+.footer-link {
+    background: none;
+    border: 0;
+    color: #93c5fd;
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+}
+@media (max-width: 768px) { .ad-wrap { padding: 12px 16px; } }
+@media print { .ad-wrap, .consent-banner, footer { display: none !important; } }
 </style>
 </head>
 <body>
@@ -1467,6 +1530,11 @@ tr[data-type="simple"] .tipo-tag { background: #dbeafe; color: #1e40af; }
  
         <p class="calc-note" id="nota-calculo">ℹ️ Linhas TANB: juros simples, base de <span class="base-txt">360</span> dias. Linhas verdes: juros compostos com capitalização <span class="cap-txt">diária</span> (ano de 365 dias). Retenção de <span class="ret-pct">28</span>% aplicada a todas as linhas. Só as linhas completas e válidas entram nos totais. Simulação meramente informativa; não substitui as condições contratuais da instituição financeira.</p>
 
+        <div class="ad-wrap" id="ad-wrap" hidden>
+            <span class="ad-label">Publicidade</span>
+            <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4094039418988922" data-ad-format="auto" data-full-width-responsive="true"></ins>
+        </div>
+
         <div class="instructions">
             <div class="info-buttons-container">
                 <button class="info-explain-btn" onclick="showTanbInfo()">💡 O que é a TANB?</button>
@@ -1563,6 +1631,14 @@ tr[data-type="simple"] .tipo-tag { background: #dbeafe; color: #1e40af; }
     <div class="print-only-footer" id="dynamic-print-footer"></div>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <div class="consent-banner" id="consent-banner" role="dialog" aria-label="Preferências de publicidade" hidden>
+        <p>Este simulador mostra publicidade do Google AdSense, que pode usar cookies e identificadores para apresentar anúncios. Só carregamos a publicidade se aceitares. Podes mudar de ideias a qualquer momento no rodapé.</p>
+        <div class="consent-actions">
+            <button type="button" onclick="responderConsentimento(false)">Recusar</button>
+            <button type="button" class="consent-accept" onclick="responderConsentimento(true)">Aceitar</button>
+        </div>
+    </div>
         
     <script>
     const MAX_DIAS = 36500, MAX_TAXA = 100, MAX_MONTANTE = 1e12;
@@ -1570,6 +1646,12 @@ tr[data-type="simple"] .tipo-tag { background: #dbeafe; color: #1e40af; }
     const CAPS = ['diaria', 'mensal', 'anual'];
     const PERIODOS_ANO = { diaria: 365, mensal: 12, anual: 1 };
     const NOME_CAP = { diaria: 'diária', mensal: 'mensal', anual: 'anual' };
+
+    /* Publicidade (AdSense): cole em ADSENSE_SLOT o ID do bloco de anúncios.
+       Enquanto estiver vazio, não aparece publicidade nem o aviso de consentimento. */
+    const ADSENSE_CLIENT = 'ca-pub-4094039418988922';
+    const ADSENSE_SLOT = '8137560560';
+    const CHAVE_ADS = 'simulador_consentimento_ads';
 
     let cfg = { retencao: 28, base: 360, cap: 'diaria' };
     let totalsVisible = false;
@@ -2070,7 +2152,7 @@ tr[data-type="simple"] .tipo-tag { background: #dbeafe; color: #1e40af; }
         const currentYear = new Date().getFullYear();
         const pageFooter = byId('page-footer');
         if (pageFooter) {
-            pageFooter.innerHTML = `© ${currentYear} Agajota`;
+            pageFooter.innerHTML = `© ${currentYear} Agajota` + (ADSENSE_SLOT ? ' · <button type="button" class="footer-link" onclick="abrirConsentimento()">Preferências de publicidade</button>' : '');
         }
     }
 
@@ -2164,6 +2246,59 @@ tr[data-type="simple"] .tipo-tag { background: #dbeafe; color: #1e40af; }
         window.print();
     }
 
+    /* ===== Publicidade e consentimento ===== */
+    function lerConsentimento() {
+        try { return localStorage.getItem(CHAVE_ADS); } catch (e) { return null; }
+    }
+
+    function guardarConsentimento(valor) {
+        try { localStorage.setItem(CHAVE_ADS, valor); } catch (e) {}
+    }
+
+    function carregarAnuncios() {
+        if (!ADSENSE_SLOT || byId('adsense-script')) return;
+        const wrap = byId('ad-wrap');
+        wrap.querySelector('ins').setAttribute('data-ad-slot', ADSENSE_SLOT);
+        wrap.hidden = false;
+
+        const s = document.createElement('script');
+        s.id = 'adsense-script';
+        s.async = true;
+        s.crossOrigin = 'anonymous';
+        s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + ADSENSE_CLIENT;
+        s.onload = () => { try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch (e) {} };
+        s.onerror = () => { wrap.hidden = true; };
+        document.head.appendChild(s);
+    }
+
+    function mostrarConsentimento() {
+        byId('consent-banner').hidden = false;
+    }
+
+    function abrirConsentimento() {
+        if (ADSENSE_SLOT) mostrarConsentimento();
+    }
+
+    function responderConsentimento(aceitar) {
+        guardarConsentimento(aceitar ? 'granted' : 'denied');
+        byId('consent-banner').hidden = true;
+        if (aceitar) {
+            carregarAnuncios();
+        } else if (byId('adsense-script')) {
+            location.reload(); /* retira a publicidade já carregada; os dados da tabela ficam guardados */
+        } else {
+            byId('ad-wrap').hidden = true;
+            toast('Preferência guardada: sem publicidade.');
+        }
+    }
+
+    function iniciarPublicidade() {
+        if (!ADSENSE_SLOT) return;
+        const c = lerConsentimento();
+        if (c === 'granted') carregarAnuncios();
+        else if (c !== 'denied') mostrarConsentimento();
+    }
+
     /* ===== Arranque ===== */
     window.onload = function(){
         if (!loadStateFromLocalStorage()) {
@@ -2172,6 +2307,7 @@ tr[data-type="simple"] .tipo-tag { background: #dbeafe; color: #1e40af; }
         }
         atualizarRotulos();
         updatePageFooter();
+        iniciarPublicidade();
 
         const totalRow = byId('total-row-element');
         if (totalRow) {
