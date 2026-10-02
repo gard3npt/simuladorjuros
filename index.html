@@ -1427,6 +1427,8 @@ tr[data-type="simple"] .tipo-tag { background: #dbeafe; color: #1e40af; }
 }
 @media (max-width: 768px) { .ad-wrap { padding: 12px 16px; } }
 @media print { .ad-wrap, .consent-banner, footer { display: none !important; } }
+
+.ad-wrap.ad-pending { height: 0; padding: 0 !important; border: 0; overflow: hidden; }
 </style>
 </head>
 <body>
@@ -2258,8 +2260,17 @@ tr[data-type="simple"] .tipo-tag { background: #dbeafe; color: #1e40af; }
     function carregarAnuncios() {
         if (!ADSENSE_SLOT || byId('adsense-script')) return;
         const wrap = byId('ad-wrap');
-        wrap.querySelector('ins').setAttribute('data-ad-slot', ADSENSE_SLOT);
+        const ins = wrap.querySelector('ins');
+        ins.setAttribute('data-ad-slot', ADSENSE_SLOT);
+
+        /* O bloco só fica visível quando o Google devolve mesmo um anúncio */
         wrap.hidden = false;
+        wrap.classList.add('ad-pending');
+        new MutationObserver(() => {
+            const estado = ins.getAttribute('data-ad-status');
+            if (estado === 'filled') wrap.classList.remove('ad-pending');
+            else if (estado === 'unfilled') wrap.hidden = true;
+        }).observe(ins, { attributes: true, attributeFilter: ['data-ad-status'] });
 
         const s = document.createElement('script');
         s.id = 'adsense-script';
