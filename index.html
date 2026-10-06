@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -42,15 +42,6 @@ body{
 
 .print-only-header, .print-only-footer {
     display: none;
-}
-
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-input[type=number] {
-    -moz-appearance: textfield;
 }
 
 footer{
@@ -231,7 +222,6 @@ footer{
     white-space: nowrap;       
 }
 
-/* Cabeçalho das Colunas com Gradiente Modernizado (mais escuro em cima e suave/claro em baixo) */
 /* Cabeçalho fixo ao fazer scroll: estado compacto */
 .calculator-header.is-stuck {
     padding-top: 10px;
@@ -292,20 +282,6 @@ footer{
     width: 90px; 
 }
 
-tr[data-type="simple"] {
-    background-color: #f8fafc;
-}
-tr[data-type="simple"]:hover {
-    background-color: #f1f5f9 !important;
-}
-
-.compound-row {
-    background-color: #f0fdf4;
-}
-.compound-row:hover {
-    background-color: #dcfce7 !important;
-}
-
 .calculator-table input{
     width:100%;
     padding:12px;
@@ -336,21 +312,6 @@ tr[data-type="simple"]:hover {
     padding: 14px 4px;
 }
 
-tr[data-type="simple"] .result-cell {
-    color:#1e3a8a;
-}
-
-.compound-row .result-cell {
-    color:#065f46;
-}
-
-.action-row {
-    background: #f8fafc;
-}
-.action-row td {
-    padding: 18px 14px;
-}
-
 .buttons-container {
     display: flex;
     justify-content: center;
@@ -358,11 +319,23 @@ tr[data-type="simple"] .result-cell {
     gap: 15px;
 }
 
-.action-row td:last-child {
-    text-align: center;
-    vertical-align: middle;
-    padding: 10px 8px;
+/* Botões de adicionar linha e limpar, por baixo da tabela */
+.table-actions {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    padding: 18px 14px;
+    background: #f8fafc;
 }
+.table-actions .clear-total-btn {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+.scroll-hint { display: none; }
 
 .total-row {
     background: #fef3c7; 
@@ -670,25 +643,6 @@ tr[data-type="simple"] .result-cell {
     color: #dbeafe;
 }
 
-.modal-footer {
-    margin-top: 20px;
-    padding-top: 12px;
-    border-top: 1px dashed var(--border-color);
-    font-size: 0.85rem;
-    color: #64748b;
-    font-weight: 600;
-}
-
-.modal-footer .version-highlight {
-    color: var(--accent-title-dark);
-    font-weight: 800;
-    background: #eff6ff;
-    padding: 3px 8px;
-    border-radius: 6px;
-    border: 1px solid #bfdbfe;
-    display: inline-block;
-}
-
 .instructions li{
     margin-bottom:10px;
     line-height:1.6;
@@ -698,16 +652,6 @@ tr[data-type="simple"] .result-cell {
     border: 0;
     border-top: 1px dashed #cbd5e1;
     margin: 15px 0;
-}
-
-/* Cabeçalho das colunas fixo, logo abaixo do cabeçalho principal (só desktop) */
-@media screen and (min-width: 1025px) {
-    .calculator-table th {
-        position: sticky;
-        top: var(--header-h, 80px);
-        z-index: 90;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1), inset 0 -2px 0 #2563eb;
-    }
 }
 
 @media(max-width:768px){
@@ -751,186 +695,97 @@ tr[data-type="simple"] .result-cell {
         display: none;
     }
 
-    .tanb-calculator {
-        overflow-x: auto;
-    }
-
-    .calculator-table{
-        display:table;
-        table-layout: fixed;
-        min-width: 1000px; 
-    }
-
-    .buttons-container {
-        flex-direction: row !important;
-        justify-content: center !important;
-        gap: 10px !important;
-        flex-wrap: wrap;
-    }
-
-    .buttons-container .add-btn {
-        width: auto !important;
-    }
-
-    .clear-total-btn {
-        width: 76px !important;
-        margin-top: 0 !important;
-    }
-
-    .calculator-table input {
-        padding: 8px 4px;
-        font-size: 16px; 
-    }
-
-    .calculator-table input:focus{
-        border-color: #3b82f6;
-        box-shadow: 0 0 12px rgba(59, 130, 246, 0.35);
-        outline: none;
-        background: #f8fafc;
-        transform: scale(1.01);
-        transition: all 0.2s ease;
-    }
 }
 
-/* ===== Telemóvel: tabela em cartões, sem deslizar na horizontal ===== */
+/* ===== Telemóvel e tablet: tabela normal com letra mais pequena e scroll horizontal ===== */
 @media screen and (max-width: 1024px) {
     button { touch-action: manipulation; }
 
-    body { padding: 10px 10px 84px; }
+    body { padding: 10px; }
 
-    .tanb-calculator { overflow-x: visible; }
-
-    .calculator-table { display: block; min-width: 0; table-layout: auto; }
-    .calculator-table thead { display: none; }
-    .calculator-table tbody,
-    .calculator-table tfoot { display: block; }
-
-    .calculator-table tbody tr > td,
-    .calculator-table tfoot tr > td {
+    .scroll-hint {
         display: block;
-        width: auto !important;
-        min-width: 0 !important;
-        max-width: none !important;
-        padding: 0;
-        border: 0;
-        text-align: left;
-        white-space: normal;
+        margin: 0;
+        padding: 8px 14px;
+        background: #eff6ff;
+        color: #1e40af;
+        border-bottom: 1px solid #bfdbfe;
+        font-size: 12px;
+        font-weight: 600;
+        text-align: center;
     }
 
-    .calculator-table td[data-label]::before {
-        content: attr(data-label);
-        display: block;
-        margin-bottom: 4px;
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-        color: var(--text-muted);
+    .table-scroll {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-x: contain;
+        scrollbar-width: thin;
+        scrollbar-color: #94a3b8 #e2e8f0;
     }
+    .table-scroll::-webkit-scrollbar { height: 10px; }
+    .table-scroll::-webkit-scrollbar-track { background: #e2e8f0; }
+    .table-scroll::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 6px; }
 
-    /* Cada linha da simulação passa a ser um cartão */
-    .calculator-table tbody tr {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-        margin: 12px;
-        padding: 14px;
-        border: 1px solid var(--border-color);
-        border-radius: 16px;
-    }
+    #calculator-table { min-width: 944px; }
+    #calculator-table thead th:nth-child(1)  { width: 60px; }
+    #calculator-table thead th:nth-child(2)  { width: 118px; }
+    #calculator-table thead th:nth-child(3)  { width: 74px; }
+    #calculator-table thead th:nth-child(4)  { width: 60px; }
+    #calculator-table thead th:nth-child(5)  { width: 92px; }
+    #calculator-table thead th:nth-child(6)  { width: 100px; }
+    #calculator-table thead th:nth-child(7)  { width: 92px; }
+    #calculator-table thead th:nth-child(8)  { width: 92px; }
+    #calculator-table thead th:nth-child(9)  { width: 104px; }
+    #calculator-table thead th:nth-child(10) { width: 96px; }
+    #calculator-table thead th:nth-child(11) { width: 60px; }
 
-    .calculator-table tbody tr > td:nth-child(1) {
-        grid-column: 1; grid-row: 1;
-        display: flex; align-items: baseline; gap: 6px;
-        align-self: center;
-        font-size: 1.05rem; font-weight: 700;
-        color: var(--primary-blue);
-    }
-    .calculator-table tbody tr > td:nth-child(1) small { font-size: 11px !important; }
-    .calculator-table tbody tr > td:nth-child(2) { grid-column: 1 / -1; grid-row: 2; }
-    .calculator-table tbody tr > td:nth-child(3) { grid-column: 1; grid-row: 3; }
-    .calculator-table tbody tr > td:nth-child(4) { grid-column: 2; grid-row: 3; }
-    .calculator-table tbody tr > td:nth-child(5) { grid-column: 1; grid-row: 4; }
-    .calculator-table tbody tr > td:nth-child(6) { grid-column: 2; grid-row: 4; }
-    .calculator-table tbody tr > td:nth-child(7) { grid-column: 1; grid-row: 5; }
-    .calculator-table tbody tr > td:nth-child(8) { grid-column: 2; grid-row: 5; }
-    .calculator-table tbody tr > td:nth-child(9) { grid-column: 1; grid-row: 6; }
-    .calculator-table tbody tr > td:nth-child(10) { grid-column: 2; grid-row: 6; }
-    .calculator-table tbody tr > td:nth-child(11) { grid-column: 2; grid-row: 1; justify-self: end; }
+    /* Letra mais pequena */
+    #calculator-table thead th { font-size: 11.5px; padding: 9px 3px; line-height: 1.25; }
+    #calculator-table td,
+    #calculator-table tbody td:nth-child(-n+4) { padding: 8px 3px; }
+    #calculator-table tbody input { font-size: 14px; padding: 9px 2px; border-width: 1px; border-radius: 8px; }
+    #calculator-table td.result-cell { font-size: 12px; padding: 8px 3px; }
+    #calculator-table .total-row td { font-size: 12.5px; padding: 8px 3px; }
+    #calculator-table .total-row td:first-child { width: 60px; min-width: 60px; max-width: 60px; padding: 0 !important; }
+    .toggle-total-btn { font-size: 10px; }
+    .tipo-tag { font-size: 8px; padding: 1px 5px; }
+    .delete-btn { height: 30px; min-width: 40px; padding: 4px 8px; }
+    #th-ret label { font-size: 11.5px; }
+    #cfg-ret { width: 46px; height: 26px; font-size: 12px; }
 
-    .calculator-table tbody tr > td.result-cell {
-        background: rgba(255, 255, 255, 0.75);
-        border: 1px solid var(--border-color);
-        border-radius: 10px;
-        padding: 8px 10px;
-        font-size: 15px;
-    }
+    /* Primeira coluna (nº da linha) sempre visível ao deslizar */
+    #calculator-table th:first-child,
+    #calculator-table td:first-child { position: sticky; left: 0; z-index: 2; }
+    #calculator-table thead th:first-child { z-index: 3; }
+    #calculator-table tbody td:first-child { background: inherit; }
 
-    .calculator-table input { padding: 12px 8px; }
-
-    .delete-btn { height: 40px; min-width: 56px; }
-
-    /* Linha de totais */
-    .calculator-table tfoot tr.total-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-        margin: 12px;
-        padding: 12px;
-        border: 2px solid #f59e0b;
-        border-radius: 14px;
-    }
-    .calculator-table tfoot tr.total-row.is-hidden {
-        border: 0;
-        padding: 0;
-    }
-    .calculator-table tfoot .total-row > td:first-child {
-        grid-column: 1 / -1;
-        padding: 0 !important;
-    }
-    .calculator-table tfoot .total-row > td#total-montante { grid-column: 1 / -1; }
-    .calculator-table tfoot .total-row > td.total-hidden,
-    .calculator-table tfoot .total-row > td:last-child { display: none; }
-    .calculator-table tfoot .total-row > td[data-label]::before { color: #b45309; }
-
-    .toggle-total-btn {
-        min-height: 46px;
-        border-radius: 12px;
-        font-size: 14px;
-    }
-
-    /* Botões de ação empilhados e fáceis de tocar */
-    .calculator-table tfoot tr.action-row {
-        display: flex;
+    /* Botões por baixo da tabela, fáceis de tocar */
+    .table-actions {
         flex-direction: column;
+        align-items: stretch;
         gap: 10px;
-        margin: 12px;
         padding: 14px;
-        border: 1px solid var(--border-color);
-        border-radius: 16px;
     }
-    .calculator-table tfoot .action-row > td:first-child { display: none; }
-
-    .buttons-container {
-        flex-direction: column !important;
-        flex-wrap: nowrap;
+    .table-actions .buttons-container {
+        flex-direction: column;
         width: 100%;
-        gap: 10px !important;
+        gap: 10px;
     }
-    .buttons-container .add-btn {
-        width: 100% !important;
-        height: 48px;
+    .table-actions .add-btn {
+        width: 100%;
+        height: 46px;
         justify-content: center;
         white-space: normal;
     }
-    .clear-total-btn {
-        width: 100% !important;
-        min-width: 0 !important;
-        max-width: none !important;
+    .table-actions .clear-total-btn {
+        position: static;
+        transform: none;
+        width: 100%;
+        min-width: 0;
+        max-width: none;
         height: 44px;
         flex-direction: row;
         gap: 6px;
-        margin-top: 0 !important;
     }
 
     /* Instruções e janelas */
@@ -1021,7 +876,8 @@ tr[data-type="simple"] .result-cell {
     }
 
     .calculator-header, 
-    .action-row, 
+    .table-actions, 
+    .scroll-hint, 
     .instructions, 
     footer,
     .modal-overlay {
@@ -1146,9 +1002,7 @@ tr[data-type="simple"] .result-cell {
     display: flex;
     flex-wrap: wrap;
     align-items: flex-end;
-    gap: 14px 18px;
     padding: 14px 24px;
-    background: #f1f5f9;
     border-bottom: 1px solid var(--border-color);
 }
 .settings-bar label {
@@ -1182,26 +1036,6 @@ tr[data-type="simple"] .result-cell {
     box-shadow: 0 0 0 4px rgba(30,58,138,.15);
     outline: none;
 }
-.tool-actions { margin-left: auto; display: flex; gap: 10px; }
-.tool-btn {
-    height: 40px;
-    padding: 0 14px;
-    border: 1px solid #cbd5e1;
-    border-radius: 10px;
-    background: #fff;
-    color: #1e293b;
-    font: inherit;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: 0.2s;
-}
-.tool-btn:hover {
-    background: var(--accent-title-dark);
-    border-color: var(--accent-title-dark);
-    color: #fff;
-}
-
 .aviso {
     margin: 0;
     padding: 10px 24px;
@@ -1274,8 +1108,6 @@ select:focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }
     .settings-bar { padding: 12px 16px; }
     .settings-bar label { flex: 1 1 140px; }
     .settings-bar input, .settings-bar select { width: 100%; }
-    .tool-actions { margin-left: 0; width: 100%; }
-    .tool-btn { flex: 1; }
     .aviso, .calc-note { padding-left: 16px; padding-right: 16px; }
 }
 
@@ -1291,10 +1123,6 @@ select:focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }
 
 @media (min-width: 1025px) {
     .calculator-table tbody td:nth-child(-n+4) { padding: 10px 5px; }
-}
-
-@media (max-width: 1024px) {
-    .calculator-table tbody input { padding: 11px 8px; }
 }
 
 #th-ret label { display: block; }
@@ -1318,23 +1146,6 @@ select:focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }
     background: #fff;
     transform: none;
     box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.55);
-}
-
-/* Em ecrãs pequenos a tabela vira cartões: o cabeçalho fica só com a retenção */
-@media screen and (max-width: 1024px) {
-    .calculator-table thead { display: block; }
-    .calculator-table thead tr { display: flex; justify-content: center; }
-    .calculator-table thead th { display: none; }
-    .calculator-table thead th#th-ret {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        width: auto;
-        padding: 8px 16px;
-        border-radius: 0 0 12px 12px;
-    }
-    #th-ret label { display: inline; }
-    .th-ret-field { margin-top: 0; }
 }
 
 @media print {
@@ -1373,15 +1184,8 @@ tr[data-type="simple"] input:focus {
 tr[data-type="simple"] .tipo-tag { background: #dbeafe; color: #1e40af; }
 .compound-row .tipo-tag { background: #d1fae5; color: #047857; }
 
-@media (min-width: 1025px) {
-    tr[data-type="simple"] td:first-child { box-shadow: inset 4px 0 0 #3b82f6; }
-    .compound-row td:first-child { box-shadow: inset 4px 0 0 #10b981; }
-}
-
-@media screen and (max-width: 1024px) {
-    .calculator-table tbody tr[data-type="simple"] { border-color: #bfdbfe; border-left: 5px solid #3b82f6; }
-    .calculator-table tbody tr.compound-row { border-color: #a7f3d0; border-left: 5px solid #10b981; }
-}
+tr[data-type="simple"] td:first-child { box-shadow: inset 4px 0 0 #3b82f6; }
+.compound-row td:first-child { box-shadow: inset 4px 0 0 #10b981; }
 
 @media print {
     tr[data-type="simple"] { background-color: #eff6ff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -1500,6 +1304,111 @@ tr[data-type="simple"] .tipo-tag { background: #dbeafe; color: #1e40af; }
 /* Rodapé no fim da página (já não é fixo): menos espaço em baixo no corpo */
 body { padding-bottom: 20px; }
 @media screen and (max-width: 1024px) { body { padding-bottom: 10px; } }
+
+/* ===== V25.4: barra de ferramentas moderna + cabeçalho das colunas fixo mais estável ===== */
+.settings-bar {
+    background: linear-gradient(180deg, #f8fafc, #f1f5f9);
+    gap: 14px 20px;
+}
+.settings-bar select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 32px;
+    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center / 14px;
+    cursor: pointer;
+}
+.tool-actions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .06), 0 4px 12px rgba(15, 23, 42, .05);
+}
+.tool-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 38px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: #334155;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background .18s, color .18s, transform .18s, box-shadow .18s;
+}
+.tool-btn svg {
+    width: 17px;
+    height: 17px;
+    flex-shrink: 0;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.tool-btn:hover {
+    background: #eff6ff;
+    border-color: transparent;
+    color: #1d4ed8;
+}
+.tool-btn:active { transform: scale(.97); }
+.tool-btn-primary {
+    background: linear-gradient(135deg, #2563eb, #1e40af);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, .35);
+}
+.tool-btn-primary:hover {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(37, 99, 235, .45);
+}
+.tool-btn-primary:active { transform: translateY(0) scale(.97); }
+
+@media (max-width: 768px) {
+    .tool-actions { width: 100%; margin-left: 0; }
+    .tool-btn { flex: 1; padding: 0 8px; }
+    .tool-btn-primary { flex: 1.2; }
+}
+@media (max-width: 400px) {
+    .tool-btn { gap: 5px; font-size: 12px; }
+    .tool-btn svg { width: 15px; height: 15px; }
+}
+
+/* Cabeçalho das colunas: plano, sem folga e sem "saltos" ao fazer scroll (desktop) */
+@media screen and (min-width: 1025px) {
+    .calculator-table {
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    .calculator-table thead th {
+        position: sticky;
+        top: calc(var(--header-h, 80px) - 1px); /* -1px tapa a linha fina entre os dois cabeçalhos */
+        z-index: 90;
+        background: linear-gradient(180deg, #0b8ee6 50%, #3b82f6 100%);
+        color: #ffffff;
+        padding: 12px 8px;
+        font-weight: 700;
+        font-size: 14px;
+        line-height: 1.3;
+        border-bottom: 0;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1), inset 0 -2px 0 #2563eb;
+        transition: box-shadow .2s;
+    }
+    .calculator-table.th-stuck thead th {
+        box-shadow: 0 8px 14px -6px rgba(15, 23, 42, .45), inset 0 -2px 0 #2563eb;
+    }
+}
 </style>
 </head>
 <body>
@@ -1542,14 +1451,25 @@ body { padding-bottom: 20px; }
                     <option value="anual">Anual</option>
                 </select>
             </label>
-            <div class="tool-actions">
-                <button type="button" class="tool-btn" onclick="exportCSV()" title="Exportar para CSV (Excel)">⬇️ Exportar CSV</button>
-                <button type="button" class="tool-btn" onclick="copyResults()" title="Copiar resultados">📋 Copiar</button>
-                <button type="button" class="tool-btn" onclick="printTable()" title="Imprimir simulações">🖨️ Imprimir</button>
+            <div class="tool-actions" role="group" aria-label="Exportar e imprimir">
+                <button type="button" class="tool-btn" onclick="exportCSV()" title="Exportar para CSV (Excel)">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+                    <span>Exportar CSV</span>
+                </button>
+                <button type="button" class="tool-btn" onclick="copyResults()" title="Copiar resultados">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/></svg>
+                    <span>Copiar</span>
+                </button>
+                <button type="button" class="tool-btn tool-btn-primary" onclick="printTable()" title="Imprimir simulações">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V4h10v5M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/><rect x="7" y="14" width="10" height="6" rx="1"/></svg>
+                    <span>Imprimir</span>
+                </button>
             </div>
         </div>
         <p class="aviso" id="aviso" role="status" aria-live="polite" hidden></p>
 
+        <p class="scroll-hint">↔ Deslize a tabela para ver todas as colunas</p>
+        <div class="table-scroll">
         <table class="calculator-table" id="calculator-table">
             <thead>
                 <tr>
@@ -1558,7 +1478,7 @@ body { padding-bottom: 20px; }
                     <th>% Taxa Anual</th>
                     <th>Dias</th>
                     <th>Juros<br>Brutos (€)</th>
-                    <th id="th-ret"><label for="cfg-ret">Retenção</label><span class="th-ret-field"><input type="text" id="cfg-ret" inputmode="decimal" value="28" autocomplete="off" aria-label="Taxa de retenção em percentagem" onchange="aplicarConfig()"><b>%</b></span></th>
+                    <th id="th-ret"><label for="cfg-ret">Retenção</label><span class="th-ret-field"><input type="text" id="cfg-ret" data-num="dec" inputmode="decimal" value="28" autocomplete="off" aria-label="Taxa de retenção em percentagem" onchange="aplicarConfig()"><b>%</b></span></th>
                     <th>Juros<br>Líquidos (€)</th>
                     <th>Juro Líquido<br>por Dia (€)</th>
                     <th title="Capital mais juros líquidos">Montante<br>Final (€)</th>
@@ -1572,7 +1492,7 @@ body { padding-bottom: 20px; }
             
             <tfoot>
                 <tr class="total-row" id="total-row-element">
-                    <td id="toggle-button-cell">
+                    <td>
                         <button class="toggle-total-btn" id="toggle-btn-element" onclick="toggleTotals()">Mostrar total</button>
                     </td>
                     <td class="total-data total-hidden" id="total-montante" data-label="Montante total"></td>
@@ -1586,22 +1506,19 @@ body { padding-bottom: 20px; }
                     <td class="total-data total-hidden" id="total-taxa" data-label="Taxa líq. anual efetiva"></td>
                     <td class="total-data total-hidden" id="total-blank-last"></td>
                 </tr>
-                <tr class="action-row">
-                    <td></td>
-                    <td colspan="9">
-                        <div class="buttons-container">
-                            <button class="add-btn" onclick="addRow(false)">Adicionar linha TANB</button>
-                            <button class="add-btn add-compound-btn" onclick="addRow(true)">Adicionar linha de juros compostos</button>
-                        </div>
-                    </td>
-                    <td>
-                        <button class="clear-total-btn" id="clear-btn-element" onclick="clearAllRows()">Limpar<br>tudo</button>
-                    </td>
-                </tr>
             </tfoot>
         </table>
+        </div>
+
+        <div class="table-actions">
+            <div class="buttons-container">
+                <button class="add-btn" onclick="addRow(false)">Adicionar linha TANB</button>
+                <button class="add-btn add-compound-btn" onclick="addRow(true)">Adicionar linha de juros compostos</button>
+            </div>
+            <button class="clear-total-btn" onclick="clearAllRows()">Limpar<br>tudo</button>
+        </div>
  
-        <p class="calc-note" id="nota-calculo">ℹ️ Linhas TANB: juros simples, base de <span class="base-txt">360</span> dias. Linhas verdes: juros compostos com capitalização <span class="cap-txt">diária</span> (ano de 365 dias). Retenção de <span class="ret-pct">28</span>% aplicada a todas as linhas. Só as linhas completas e válidas entram nos totais. Simulação meramente informativa; não substitui as condições contratuais da instituição financeira.</p>
+        <p class="calc-note">ℹ️ Linhas TANB: juros simples, base de <span class="base-txt">360</span> dias. Linhas verdes: juros compostos com capitalização <span class="cap-txt">diária</span> (ano de 365 dias). Retenção de <span class="ret-pct">28</span>% aplicada a todas as linhas. Só as linhas completas e válidas entram nos totais. Simulação meramente informativa; não substitui as condições contratuais da instituição financeira.</p>
 
         <div class="ad-wrap" id="ad-wrap" hidden>
             <span class="ad-label">Publicidade</span>
@@ -1710,29 +1627,29 @@ body { padding-bottom: 20px; }
 
             <div class="priv-card">
                 <h4>Quem é o responsável</h4>
-                <p>Para qualquer questão sobre privacidade, usa o botão “Suporte”.</p>
+                <p>Para qualquer questão sobre privacidade, use o botão “Suporte”.</p>
             </div>
             <div class="priv-card">
                 <h4>Que dados recolhe este site</h4>
-                <p>Este simulador não tem contas de utilizador, formulários nem comentários, e não recolhe diretamente dados pessoais. Os valores que introduzes na tabela são processados no teu navegador e não são enviados para nenhum servidor.</p>
+                <p>Este simulador não tem contas de utilizador, formulários nem comentários, e não recolhe diretamente dados pessoais. Os valores que introduz na tabela são processados no seu navegador e não são enviados para nenhum servidor.</p>
             </div>
             <div class="priv-card">
                 <h4>Publicidade (Google AdSense)</h4>
-                <p>O site pode mostrar anúncios do Google AdSense. Só depois de aceitares é que o código de anúncios é carregado, e o Google pode então usar cookies e identificadores para mostrar e medir anúncios. Se recusares, esse código não é carregado. Podes mudar de ideias a qualquer momento em “Cookies”, no rodapé. Mais informação em policies.google.com/technologies/ads.</p>
+                <p>O site pode mostrar anúncios do Google AdSense. Só depois de aceitar é que o código de anúncios é carregado, e o Google pode então usar cookies e identificadores para mostrar e medir anúncios. Se recusar, esse código não é carregado. Pode mudar de ideias a qualquer momento em “Cookies”, no rodapé. Mais informação em policies.google.com/technologies/ads.</p>
             </div>
             <div class="priv-card">
-                <h4>Armazenamento no teu navegador</h4>
-                <p>Guardamos apenas, no armazenamento local do navegador, a tua escolha sobre cookies e os dados da tabela do simulador, para não voltares a perder o que preencheste. Estes dados não saem do teu dispositivo.</p>
+                <h4>Armazenamento no seu navegador</h4>
+                <p>Guardamos apenas, no armazenamento local do navegador, a sua escolha sobre cookies e os dados da tabela do simulador, para não voltar a perder o que preencheu. Estes dados não saem do seu dispositivo.</p>
             </div>
             <div class="priv-card">
-                <h4>Os teus direitos</h4>
-                <p>Ao abrigo do RGPD, tens direito de acesso, retificação, apagamento e oposição ao tratamento dos teus dados, bem como o direito de apresentar reclamação à CNPD (cnpd.pt).</p>
+                <h4>Os seus direitos</h4>
+                <p>Ao abrigo do RGPD, tem direito de acesso, retificação, apagamento e oposição ao tratamento dos seus dados, bem como o direito de apresentar reclamação à CNPD (cnpd.pt).</p>
             </div>
         </div>
     </div>
 
     <div class="consent-banner" id="consent-banner" role="region" aria-label="Aviso de cookies" hidden>
-        <p>🍪 Este site usa cookies de terceiros para mostrar anúncios, mas só com a tua autorização. <button type="button" class="consent-more" onclick="abrirPrivacidade()">Saber mais</button></p>
+        <p>🍪 Este site usa cookies de terceiros para mostrar anúncios, mas só com a sua autorização. <button type="button" class="consent-more" onclick="abrirPrivacidade()">Saber mais</button></p>
         <div class="consent-actions">
             <button type="button" onclick="responderConsentimento(false)">Recusar</button>
             <button type="button" class="consent-accept" onclick="responderConsentimento(true)">Aceitar</button>
@@ -1753,8 +1670,8 @@ body { padding-bottom: 20px; }
     const CHAVE_ADS = 'agajota-cookies'; /* mesma chave do site AGAJOTA (valores: 'aceite' / 'recusado') */
     const CHAVE_ADS_ANTIGA = 'simulador_consentimento_ads';
 
-    /* Data da última atualização do simulador (AAAA-MM-DD): alterar sempre que publicares uma nova versão */
-    const ULTIMA_ATUALIZACAO = '2026-10-06' ;
+    /* Data da última atualização do simulador (AAAA-MM-DD): alterar sempre que publicar uma nova versão */
+    const ULTIMA_ATUALIZACAO = '2026-10-06';
 
     let cfg = { retencao: 28, base: 360, cap: 'diaria' };
     let totalsVisible = false;
@@ -1893,10 +1810,6 @@ body { padding-bottom: 20px; }
         saveStateToLocalStorage();
     }
 
-    function handleLiveInput(input) {
-        calculateRow(input);
-    }
-
     /* ===== Definições ===== */
     function sincronizarControlos() {
         byId('cfg-ret').value = pctTxt(cfg.retencao);
@@ -2001,9 +1914,9 @@ body { padding-bottom: 20px; }
 
         newRow.innerHTML = `
             <td class="row-index"></td>
-            <td data-label="Montante a investir (€)"><input type="text" enterkeyhint="next" placeholder="10 000 €" inputmode="decimal" autocomplete="off" oninput="handleLiveInput(this)" onfocus="editMoney(this)" onblur="formatMoney(this)"></td>
-            <td data-label="% Taxa anual"><input type="text" enterkeyhint="next" placeholder="%" inputmode="decimal" autocomplete="off" oninput="handleLiveInput(this)" onfocus="editPercent(this)" onblur="formatPercent(this)"></td>
-            <td data-label="Dias"><input type="number" enterkeyhint="done" placeholder="Dias" min="1" step="1" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g,''); calculateRow(this)" onfocus="this.select()"></td>
+            <td data-label="Montante a investir (€)"><input type="text" data-num="dec" enterkeyhint="next" placeholder="10 000 €" inputmode="decimal" autocomplete="off" oninput="calculateRow(this)" onfocus="editarCampo(this, false)" onblur="formatarCampo(this, ' €', false)"></td>
+            <td data-label="% Taxa anual"><input type="text" data-num="dec" enterkeyhint="next" placeholder="%" inputmode="decimal" autocomplete="off" oninput="calculateRow(this)" onfocus="editarCampo(this, true)" onblur="formatarCampo(this, ' %', true)"></td>
+            <td data-label="Dias"><input type="text" data-num="int" enterkeyhint="done" placeholder="Dias" inputmode="numeric" autocomplete="off" oninput="calculateRow(this)" onfocus="this.select()"></td>
             <td class="result-cell c-brutos" data-label="Juros brutos">---</td>
             <td class="result-cell c-ret" data-label="Retenção">---</td>
             <td class="result-cell c-liq" data-label="Juros líquidos">---</td>
@@ -2217,36 +2130,18 @@ body { padding-bottom: 20px; }
     }
 
     /* ===== Campos de montante e percentagem ===== */
-    function formatMoney(input){
-        let n = parsePtNumber(input.value);
-        if(input.value.trim() === '' || isNaN(n) || n === 0) {
-            if (input.value.trim() === '') input.value = '';
-            calculateRow(input);
-            return;
+    function formatarCampo(input, sufixo, isPercent) {
+        const n = parsePtNumber(input.value, isPercent);
+        if (input.value.trim() === '') {
+            input.value = '';
+        } else if (n !== 0) {
+            input.value = n.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + sufixo;
         }
-        input.value = n.toLocaleString('pt-PT',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €';
         calculateRow(input);
     }
 
-    function editMoney(input){
-        let n = parsePtNumber(input.value);
-        input.value = n > 0 ? n.toString().replace('.', ',') : '';
-        input.select();
-    }
-
-    function formatPercent(input){
-        let n = parsePtNumber(input.value, true);
-        if(input.value.trim() === '' || isNaN(n) || n === 0) {
-            if (input.value.trim() === '') input.value = '';
-            calculateRow(input);
-            return;
-        }
-        input.value = n.toLocaleString('pt-PT',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' %';
-        calculateRow(input);
-    }
-
-    function editPercent(input){
-        let n = parsePtNumber(input.value, true);
+    function editarCampo(input, isPercent) {
+        const n = parsePtNumber(input.value, isPercent);
         input.value = n > 0 ? n.toString().replace('.', ',') : '';
         input.select();
     }
@@ -2438,6 +2333,23 @@ body { padding-bottom: 20px; }
         else if (c !== 'recusado') mostrarConsentimento();
     }
 
+    /* ===== Campos editáveis: só aceitam números ===== */
+    /* Em fase de captura, para limpar o valor antes de qualquer cálculo */
+    document.addEventListener('input', function (e) {
+        const el = e.target;
+        const tipo = el && el.dataset ? el.dataset.num : null;
+        if (!tipo) return;
+        let v = el.value;
+        if (tipo === 'int') {
+            v = v.replace(/\D/g, '');
+        } else {
+            v = v.replace(/[^\d.,]/g, '');
+            const i = v.indexOf(',');
+            if (i !== -1) v = v.slice(0, i + 1) + v.slice(i + 1).replace(/,/g, '');
+        }
+        if (v !== el.value) el.value = v;
+    }, true);
+
     /* ===== Cabeçalho fixo: estado compacto ao fazer scroll ===== */
     (function () {
         const header = document.querySelector('.calculator-header');
@@ -2448,15 +2360,37 @@ body { padding-bottom: 20px; }
         sentinel.style.cssText = 'height:1px;margin-bottom:-1px;pointer-events:none;';
         header.parentNode.insertBefore(sentinel, header);
 
-        const medir = () => document.documentElement.style.setProperty('--header-h', header.offsetHeight + 'px');
-
         new IntersectionObserver(([e]) => {
             header.classList.toggle('is-stuck', !e.isIntersecting);
-            medir();
         }).observe(sentinel);
 
+    })();
+
+
+    /* ===== Cabeçalho das colunas: sombra só quando está fixo; altura do cabeçalho sempre atualizada ===== */
+    (function () {
+        const header = document.querySelector('.calculator-header');
+        const tabela = document.getElementById('calculator-table');
+        if (!header || !tabela) return;
+
+        const medir = () => document.documentElement.style.setProperty('--header-h', header.offsetHeight + 'px');
+        if ('ResizeObserver' in window) new ResizeObserver(medir).observe(header);
         window.addEventListener('resize', medir);
         medir();
+
+        let pendente = false;
+        function verificar() {
+            pendente = false;
+            const th = tabela.querySelector('thead th');
+            if (!th) return;
+            const colado = th.getBoundingClientRect().top <= header.offsetHeight + 1;
+            tabela.classList.toggle('th-stuck', colado);
+        }
+        window.addEventListener('scroll', () => {
+            if (!pendente) { pendente = true; requestAnimationFrame(verificar); }
+        }, { passive: true });
+        window.addEventListener('resize', verificar);
+        verificar();
     })();
 
     /* ===== Arranque ===== */
@@ -2497,10 +2431,6 @@ body { padding-bottom: 20px; }
         });
 
         document.addEventListener('keydown', function(e){
-            if (e.target.tagName === 'INPUT' && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
-                e.preventDefault();
-                return;
-            }
             if (e.key !== 'Enter') return;
 
             const input = e.target;
