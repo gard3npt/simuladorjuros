@@ -86,7 +86,8 @@ footer{
     display: flex;
     justify-content: space-between;
     align-items: center;
-    position: relative;
+    position: sticky;
+    top: 0;
     z-index: 100;
     border-top-left-radius: 24px;
     border-top-right-radius: 24px;
@@ -231,8 +232,20 @@ footer{
 }
 
 /* Cabeçalho das Colunas com Gradiente Modernizado (mais escuro em cima e suave/claro em baixo) */
+/* Cabeçalho fixo ao fazer scroll: estado compacto */
+.calculator-header.is-stuck {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    border-radius: 0;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.35);
+}
+.calculator-header.is-stuck .header-badge { display: none; }
+.calculator-header.is-stuck .header-icon-box { width: 36px; height: 36px; font-size: 1.15rem; }
+.calculator-header.is-stuck .calculator-title { font-size: 1.15rem; }
+.calculator-header.is-stuck .header-btn { width: 38px; height: 38px; }
+.calculator-header.is-stuck .header-btn-support { width: auto; }
+
 .calculator-table th{
-    position: static;
     background: linear-gradient(180deg, #0b8ee6 50%, #3b82f6 100%); 
     color: #ffffff;      
     padding:12px 8px;
@@ -687,6 +700,16 @@ tr[data-type="simple"] .result-cell {
     margin: 15px 0;
 }
 
+/* Cabeçalho das colunas fixo, logo abaixo do cabeçalho principal (só desktop) */
+@media screen and (min-width: 1025px) {
+    .calculator-table th {
+        position: sticky;
+        top: var(--header-h, 80px);
+        z-index: 90;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1), inset 0 -2px 0 #2563eb;
+    }
+}
+
 @media(max-width:768px){
     body{
         padding:10px;
@@ -770,7 +793,7 @@ tr[data-type="simple"] .result-cell {
 }
 
 /* ===== Telemóvel: tabela em cartões, sem deslizar na horizontal ===== */
-@media screen and (max-width: 1200px) {
+@media screen and (max-width: 1024px) {
     button { touch-action: manipulation; }
 
     body { padding: 10px 10px 84px; }
@@ -1266,11 +1289,11 @@ select:focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }
     padding: 10px 4px;
 }
 
-@media (min-width: 1201px) {
+@media (min-width: 1025px) {
     .calculator-table tbody td:nth-child(-n+4) { padding: 10px 5px; }
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1024px) {
     .calculator-table tbody input { padding: 11px 8px; }
 }
 
@@ -1298,7 +1321,7 @@ select:focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }
 }
 
 /* Em ecrãs pequenos a tabela vira cartões: o cabeçalho fica só com a retenção */
-@media screen and (max-width: 1200px) {
+@media screen and (max-width: 1024px) {
     .calculator-table thead { display: block; }
     .calculator-table thead tr { display: flex; justify-content: center; }
     .calculator-table thead th { display: none; }
@@ -1350,12 +1373,12 @@ tr[data-type="simple"] input:focus {
 tr[data-type="simple"] .tipo-tag { background: #dbeafe; color: #1e40af; }
 .compound-row .tipo-tag { background: #d1fae5; color: #047857; }
 
-@media (min-width: 1201px) {
+@media (min-width: 1025px) {
     tr[data-type="simple"] td:first-child { box-shadow: inset 4px 0 0 #3b82f6; }
     .compound-row td:first-child { box-shadow: inset 4px 0 0 #10b981; }
 }
 
-@media screen and (max-width: 1200px) {
+@media screen and (max-width: 1024px) {
     .calculator-table tbody tr[data-type="simple"] { border-color: #bfdbfe; border-left: 5px solid #3b82f6; }
     .calculator-table tbody tr.compound-row { border-color: #a7f3d0; border-left: 5px solid #10b981; }
 }
@@ -1476,7 +1499,7 @@ tr[data-type="simple"] .tipo-tag { background: #dbeafe; color: #1e40af; }
 
 /* Rodapé no fim da página (já não é fixo): menos espaço em baixo no corpo */
 body { padding-bottom: 20px; }
-@media screen and (max-width: 1200px) { body { padding-bottom: 10px; } }
+@media screen and (max-width: 1024px) { body { padding-bottom: 10px; } }
 </style>
 </head>
 <body>
@@ -2414,6 +2437,27 @@ body { padding-bottom: 20px; }
         if (c === 'aceite') carregarAnuncios();
         else if (c !== 'recusado') mostrarConsentimento();
     }
+
+    /* ===== Cabeçalho fixo: estado compacto ao fazer scroll ===== */
+    (function () {
+        const header = document.querySelector('.calculator-header');
+        if (!header || !('IntersectionObserver' in window)) return;
+
+        const sentinel = document.createElement('div');
+        sentinel.setAttribute('aria-hidden', 'true');
+        sentinel.style.cssText = 'height:1px;margin-bottom:-1px;pointer-events:none;';
+        header.parentNode.insertBefore(sentinel, header);
+
+        const medir = () => document.documentElement.style.setProperty('--header-h', header.offsetHeight + 'px');
+
+        new IntersectionObserver(([e]) => {
+            header.classList.toggle('is-stuck', !e.isIntersecting);
+            medir();
+        }).observe(sentinel);
+
+        window.addEventListener('resize', medir);
+        medir();
+    })();
 
     /* ===== Arranque ===== */
     window.onload = function(){
