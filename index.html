@@ -54,11 +54,11 @@ input[type=number] {
 }
 
 footer{
-    position:fixed;
-    bottom:0;
-    left:0;
+    position:static;
     width:100%;
-    height:60px;
+    min-height:60px;
+    margin-top:32px;
+    border-radius:12px;
     background-color:#222;
     color:white;
     display:flex;
@@ -1387,48 +1387,96 @@ tr[data-type="simple"] .tipo-tag { background: #dbeafe; color: #1e40af; }
 }
 .consent-banner {
     position: fixed;
-    left: 50%;
-    bottom: 72px;
-    transform: translateX(-50%);
-    width: min(560px, calc(100% - 24px));
+    left: 12px;
+    right: 12px;
+    bottom: 16px;
     display: flex;
     flex-direction: column;
     gap: 12px;
-    padding: 16px 18px;
-    background: #0f172a;
+    padding: 16px;
+    background: rgba(15, 23, 42, 0.95);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,.5);
     color: #e2e8f0;
-    border-radius: 14px;
-    box-shadow: 0 10px 30px rgba(0,0,0,.4);
-    font-size: 13.5px;
-    line-height: 1.5;
-    z-index: 1200;
+    font-size: 12px;
+    line-height: 1.6;
+    z-index: 900;
 }
-.consent-actions { display: flex; gap: 10px; justify-content: flex-end; }
+@media (min-width: 640px) {
+    .consent-banner { left: auto; right: 16px; max-width: 384px; }
+}
+.consent-banner p { margin: 0; }
+.consent-more {
+    background: none; border: 0; padding: 0;
+    color: #a5b4fc; font: inherit;
+    text-decoration: underline; text-underline-offset: 2px; cursor: pointer;
+}
+.consent-more:hover { color: #fff; }
+.consent-actions { display: flex; gap: 8px; }
 .consent-actions button {
-    height: 40px;
-    padding: 0 18px;
-    border: 1px solid #475569;
-    border-radius: 10px;
-    background: transparent;
-    color: #e2e8f0;
+    flex: 1;
+    padding: 8px 12px;
+    border: 0;
+    border-radius: 12px;
+    background: rgba(255,255,255,.1);
+    color: #fff;
     font: inherit;
     font-weight: 700;
     cursor: pointer;
+    transition: background .2s;
 }
-.consent-actions .consent-accept { background: #2563eb; border-color: #2563eb; color: #fff; }
-#page-footer { gap: 10px; font-size: 14px; }
+.consent-actions button:hover { background: rgba(255,255,255,.2); }
+.consent-actions .consent-accept { background: linear-gradient(to right, #4f46e5, #9333ea); }
+.consent-actions .consent-accept:hover { background: linear-gradient(to right, #6366f1, #a855f7); }
+#page-footer { gap: 16px; font-size: 12px; color: #94a3b8; }
 .footer-link {
     background: none;
     border: 0;
-    color: #93c5fd;
+    padding: 0;
+    color: #94a3b8;
     font: inherit;
+    font-size: 11px;
     text-decoration: underline;
+    text-underline-offset: 2px;
     cursor: pointer;
 }
+.footer-link:hover { color: #cbd5e1; }
+.footer-brand { font-size: inherit; text-decoration: none; font-weight: 700; letter-spacing: .04em; }
+.footer-brand:hover { text-decoration: underline; text-underline-offset: 2px; }
 @media (max-width: 768px) { .ad-wrap { padding: 12px 16px; } }
 @media print { .ad-wrap, .consent-banner, footer { display: none !important; } }
 
 .ad-wrap.ad-pending { height: 0; padding: 0 !important; border: 0; overflow: hidden; }
+
+/* Janela de Privacidade e Cookies (igual à do site AGAJOTA) */
+.priv-modal .modal-content {
+    max-width: 640px;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: rgba(15, 23, 42, 0.97);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #cbd5e1;
+    text-align: left;
+}
+.priv-modal .modal-close { color: #cbd5e1; }
+.priv-modal .modal-close:hover { color: #fff; }
+.priv-modal .modal-content h3 { color: #fff; margin-bottom: 4px; }
+.priv-card {
+    background: rgba(2, 6, 23, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 16px;
+    padding: 14px 16px;
+    margin-top: 12px;
+}
+.priv-card h4 { color: #fff; font-size: 14px; margin: 0 0 4px; }
+.priv-card p { font-size: 12px; line-height: 1.6; color: #cbd5e1; margin: 0; }
+
+/* Rodapé no fim da página (já não é fixo): menos espaço em baixo no corpo */
+body { padding-bottom: 20px; }
+@media screen and (max-width: 1200px) { body { padding-bottom: 10px; } }
 </style>
 </head>
 <body>
@@ -1624,9 +1672,6 @@ tr[data-type="simple"] .tipo-tag { background: #dbeafe; color: #1e40af; }
                 </button>
             </div>
 
-            <div class="modal-footer">
-                Versão: <span class="version-highlight">V25</span>
-            </div>
         </div>
     </div>
 
@@ -1634,8 +1679,37 @@ tr[data-type="simple"] .tipo-tag { background: #dbeafe; color: #1e40af; }
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-    <div class="consent-banner" id="consent-banner" role="dialog" aria-label="Preferências de publicidade" hidden>
-        <p>Este simulador mostra publicidade do Google AdSense, que pode usar cookies e identificadores para apresentar anúncios. Só carregamos a publicidade se aceitares. Podes mudar de ideias a qualquer momento no rodapé.</p>
+    <!-- Janela de Privacidade e Cookies -->
+    <div id="privacy-modal" class="modal-overlay priv-modal" role="dialog" aria-modal="true" aria-labelledby="privacy-modal-title" onclick="closeModalOnOverlay(event, 'privacy-modal')">
+        <div class="modal-content">
+            <button type="button" class="modal-close" aria-label="Fechar" onclick="closeModal('privacy-modal')">&times;</button>
+            <h3 id="privacy-modal-title">🔒 Privacidade e Cookies</h3>
+
+            <div class="priv-card">
+                <h4>Quem é o responsável</h4>
+                <p>Para qualquer questão sobre privacidade, usa o botão “Suporte”.</p>
+            </div>
+            <div class="priv-card">
+                <h4>Que dados recolhe este site</h4>
+                <p>Este simulador não tem contas de utilizador, formulários nem comentários, e não recolhe diretamente dados pessoais. Os valores que introduzes na tabela são processados no teu navegador e não são enviados para nenhum servidor.</p>
+            </div>
+            <div class="priv-card">
+                <h4>Publicidade (Google AdSense)</h4>
+                <p>O site pode mostrar anúncios do Google AdSense. Só depois de aceitares é que o código de anúncios é carregado, e o Google pode então usar cookies e identificadores para mostrar e medir anúncios. Se recusares, esse código não é carregado. Podes mudar de ideias a qualquer momento em “Cookies”, no rodapé. Mais informação em policies.google.com/technologies/ads.</p>
+            </div>
+            <div class="priv-card">
+                <h4>Armazenamento no teu navegador</h4>
+                <p>Guardamos apenas, no armazenamento local do navegador, a tua escolha sobre cookies e os dados da tabela do simulador, para não voltares a perder o que preencheste. Estes dados não saem do teu dispositivo.</p>
+            </div>
+            <div class="priv-card">
+                <h4>Os teus direitos</h4>
+                <p>Ao abrigo do RGPD, tens direito de acesso, retificação, apagamento e oposição ao tratamento dos teus dados, bem como o direito de apresentar reclamação à CNPD (cnpd.pt).</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="consent-banner" id="consent-banner" role="region" aria-label="Aviso de cookies" hidden>
+        <p>🍪 Este site usa cookies de terceiros para mostrar anúncios, mas só com a tua autorização. <button type="button" class="consent-more" onclick="abrirPrivacidade()">Saber mais</button></p>
         <div class="consent-actions">
             <button type="button" onclick="responderConsentimento(false)">Recusar</button>
             <button type="button" class="consent-accept" onclick="responderConsentimento(true)">Aceitar</button>
@@ -1653,7 +1727,11 @@ tr[data-type="simple"] .tipo-tag { background: #dbeafe; color: #1e40af; }
        Enquanto estiver vazio, não aparece publicidade nem o aviso de consentimento. */
     const ADSENSE_CLIENT = 'ca-pub-4094039418988922';
     const ADSENSE_SLOT = '8137560560';
-    const CHAVE_ADS = 'simulador_consentimento_ads';
+    const CHAVE_ADS = 'agajota-cookies'; /* mesma chave do site AGAJOTA (valores: 'aceite' / 'recusado') */
+    const CHAVE_ADS_ANTIGA = 'simulador_consentimento_ads';
+
+    /* Data da última atualização do simulador (AAAA-MM-DD): alterar sempre que publicares uma nova versão */
+    const ULTIMA_ATUALIZACAO = '2026-10-06' ;
 
     let cfg = { retencao: 28, base: 360, cap: 'diaria' };
     let totalsVisible = false;
@@ -2154,7 +2232,9 @@ tr[data-type="simple"] .tipo-tag { background: #dbeafe; color: #1e40af; }
         const currentYear = new Date().getFullYear();
         const pageFooter = byId('page-footer');
         if (pageFooter) {
-            pageFooter.innerHTML = `© ${currentYear} Agajota` + (ADSENSE_SLOT ? ' · <button type="button" class="footer-link" onclick="abrirConsentimento()">Preferências de publicidade</button>' : '');
+            pageFooter.innerHTML = `<span>© ${currentYear} <button type="button" class="footer-link footer-brand" onclick="mostrarUltimaAtualizacao()" title="Ver última atualização" aria-label="Ver data da última atualização">AGAJOTA</button></span>` +
+                '<button type="button" class="footer-link" onclick="abrirPrivacidade()">Privacidade</button>' +
+                '<button type="button" class="footer-link" onclick="abrirConsentimento()">Cookies</button>';
         }
     }
 
@@ -2243,14 +2323,26 @@ tr[data-type="simple"] .tipo-tag { background: #dbeafe; color: #1e40af; }
             sub.textContent = 'Relatório de Simulações • Retenção ' + pctTxt(cfg.retencao) + '% • Juros simples: base ' + cfg.base + ' dias • Compostos: capitalização ' + NOME_CAP[cfg.cap];
         }
 
-        byId('dynamic-print-footer').innerHTML = `© ${ano} Agajota | 💰 Simulador de Juros | ${dataHoraFormatada} | Valores meramente informativos`;
+        byId('dynamic-print-footer').innerHTML = `© ${ano} AGAJOTA | 💰 Simulador de Juros | ${dataHoraFormatada} | Valores meramente informativos`;
 
         window.print();
     }
 
     /* ===== Publicidade e consentimento ===== */
     function lerConsentimento() {
-        try { return localStorage.getItem(CHAVE_ADS); } catch (e) { return null; }
+        try {
+            let v = localStorage.getItem(CHAVE_ADS);
+            if (!v) {
+                /* migra a escolha guardada na versão anterior do simulador */
+                const antigo = localStorage.getItem(CHAVE_ADS_ANTIGA);
+                if (antigo === 'granted' || antigo === 'denied') {
+                    v = antigo === 'granted' ? 'aceite' : 'recusado';
+                    localStorage.setItem(CHAVE_ADS, v);
+                }
+                if (antigo !== null) localStorage.removeItem(CHAVE_ADS_ANTIGA);
+            }
+            return v;
+        } catch (e) { return null; }
     }
 
     function guardarConsentimento(valor) {
@@ -2286,12 +2378,25 @@ tr[data-type="simple"] .tipo-tag { background: #dbeafe; color: #1e40af; }
         byId('consent-banner').hidden = false;
     }
 
+    function textoUltimaAtualizacao() {
+        const d = new Date(ULTIMA_ATUALIZACAO + 'T12:00:00');
+        return 'Última atualização: ' + d.toLocaleDateString('pt-PT', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+
+    function mostrarUltimaAtualizacao() {
+        toast(textoUltimaAtualizacao());
+    }
+
     function abrirConsentimento() {
-        if (ADSENSE_SLOT) mostrarConsentimento();
+        mostrarConsentimento();
+    }
+
+    function abrirPrivacidade() {
+        openModal('privacy-modal');
     }
 
     function responderConsentimento(aceitar) {
-        guardarConsentimento(aceitar ? 'granted' : 'denied');
+        guardarConsentimento(aceitar ? 'aceite' : 'recusado');
         byId('consent-banner').hidden = true;
         if (aceitar) {
             carregarAnuncios();
@@ -2306,8 +2411,8 @@ tr[data-type="simple"] .tipo-tag { background: #dbeafe; color: #1e40af; }
     function iniciarPublicidade() {
         if (!ADSENSE_SLOT) return;
         const c = lerConsentimento();
-        if (c === 'granted') carregarAnuncios();
-        else if (c !== 'denied') mostrarConsentimento();
+        if (c === 'aceite') carregarAnuncios();
+        else if (c !== 'recusado') mostrarConsentimento();
     }
 
     /* ===== Arranque ===== */
