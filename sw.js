@@ -1,15 +1,15 @@
 /* Service worker do Simulador de Juros.
    Alterar CACHE_VERSION sempre que publicar uma nova versão para forçar a atualização da cache. */
-const CACHE_VERSION = 'v6';
+const CACHE_VERSION = 'v7';
 const CACHE_NAME = 'simulador-juros-' + CACHE_VERSION;
 const PRECACHE = [
     './',
     './index.html',
     './manifest.webmanifest',
-    './icons/icon-192.png',
-    './icons/icon-512.png',
-    './icons/icon-maskable-512.png',
-    './icons/apple-touch-icon.png'
+    './icon-192.png',
+    './icon-512.png',
+    './icon-maskable-512.png',
+    './apple-touch-icon.png'
 ];
 
 self.addEventListener('install', (event) => {
