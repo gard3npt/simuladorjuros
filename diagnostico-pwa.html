@@ -6,6 +6,7 @@
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#0f172a">
 <title>Diagnóstico da app instalável</title>
+<link rel="manifest" href="manifest.webmanifest" id="ligacaoManifesto">
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
@@ -64,6 +65,7 @@
   }
   var urlManifesto = mesmoSite(params.get('m'), 'manifest.webmanifest');
   var urlSW = mesmoSite(params.get('s'), 'sw.js');
+  document.getElementById('ligacaoManifesto').setAttribute('href', urlManifesto.pathname + urlManifesto.search);
 
   window.addEventListener('beforeinstallprompt', function (e) {
     e.preventDefault();
@@ -175,6 +177,18 @@
     });
   }
 
+  function paginaPrincipal() {
+    var raiz = new URL('./', urlManifesto);
+    return buscar(raiz).then(function (r) {
+      if (!r.ok) { add('erro', 'Página principal não encontrada (HTTP ' + r.status + ')', caminhoSite(raiz)); return; }
+      return r.text().then(function (t) {
+        add(/rel=["']manifest["']/.test(t) ? 'ok' : 'erro', 'A página principal liga o manifesto');
+        add(/serviceWorker/.test(t) && /register\(/.test(t) ? 'ok' : 'erro', 'A página principal regista o service worker');
+        if (/["']icons\//.test(t)) add('erro', 'A página principal publicada ainda é a versão antiga', 'Ainda aponta para a pasta icons/. Substitua o index.html no GitHub pelo novo.');
+      });
+    }).catch(function (e) { add('erro', 'Falha ao ler a página principal', String(e.message)); });
+  }
+
   function serviceWorker() {
     if (!('serviceWorker' in navigator)) { add('erro', 'Este browser não suporta service workers'); return Promise.resolve(); }
     return buscar(urlSW).then(function (r) {
@@ -183,12 +197,25 @@
       return r.text();
     }).then(function (texto) {
       return navigator.serviceWorker.getRegistration(urlSW.pathname.replace(/[^/]*$/, '')).then(function (reg) {
-        if (!reg) add('erro', 'Service worker não está registado', 'Abra primeiro a página principal do site, espere alguns segundos e repita a análise. Se continuar assim, o registo está a falhar.');
-        else {
+        if (reg) {
           var est = reg.active ? 'ativo' : reg.installing ? 'a instalar' : reg.waiting ? 'à espera' : 'desconhecido';
           add(reg.active ? 'ok' : 'erro', 'Service worker registado: ' + est, 'âmbito ' + new URL(reg.scope).pathname);
+          return texto;
         }
-        return texto;
+        // Não estava registado: tenta registar já, para mostrar o erro exato se falhar
+        return navigator.serviceWorker.register(urlSW.pathname).then(function (r) {
+          return Promise.race([
+            navigator.serviceWorker.ready.then(function () { return true; }),
+            new Promise(function (res) { setTimeout(function () { res(false); }, 5000); })
+          ]).then(function (ativo) {
+            if (ativo) add('aviso', 'O service worker não estava registado; esta página registou-o agora', 'âmbito ' + new URL(r.scope).pathname + '. Abra o site principal, recarregue e repita a análise para confirmar que o próprio site o regista.');
+            else add('erro', 'O service worker foi registado mas não chegou a ficar ativo', 'A instalação falhou (normalmente por um ficheiro em falta ou um erro no sw.js).');
+            return texto;
+          });
+        }).catch(function (e) {
+          add('erro', 'O registo do service worker falhou', e.name + ': ' + e.message);
+          return texto;
+        });
       });
     }).then(function (texto) {
       if (!texto) return;
@@ -219,7 +246,7 @@
         if (pedidoInstalar) add('ok', 'O browser considera a app instalável', 'Toque em «Instalar a app» em baixo.');
         else add('aviso', 'O browser ainda não ofereceu a instalação', 'Se tudo acima estiver ✔, pode já estar instalada ou o browser pode demorar; experimente o menu ⋮ → «Instalar app».');
         resolve();
-      }, 4000);
+      }, 6000);
     });
   }
 
@@ -236,6 +263,7 @@
     ambiente();
     return manifesto()
       .then(iconesDoManifesto)
+      .then(paginaPrincipal)
       .then(serviceWorker)
       .then(aguardarOferta)
       .then(resumir)
