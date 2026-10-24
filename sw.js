@@ -1,6 +1,6 @@
 /* Service worker do Simulador de Juros.
    Alterar CACHE_VERSION sempre que publicar uma nova versão para forçar a atualização da cache. */
-const CACHE_VERSION = 'v5';
+const CACHE_VERSION = 'v6';
 const CACHE_NAME = 'simulador-juros-' + CACHE_VERSION;
 const PRECACHE = [
     './',
@@ -15,7 +15,8 @@ const PRECACHE = [
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME)
-            .then((cache) => cache.addAll(PRECACHE))
+            /* Um ficheiro em falta não deve impedir a instalação do service worker */
+            .then((cache) => Promise.all(PRECACHE.map((f) => cache.add(f).catch(() => {}))))
             .then(() => self.skipWaiting())
     );
 });
