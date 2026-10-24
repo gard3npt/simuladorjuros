@@ -1,6 +1,6 @@
 /* Service worker do Simulador de Juros.
    Alterar CACHE_VERSION sempre que publicar uma nova versão para forçar a atualização da cache. */
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const CACHE_NAME = 'simulador-juros-' + CACHE_VERSION;
 const PRECACHE = [
     './',
