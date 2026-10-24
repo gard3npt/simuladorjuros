@@ -30,6 +30,14 @@
         function lembrar(v) {
             try { if (v) localStorage.setItem(CHAVE, '1'); else localStorage.removeItem(CHAVE); } catch (e) {}
         }
+        /* Chrome/Edge/Samsung só disparam o pedido de instalação quando a app NÃO está instalada:
+           passados uns segundos sem pedido, assume-se que já está instalada (a não ser que o visitante tenha recusado) */
+        var inicio = Date.now(), recusou = false;
+        function provavel() {
+            if (!('BeforeInstallPromptEvent' in window)) return false;
+            if (/FBAN|FBAV|Instagram|Line\/|MicroMessenger|Snapchat|TikTok|; wv\)/.test(navigator.userAgent)) return false;
+            return !pedido && !recusou && (Date.now() - inicio > 4000);
+        }
         function lembrada() {
             try { return localStorage.getItem(CHAVE) === '1'; } catch (e) { return false; }
         }
@@ -40,7 +48,7 @@
                 toast('✅ App já instalada. Procure o ícone no ecrã ou na lista de aplicações.', null, null, 6000);
             } else if (pedido) {
                 toast('📲 Instale o simulador no ecrã principal.', 'Instalar', window.instalarApp);
-            } else if (lembrada()) {
+            } else if (lembrada() || provavel()) {
                 toast('✅ App já instalada. Procure o ícone no ecrã ou na lista de aplicações.', null, null, 6000);
             } else {
                 toast('📲 Instalar app. ' + textoAjuda(), null, null, 14000);
@@ -55,7 +63,7 @@
             if (!pedido) return;
             var p = pedido; pedido = null;
             p.prompt();
-            if (p.userChoice) p.userChoice.then(function (r) { if (r && r.outcome === 'accepted') lembrar(true); });
+            if (p.userChoice) p.userChoice.then(function (r) { if (r && r.outcome === 'accepted') lembrar(true); else recusou = true; });
         };
         document.addEventListener('DOMContentLoaded', function () {
             if (emApp()) lembrar(true);
