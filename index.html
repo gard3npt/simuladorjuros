@@ -37,7 +37,7 @@
         window.mostrarEstadoApp = function () {
             if (typeof toast !== 'function') return;
             if (emApp()) {
-                toast('✅ App já instalada.');
+                toast('✅ App já instalada. Procure o ícone no ecrã ou na lista de aplicações.', null, null, 6000);
             } else if (pedido) {
                 toast('📲 Instale o simulador no ecrã principal.', 'Instalar', window.instalarApp);
             } else if (lembrada()) {
