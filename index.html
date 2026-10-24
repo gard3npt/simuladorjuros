@@ -10,6 +10,47 @@
     <!-- PWA: app instalável -->
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <!-- Instalar app: usa o pedido do browser quando existe; senão mostra instruções -->
+    <script>
+    (function () {
+        var pedido = null;
+        function emApp() {
+            try { return (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true; }
+            catch (e) { return false; }
+        }
+        function textoAjuda() {
+            var ua = navigator.userAgent;
+            if (/FBAN|FBAV|Instagram|Line\/|MicroMessenger|Snapchat|TikTok|; wv\)/.test(ua))
+                return 'Esta página está aberta dentro de outra aplicação, que não permite instalar. Abra o endereço diretamente no Chrome (ou no Safari, no iPhone).';
+            if (/iPhone|iPad|iPod/.test(ua))
+                return 'No iPhone/iPad: toque em Partilhar (o quadrado com a seta) na barra do Safari e escolha «Adicionar ao ecrã principal».';
+            return 'Abra o menu do browser (⋮) e escolha «Instalar aplicação» ou «Adicionar ao ecrã principal». No computador, use o ícone de instalar na barra de endereço. Se aparecer «Abrir» com o nome da app, já está instalada: procure o ícone no ecrã ou na lista de aplicações.';
+        }
+        window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); pedido = e; });
+        window.addEventListener('appinstalled', function () {
+            pedido = null;
+            var o = document.getElementById('install-option'); if (o) o.style.display = 'none';
+            var h = document.getElementById('install-help'); if (h) h.hidden = true;
+        });
+        window.instalarApp = function () {
+            var h = document.getElementById('install-help');
+            if (pedido) {
+                var p = pedido; pedido = null;
+                if (h) h.hidden = true;
+                p.prompt();
+                if (typeof closeModal === 'function') closeModal('about-modal');
+                return;
+            }
+            if (!h) return;
+            var estavaVisivel = !h.hidden;
+            h.textContent = textoAjuda();
+            h.hidden = estavaVisivel;
+        };
+        document.addEventListener('DOMContentLoaded', function () {
+            if (emApp()) { var o = document.getElementById('install-option'); if (o) o.style.display = 'none'; }
+        });
+    })();
+    </script>
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Juros">
@@ -650,6 +691,18 @@ footer{
 .modal-option-btn:hover .modal-option-text small {
     color: #dbeafe;
 }
+
+.install-help {
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #334155;
+    text-align: left;
+}
+.install-help[hidden] { display: none; }
 
 .instructions li{
     margin-bottom:10px;
@@ -1618,6 +1671,11 @@ body { padding-bottom: 20px; }
                     <span class="modal-option-icon" aria-hidden="true">✉️</span>
                     <span class="modal-option-text"><strong>Contacto (E-mail)</strong><small>Enviar mensagem diretamente</small></span>
                 </button>
+                <button type="button" class="modal-option-btn" id="install-option" onclick="instalarApp()">
+                    <span class="modal-option-icon" aria-hidden="true">📲</span>
+                    <span class="modal-option-text"><strong>Instalar app</strong><small>Adicionar ao ecrã principal</small></span>
+                </button>
+                <div class="install-help" id="install-help" role="status" hidden></div>
             </div>
 
         </div>
