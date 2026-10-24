@@ -45,11 +45,11 @@
         window.mostrarEstadoApp = function () {
             if (typeof toast !== 'function') return;
             if (emApp()) {
-                toast('✅ App já instalada. Procure o ícone no ecrã ou na lista de aplicações.', null, null, 6000);
+                toast('✅ App já instalada.', null, null, 3000);
             } else if (pedido) {
                 toast('📲 Instale o simulador no ecrã principal.', 'Instalar', window.instalarApp);
             } else if (lembrada() || provavel()) {
-                toast('✅ App já instalada. Procure o ícone no ecrã ou na lista de aplicações.', null, null, 6000);
+                toast('✅ App já instalada.', null, null, 3000);
             } else {
                 toast('📲 Instalar app. ' + textoAjuda(), null, null, 14000);
             }
@@ -1622,14 +1622,6 @@ body { padding-bottom: 20px; }
             </div>
             
             <ul>
-                <li><strong>Montante a Investir (€):</strong> Insira o valor que pretende investir (em euros);</li>
-                <li><strong>% Taxa Anual:</strong> Insira a Taxa Anual Nominal Bruta (TANB);</li>    
-                <li><strong>Dias:</strong> Insira o período do investimento em dias;</li>
-            </ul>
-            
-            <hr>
-            
-            <ul>
                 <li><strong>Linhas TANB Simples (Azul):</strong> O cálculo dos juros simples baseia-se na convenção do <strong>ano de <span class="base-txt">360</span> dias</strong> (configurável nas definições).</li>
                 <li><strong>Linhas Verdes (Compostas):</strong> Representam investimentos onde o cálculo utiliza o <strong>ano civil de 365 dias</strong>. Os juros são capitalizados com periodicidade <strong class="cap-txt">diária</strong> (configurável) e o imposto (<span class="ret-pct">28</span>%) é deduzido em cada período, reinvestindo o ganho líquido.</li>
             </ul>
@@ -1637,6 +1629,15 @@ body { padding-bottom: 20px; }
             <hr>
             
             <ul>
+                <li><strong>Definições:</strong> Ajuste a retenção, a base dos juros simples (360 ou 365 dias) e a capitalização dos juros compostos (diária, mensal ou anual);</li>
+            </ul>
+            
+            <hr>
+            
+            <ul>
+                <li><strong>Montante a Investir (€):</strong> Insira o valor que pretende investir (em euros);</li>
+                <li><strong>% Taxa Anual:</strong> Insira a Taxa Anual Nominal Bruta (TANB);</li>    
+                <li><strong>Dias:</strong> Insira o período do investimento em dias;</li>
                 <li><strong>Juros Brutos (€):</strong> Valor total ganho sem a retenção na fonte.</li>
                 <li><strong>Retenção na fonte (€):</strong> Em conformidade com a regulamentação fiscal portuguesa, a taxa de retenção por defeito é de <span class="ret-pct">28</span>% (configurável);</li>
                 <li><strong>Juros Líquidos (€):</strong> Lucro real calculado referente aos dias colocados já livre de impostos;</li>
@@ -1649,8 +1650,13 @@ body { padding-bottom: 20px; }
             <hr>
 
             <ul>
-                <li><strong>Definições:</strong> Ajuste a retenção, a base dos juros simples (360 ou 365 dias) e a capitalização dos juros compostos (diária, mensal ou anual);</li>
-                <li><strong>Exportar CSV / Copiar:</strong> Exporte ou copie as linhas calculadas. Para obter um PDF, use <strong>Imprimir</strong> e escolha "Guardar como PDF";</li>
+                <li><strong>Exportar CSV / Copiar:</strong> Exporte ou copie as linhas calculadas;</li>
+                <li><strong>Imprimir:</strong> Imprima as linhas calculadas. Para obter um PDF, escolha "Guardar como PDF" na janela de impressão.</li>
+            </ul>
+
+            <hr>
+
+            <ul>
                 <li><strong>Limites:</strong> Montante até 1 000 000 000 000 €, taxa até 100 % e prazo até 36 500 dias.</li>
             </ul>
         </div>
@@ -1764,7 +1770,7 @@ body { padding-bottom: 20px; }
     const CHAVE_ADS_ANTIGA = 'simulador_consentimento_ads';
 
     /* Data da última atualização do simulador (AAAA-MM-DD): alterar sempre que publicar uma nova versão */
-    const ULTIMA_ATUALIZACAO = '2026-10-24';
+    const ULTIMA_ATUALIZACAO = '2026-10-25';
 
     let cfg = { retencao: 28, base: 360, cap: 'diaria' };
     let totalsVisible = false;
@@ -2033,11 +2039,16 @@ body { padding-bottom: 20px; }
             toast('É necessário manter pelo menos uma linha de investimento.');
             return;
         }
-        const antes = lerEstado();
-        row.remove();
-        updateRowNumbers();
-        recalcularTudo();
-        toast('Linha eliminada.', 'Anular', () => aplicarEstado(antes));
+        const haDados = Array.from(row.querySelectorAll('input')).some(i => i.value.trim() !== '');
+        const eliminar = () => {
+            if (!row.isConnected) return;
+            const antes = lerEstado();
+            row.remove();
+            updateRowNumbers();
+            recalcularTudo();
+            toast('Linha eliminada.', 'Anular', () => aplicarEstado(antes));
+        };
+        if (haDados) caixaMensagem('Apagar esta linha de simulação?', eliminar); else eliminar();
     }
 
     function updateRowNumbers() {
@@ -2053,11 +2064,64 @@ body { padding-bottom: 20px; }
         });
     }
 
+    /* Caixa de mensagem/confirmação dentro da página (não usa confirm/alert, que alguns navegadores bloqueiam).
+       Com aoConfirmar: mostra Cancelar + Apagar. Sem aoConfirmar: só OK. */
+    function caixaMensagem(msg, aoConfirmar, aoCancelar, textoConfirmar) {
+      const antigo = document.getElementById("caixaMensagemOverlay");
+      if (antigo) antigo.remove();
+
+      const ov = document.createElement("div");
+      ov.id = "caixaMensagemOverlay";
+      ov.style.cssText = "position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(15,23,42,0.55); z-index:99999; display:flex; align-items:center; justify-content:center; padding:16px;";
+
+      const caixa = document.createElement("div");
+      caixa.style.cssText = "background:#ffffff; border-radius:14px; padding:20px; max-width:340px; width:100%; box-shadow:0 10px 30px rgba(0,0,0,0.3); text-align:center;";
+
+      const texto = document.createElement("div");
+      texto.style.cssText = "font-size:16px; font-weight:700; color:#0f172a; margin-bottom:18px; line-height:1.4; white-space:pre-line;";
+      texto.textContent = msg;
+
+      const botoes = document.createElement("div");
+      botoes.style.cssText = "display:flex; gap:10px; justify-content:center;";
+
+      const estiloBtn = "flex:1; padding:11px 14px; border-radius:10px; border:none; font-size:15px; font-weight:700; cursor:pointer;";
+      const fechar = () => ov.remove();
+      const cancelar = () => { fechar(); if (aoCancelar) aoCancelar(); };
+
+      const btnCancelar = document.createElement("button");
+      btnCancelar.type = "button";
+      btnCancelar.style.cssText = estiloBtn + "background:#e2e8f0; color:#0f172a;";
+      btnCancelar.textContent = aoConfirmar ? "Cancelar" : "OK";
+      btnCancelar.onclick = cancelar;
+      botoes.appendChild(btnCancelar);
+
+      if (aoConfirmar) {
+        const btnSim = document.createElement("button");
+        btnSim.type = "button";
+        btnSim.style.cssText = estiloBtn + "background:#dc2626; color:#ffffff;";
+        btnSim.textContent = textoConfirmar || "Apagar";
+        btnSim.onclick = () => { fechar(); aoConfirmar(); };
+        botoes.appendChild(btnSim);
+      }
+
+      caixa.appendChild(texto);
+      caixa.appendChild(botoes);
+      ov.appendChild(caixa);
+      ov.addEventListener("click", (e) => { if (!aoConfirmar || e.target === ov) cancelar(); });
+      ov.addEventListener("keydown", (e) => { if (e.key === "Escape") cancelar(); });
+      document.body.appendChild(ov);
+      btnCancelar.focus();
+    }
+
     function clearAllRows() {
-        const antes = lerEstado();
-        try { localStorage.removeItem(CHAVE); } catch (e) {}
-        initTableDefaultRows();
-        toast('Simulações limpas.', 'Anular', () => aplicarEstado(antes));
+        const haDados = linhas().some(r => Array.from(r.querySelectorAll('input')).some(i => i.value.trim() !== ''));
+        const limpar = () => {
+            const antes = lerEstado();
+            try { localStorage.removeItem(CHAVE); } catch (e) {}
+            initTableDefaultRows();
+            toast('Simulações apagadas e tabela reposta.', 'Anular', () => aplicarEstado(antes));
+        };
+        if (haDados) caixaMensagem('Apagar todas as simulações e repor as linhas iniciais?', limpar); else limpar();
     }
 
     function initTableDefaultRows() {
