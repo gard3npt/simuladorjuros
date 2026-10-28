@@ -1,0 +1,3223 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Simulador de juros para depósitos: compare TANB e juros compostos, com retenção na fonte, juros líquidos e taxa anual efetiva.">
+    <meta name="theme-color" content="#1e3a8a">
+    <meta name="google-adsense-account" content="ca-pub-4094039418988922">
+
+    <!-- Coletor de erros para a Área de controlo -->
+    <script>
+      window.__erros = [];
+      function __regErro(tipo, msg) { if (window.__erros.length < 30) window.__erros.push({ t: Date.now(), tipo: tipo, msg: String(msg).slice(0, 160) }); }
+      window.addEventListener('error', function (e) {
+        var t = e.target;
+        if (t && t !== window && (t.src || t.href)) __regErro('recurso', t.src || t.href);
+        else __regErro('erro', e.message || 'erro desconhecido');
+      }, true);
+      window.addEventListener('unhandledrejection', function (e) { __regErro('promessa', (e.reason && e.reason.message) || e.reason || 'rejeição'); });
+    </script>
+
+    <!-- PWA: app instalável -->
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <!-- Instalar app: usa o pedido do browser quando existe; senão mostra instruções -->
+    <script>
+    (function () {
+        var pedido = null;
+        function emApp() {
+            try { return (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true; }
+            catch (e) { return false; }
+        }
+        function textoAjuda() {
+            var ua = navigator.userAgent;
+            if (/FBAN|FBAV|Instagram|Line\/|MicroMessenger|Snapchat|TikTok|; wv\)/.test(ua))
+                return 'Esta página está aberta dentro de outra aplicação, que não permite instalar. Abra o endereço diretamente no Chrome (ou no Safari, no iPhone).';
+            if (/iPhone|iPad|iPod/.test(ua))
+                return 'No iPhone/iPad: toque em Partilhar (o quadrado com a seta) na barra do Safari e escolha «Adicionar ao ecrã principal».';
+            return 'Abra o menu do browser (⋮) e escolha «Instalar aplicação» ou «Adicionar ao ecrã principal». No computador, use o ícone de instalar na barra de endereço. Se aparecer «Abrir» com o nome da app, já está instalada: procure o ícone no ecrã ou na lista de aplicações.';
+        }
+        var CHAVE = 'simulador-app-instalada';
+        function lembrar(v) {
+            try { if (v) localStorage.setItem(CHAVE, '1'); else localStorage.removeItem(CHAVE); } catch (e) {}
+        }
+        /* Chrome/Edge/Samsung só disparam o pedido de instalação quando a app NÃO está instalada:
+           passados uns segundos sem pedido, assume-se que já está instalada (a não ser que o visitante tenha recusado) */
+        var inicio = Date.now(), recusou = false;
+        function provavel() {
+            if (!('BeforeInstallPromptEvent' in window)) return false;
+            if (/FBAN|FBAV|Instagram|Line\/|MicroMessenger|Snapchat|TikTok|; wv\)/.test(navigator.userAgent)) return false;
+            return !pedido && !recusou && (Date.now() - inicio > 4000);
+        }
+        function lembrada() {
+            try { return localStorage.getItem(CHAVE) === '1'; } catch (e) { return false; }
+        }
+        /* «© ano» no rodapé: mostra sempre o estado da app (instalar / já instalada / instruções) */
+        window.mostrarEstadoApp = function () {
+            if (typeof toast !== 'function') return;
+            if (emApp()) {
+                toast('✅ App já instalada.', null, null, 3000);
+            } else if (pedido) {
+                toast('📲 Instale o simulador no ecrã principal.', 'Instalar', window.instalarApp);
+            } else if (lembrada() || provavel()) {
+                toast('✅ App já instalada.', null, null, 3000);
+            } else {
+                toast('📲 Instalar app. ' + textoAjuda(), null, null, 14000);
+            }
+        };
+        /* Verdadeiro se a app já está instalada (aberta como app, ou instalada e lembrada/provável no browser) */
+        window.appJaInstalada = function () {
+            if (emApp()) return true;
+            if (pedido) return false;
+            return lembrada() || provavel();
+        };
+        window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); pedido = e; lembrar(false); });
+        window.addEventListener('appinstalled', function () {
+            pedido = null;
+            lembrar(true);
+        });
+        window.instalarApp = function () {
+            if (!pedido) return;
+            var p = pedido; pedido = null;
+            p.prompt();
+            if (p.userChoice) p.userChoice.then(function (r) { if (r && r.outcome === 'accepted') lembrar(true); else recusou = true; });
+        };
+        document.addEventListener('DOMContentLoaded', function () {
+            if (emApp()) lembrar(true);
+        });
+    })();
+    </script>
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Juros">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+    <title>Simulador de Juros</title>
+
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2064%2064%27%3E%3Cdefs%3E%3ClinearGradient%20id=%27g%27%20x1=%270%27%20y1=%270%27%20x2=%271%27%20y2=%271%27%3E%3Cstop%20offset=%270%27%20stop-color=%27%232a4fb8%27/%3E%3Cstop%20offset=%271%27%20stop-color=%27%23172554%27/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect%20width=%2764%27%20height=%2764%27%20rx=%2714%27%20fill=%27url%28%23g%29%27/%3E%3Crect%20x=%2714%27%20y=%279%27%20width=%2736%27%20height=%2746%27%20rx=%276%27%20fill=%27%23f8fafc%27/%3E%3Crect%20x=%2718%27%20y=%2713%27%20width=%2728%27%20height=%2711%27%20rx=%273%27%20fill=%27%230f172a%27/%3E%3Crect%20x=%2734%27%20y=%2716%27%20width=%279%27%20height=%275%27%20rx=%271.5%27%20fill=%27%2334d399%27/%3E%3Crect%20x=%2718.0%27%20y=%2728.0%27%20width=%275.5%27%20height=%276%27%20rx=%271.5%27%20fill=%27%23cbd5e1%27/%3E%3Crect%20x=%2725.5%27%20y=%2728.0%27%20width=%275.5%27%20height=%276%27%20rx=%271.5%27%20fill=%27%23cbd5e1%27/%3E%3Crect%20x=%2733.0%27%20y=%2728.0%27%20width=%275.5%27%20height=%276%27%20rx=%271.5%27%20fill=%27%23cbd5e1%27/%3E%3Crect%20x=%2740.5%27%20y=%2728.0%27%20width=%275.5%27%20height=%276%27%20rx=%271.5%27%20fill=%27%2310b981%27/%3E%3Crect%20x=%2718.0%27%20y=%2735.5%27%20width=%275.5%27%20height=%276%27%20rx=%271.5%27%20fill=%27%23cbd5e1%27/%3E%3Crect%20x=%2725.5%27%20y=%2735.5%27%20width=%275.5%27%20height=%276%27%20rx=%271.5%27%20fill=%27%23cbd5e1%27/%3E%3Crect%20x=%2733.0%27%20y=%2735.5%27%20width=%275.5%27%20height=%276%27%20rx=%271.5%27%20fill=%27%23cbd5e1%27/%3E%3Crect%20x=%2740.5%27%20y=%2735.5%27%20width=%275.5%27%20height=%276%27%20rx=%271.5%27%20fill=%27%2310b981%27/%3E%3Crect%20x=%2718.0%27%20y=%2743.0%27%20width=%275.5%27%20height=%276%27%20rx=%271.5%27%20fill=%27%23cbd5e1%27/%3E%3Crect%20x=%2725.5%27%20y=%2743.0%27%20width=%275.5%27%20height=%276%27%20rx=%271.5%27%20fill=%27%23cbd5e1%27/%3E%3Crect%20x=%2733.0%27%20y=%2743.0%27%20width=%275.5%27%20height=%276%27%20rx=%271.5%27%20fill=%27%23cbd5e1%27/%3E%3Crect%20x=%2740.5%27%20y=%2743.0%27%20width=%275.5%27%20height=%276%27%20rx=%271.5%27%20fill=%27%2310b981%27/%3E%3C/svg%3E">
+
+    <style>
+:root {
+    --primary-blue: #1e3a8a;
+    --primary-dark: #172554;
+    --compound-green: #10b981;
+    --compound-dark: #059669;
+    --bg-dark-1: #0f172a;
+    --bg-dark-2: #1e293b;
+    --text-dark: #0f172a;
+    --text-muted: #475569;
+    --border-color: #e2e8f0;
+    --accent-title-dark: #1e3a8a; /* Azul Escuro Suave */
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
+    background:linear-gradient(135deg, var(--bg-dark-1), var(--bg-dark-2));
+    min-height:100vh;
+    padding:40px 20px 60px 20px; 
+    color: var(--bg-dark-2);
+}
+
+.print-only-header, .print-only-footer {
+    display: none;
+}
+
+footer{
+    position:static;
+    width:100%;
+    min-height:60px;
+    margin-top:32px;
+    border-radius:12px;
+    background-color:#222;
+    color:white;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.tanb-calculator{
+    max-width:1400px;
+    margin:auto;
+    background:#fff;
+    border-radius:24px;
+    box-shadow:
+        0 10px 25px rgba(0,0,0,.1),
+        0 20px 50px rgba(0,0,0,.08);
+    position: relative;
+}
+
+/* Cabeçalho Relativo com Gradiente Azul Suave e Modernizado na base */
+.calculator-header {
+    background: linear-gradient(180deg, #1430acd5 10%, #2e5ab8 100%);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    padding: 20px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+    border-bottom: 2px solid #163861;
+    box-shadow: 0 4px 20px rgba(30, 58, 138, 0.2);
+}
+
+.header-left-group {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.header-icon-box {
+    width: 48px;
+    height: 48px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.header-badge {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #93c5fd;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 3px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(147, 197, 253, 0.3);
+    margin-bottom: 3px;
+}
+
+.calculator-title {
+    color: #ffffff;
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0;
+}
+
+.header-actions-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.header-btn {
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    font-size: 1.15rem;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.header-btn:hover {
+    background: #ffffff;
+    color: #32394d;
+    border-color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(255, 255, 255, 0.3);
+}
+
+.header-btn:active {
+    transform: translateY(0);
+}
+
+.header-btn:focus-visible,
+.modal-option-btn:focus-visible {
+    outline: 3px solid #93c5fd;
+    outline-offset: 2px;
+}
+
+.header-btn-support {
+    width: auto;
+    padding: 0 18px;
+    gap: 8px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+}
+
+.header-btn-support .support-icon {
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
+.add-btn{
+    background: linear-gradient(135deg, #2e5bd6, #2563eb);
+    color: white;
+    border: none;
+    padding: 14px 24px;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+    white-space: nowrap;
+    height: 50px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.add-btn:hover{
+    transform:translateY(-2px);
+    box-shadow: 0 10px 25px rgba(35, 40, 54, 0.4);
+}
+
+.add-compound-btn {
+    background: linear-gradient(135deg, var(--compound-green), var(--compound-dark));
+}
+
+.add-compound-btn:hover {
+    box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
+}
+
+.calculator-table{
+    width:100%;
+    border-collapse:collapse;
+    table-layout: fixed; 
+}
+
+.calculator-table td {
+    padding: 14px;
+    border-bottom: 1px solid var(--border-color);
+    white-space: nowrap;       
+}
+
+/* Cabeçalho fixo ao fazer scroll: estado compacto */
+.calculator-header.is-stuck {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    border-radius: 0;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.35);
+}
+.calculator-header.is-stuck .header-badge { display: none; }
+.calculator-header.is-stuck .header-icon-box { width: 36px; height: 36px; font-size: 1.15rem; }
+.calculator-header.is-stuck .calculator-title { font-size: 1.15rem; }
+.calculator-header.is-stuck .header-btn { width: 38px; height: 38px; }
+.calculator-header.is-stuck .header-btn-support { width: auto; }
+
+.calculator-table th{
+    background: linear-gradient(180deg, #0b8ee6 50%, #3b82f6 100%); 
+    color: #ffffff;      
+    padding:12px 8px;
+    font-weight:700;
+    font-size: 14px;
+    border-bottom:2px solid #2563eb; 
+    white-space: normal;      
+    text-align: center;
+    vertical-align: middle;
+    line-height: 1.3;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.calculator-table th:nth-child(2), .calculator-table td:nth-child(2) {
+    width: 12.5%;
+}
+
+.calculator-table th:nth-child(3), .calculator-table td:nth-child(3) {
+    width: 8%;
+}
+
+.calculator-table th:nth-child(4), .calculator-table td:nth-child(4) {
+    width: 6.5%;
+}
+
+.calculator-table th:nth-child(n+5):nth-child(-n+10),
+.calculator-table td:nth-child(n+5):nth-child(-n+10) {
+    width: 9%;
+}
+
+.calculator-table th:first-child,
+.calculator-table td:first-child {
+    text-align: center;
+    vertical-align: middle;
+    font-weight: 600;
+    width: 75px;
+}
+
+.calculator-table th:last-child,
+.calculator-table td:last-child {
+    text-align: center;
+    vertical-align: middle;
+    font-weight: 600;
+    width: 90px; 
+}
+
+.calculator-table input{
+    width:100%;
+    padding:12px;
+    border:2px solid var(--border-color);
+    border-radius:10px;
+    transition:.3s;
+    font-size:18px;
+    text-align: center;
+    font-weight: 700;
+    color: var(--text-dark);
+    background: rgba(255, 255, 255, 0.6);
+}
+
+.calculator-table input:focus{
+    border-color:var(--primary-blue);
+    box-shadow:0 0 0 4px rgba(30,58,138,.15);
+    outline:none;
+    background: #ffffff;
+}
+
+.result-cell{
+    font-weight:600;
+    text-align: center;
+    font-size: 14px;
+}
+
+.calculator-table td.result-cell {
+    padding: 14px 4px;
+}
+
+.buttons-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+}
+
+/* Botões de adicionar linha e limpar, por baixo da tabela */
+.table-actions {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    padding: 18px 14px;
+    background: #f8fafc;
+}
+.table-actions .clear-total-btn {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+.scroll-hint { display: none; }
+
+.total-row {
+    background: #fef3c7; 
+    color: #92400e;      
+    font-weight: 700;
+    transition: background 0.2s ease;
+}
+
+.total-row.is-hidden {
+    background: transparent !important;
+}
+
+.total-row.is-hidden td {
+    border-top: none !important;
+    border-bottom: none !important;
+}
+
+.total-row td {
+    border-top: 2px solid #f59e0b;
+    border-bottom: 2px solid #f59e0b;
+    font-size: 16px;
+    text-align: center;
+    vertical-align: middle;
+    padding: 12px 8px; 
+}
+
+.total-row td:first-child {
+    padding: 0 !important;
+    width: 75px;
+    min-width: 75px;
+    max-width: 75px;
+}
+
+#total-tanb, #total-dias, #total-taxa {
+    white-space: normal !important; 
+    line-height: 1.3;
+}
+
+.toggle-total-btn {
+    width: 100%;
+    height: 100%;
+    min-height: 48px;
+    background: #b45309;
+    border: none;
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease;
+    white-space: normal;
+    padding: 4px;
+    text-align: center;
+    line-height: 1.2;
+}
+
+.toggle-total-btn:hover {
+    background: #78350f;
+}
+
+.clear-total-btn {
+    display: inline-flex;
+    flex-direction: column; 
+    align-items: center;
+    justify-content: center;
+    background: #fff5f5;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+    padding: 6px 4px;
+    border-radius: 12px; 
+    cursor: pointer;
+    font-size: 12px; 
+    font-weight: 700;
+    line-height: 1.2;
+    transition: all 0.2s ease-in-out;
+    white-space: nowrap !important; 
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    height: 48px; 
+    width: 76px;  
+    min-width: 76px;
+    max-width: 76px;
+}
+
+.clear-total-btn:hover {
+    background: #fee2e2;
+    color: #991b1b;
+    border-color: #fca5a5;
+    box-shadow: 0 2px 5px rgba(220, 38, 38, 0.08);
+}
+
+.total-row td.total-hidden {
+    background: transparent !important;
+    border: none !important;
+}
+
+.delete-btn{
+    background: #fff5f5;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+    padding: 6px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: .25s;
+    font-weight: 600;
+    height: 34px;
+    min-width: 50px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.delete-btn:hover{
+    background: #fee2e2;
+    border-color: #fca5a5;
+    transform: translateY(-1px);
+}
+
+.instructions{
+    background:#f8fafc;
+    padding:30px;
+    border-top:1px solid var(--border-color);
+    border-bottom-left-radius: 24px;
+    border-bottom-right-radius: 24px;
+}
+
+.instructions-header {
+    background: linear-gradient(90deg, #f1f5f9 0%, #f8fafc 100%);
+    padding: 16px 24px;
+    border-radius: 14px;
+    border-left: 6px solid var(--accent-title-dark);
+    margin-bottom: 25px;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);
+}
+
+.instructions h3{
+    margin: 0;
+    color: var(--accent-title-dark);
+    font-size: 1.4rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.info-buttons-container {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.info-explain-btn {
+    background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+    color: #1e293b;
+    border: 1px solid #cbd5e1;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.25s ease-in-out;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.info-explain-btn:hover {
+    background: linear-gradient(135deg, var(--accent-title-dark) 0%, #172554 100%);
+    color: #ffffff;
+    border-color: var(--accent-title-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(30, 58, 138, 0.25);
+}
+
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    padding: 28px;
+    border-radius: 16px;
+    max-width: 480px;
+    width: 90%;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    position: relative;
+    text-align: left;
+}
+
+.modal-content h3 {
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    color: var(--accent-title-dark);
+    font-size: 1.3rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 2px solid var(--accent-title-dark);
+}
+
+.modal-content p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 12px;
+}
+
+.modal-close {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    color: #94a3b8;
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: inherit;
+}
+
+.modal-close:hover {
+    color: var(--text-dark);
+}
+
+.modal-menu-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.modal-option-btn {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e293b;
+    cursor: pointer;
+    transition: 0.2s;
+    font-family: inherit;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.modal-option-btn:hover {
+    background: var(--accent-title-dark);
+    color: white;
+    border-color: var(--accent-title-dark);
+    transform: translateY(-1px);
+}
+
+.modal-option-icon {
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: #e0e7ff;
+    font-size: 1.15rem;
+    transition: background 0.2s;
+}
+
+.modal-option-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.modal-option-text small {
+    font-size: 12px;
+    font-weight: 500;
+    color: #64748b;
+    transition: color 0.2s;
+}
+
+.modal-option-btn:hover .modal-option-icon {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.modal-option-btn:hover .modal-option-text small {
+    color: #dbeafe;
+}
+
+/* ===== Seletor de idioma ===== */
+#langWrap { position: relative; }
+.header-btn-lang { width: auto; padding: 0 10px; gap: 6px; }
+.lang-flag { width: 24px; height: 16px; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,.3); flex-shrink: 0; }
+.lang-chev { width: 14px; height: 14px; opacity: .75; }
+#langMenu {
+    position: absolute; right: 0; top: calc(100% + 10px); z-index: 200;
+    width: 240px; padding: 6px; border-radius: 16px;
+    background: rgba(15, 23, 42, 0.97); border: 1px solid rgba(255,255,255,.15);
+    box-shadow: 0 16px 40px rgba(0,0,0,.45);
+}
+#langMenu.hidden { display: none; }
+.lang-item {
+    width: 100%; display: flex; align-items: center; gap: 12px; padding: 8px 12px;
+    border: 0; border-radius: 12px; background: none; color: #e2e8f0;
+    font: inherit; font-size: 14px; text-align: left; cursor: pointer; transition: background .15s;
+}
+.lang-item:hover, .lang-item:focus-visible { background: rgba(255,255,255,.1); outline: none; }
+.lang-name { flex: 1; white-space: nowrap; }
+.lang-orig { font-size: 10px; color: #94a3b8; }
+.lang-check { color: #34d399; font-size: 12px; font-weight: 700; }
+.lang-check.invisible { visibility: hidden; }
+.calculator-header.is-stuck .header-btn-lang { width: auto; }
+/* Tradutor: esconde a barra/balões do Google (o seletor de idioma é o nosso) */
+#google_translate_element { display: none; }
+.goog-te-banner-frame, .goog-te-balloon-frame, #goog-gt-tt, .goog-tooltip, .goog-te-spinner-pos,
+iframe.skiptranslate { display: none !important; }
+body { top: 0 !important; }
+.goog-text-highlight { background: none !important; box-shadow: none !important; }
+
+/* ===== Área de controlo (oculta: 3 cliques em «Suporte» + senha) ===== */
+#painelDonoOverlay { position: fixed; inset: 0; z-index: 99997; background: rgba(15,23,42,.6); display: flex; align-items: center; justify-content: center; padding: 12px; }
+#painelDonoOverlay > div { width: 100%; max-width: 480px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; background: #f8fafc; color: #0f172a; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.4); }
+.pd-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: #0f172a; color: #fff; font-size: 1rem; }
+.pd-x { cursor: pointer; font-size: 26px; line-height: 1; padding: 0 4px; color: #cbd5e1; }
+.pd-body { overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 4px 14px 16px; text-align: left; }
+.pd-sec { margin: 18px 0 8px; padding: 16px 2px 0; border-top: 2px solid #cbd5e1; font-size: .7rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: #64748b; }
+.pd-sec:first-child { margin-top: 10px; padding-top: 0; border-top: 0; }
+.pd-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 2px 12px; }
+.pd-row { display: grid; grid-template-columns: 40% 1fr; gap: 8px; padding: 7px 0; border-bottom: 1px solid #eef2f7; font-size: 13px; word-break: break-word; }
+.pd-row:last-child { border-bottom: 0; }
+.pd-row span { color: #64748b; font-weight: 600; }
+.pd-row b { font-weight: 700; }
+.pd-aviso, .pd-ok { padding: 9px 12px; border-radius: 10px; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.pd-aviso { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+.pd-ok { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+.pd-btn { display: block; box-sizing: border-box; width: 100%; margin-top: 8px; padding: 11px 14px; border: 0; border-radius: 10px; background: #e2e8f0; color: #0f172a; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; text-align: left; }
+.pd-btn:disabled { opacity: .6; cursor: default; }
+.pd-azul { background: #2563eb; color: #fff; }
+.pd-amarelo { background: #fde68a; color: #78350f; }
+.pd-vermelho { background: #dc2626; color: #fff; }
+.pd-nota { margin: 3px 4px 0; font-size: 12px; color: #64748b; line-height: 1.35; }
+
+.install-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 8px;
+    padding-top: 14px;
+    border-top: 1px solid #cbd5e1;
+}
+.install-group[hidden] { display: none; }
+.install-group-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #64748b;
+}
+
+.instructions li{
+    margin-bottom:10px;
+    line-height:1.6;
+}
+
+.instructions hr {
+    border: 0;
+    border-top: 1px dashed #cbd5e1;
+    margin: 15px 0;
+}
+
+@media(max-width:768px){
+    body{
+        padding:10px;
+    }
+
+    .calculator-header{
+        flex-direction:row;
+        align-items:center;
+        justify-content:space-between;
+        padding: 16px 20px;
+    }
+
+    .header-left-group {
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .header-icon-box {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+    }
+
+    .calculator-title{
+        font-size:1.1rem;
+    }
+
+    .header-actions-right {
+        justify-content: flex-end;
+    }
+
+    .header-btn-support {
+        width: 44px;
+        padding: 0;
+    }
+
+    .header-btn-support .support-label {
+        display: none;
+    }
+
+}
+
+/* ===== Telemóvel e tablet: tabela normal com letra mais pequena e scroll horizontal ===== */
+@media screen and (max-width: 1024px) {
+    button { touch-action: manipulation; }
+
+    body { padding: 10px; }
+
+    .scroll-hint {
+        display: block;
+        margin: 0;
+        padding: 8px 14px;
+        background: #eff6ff;
+        color: #1e40af;
+        border-bottom: 1px solid #bfdbfe;
+        font-size: 12px;
+        font-weight: 600;
+        text-align: center;
+    }
+
+    .table-scroll {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-x: contain;
+        scrollbar-width: thin;
+        scrollbar-color: #94a3b8 #e2e8f0;
+    }
+    .table-scroll::-webkit-scrollbar { height: 10px; }
+    .table-scroll::-webkit-scrollbar-track { background: #e2e8f0; }
+    .table-scroll::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 6px; }
+
+    #calculator-table { min-width: 944px; }
+    #calculator-table thead th:nth-child(1)  { width: 60px; }
+    #calculator-table thead th:nth-child(2)  { width: 118px; }
+    #calculator-table thead th:nth-child(3)  { width: 74px; }
+    #calculator-table thead th:nth-child(4)  { width: 60px; }
+    #calculator-table thead th:nth-child(5)  { width: 92px; }
+    #calculator-table thead th:nth-child(6)  { width: 100px; }
+    #calculator-table thead th:nth-child(7)  { width: 92px; }
+    #calculator-table thead th:nth-child(8)  { width: 92px; }
+    #calculator-table thead th:nth-child(9)  { width: 104px; }
+    #calculator-table thead th:nth-child(10) { width: 96px; }
+    #calculator-table thead th:nth-child(11) { width: 60px; }
+
+    /* Letra mais pequena */
+    #calculator-table thead th { font-size: 11.5px; padding: 9px 3px; line-height: 1.25; }
+    #calculator-table td,
+    #calculator-table tbody td:nth-child(-n+4) { padding: 8px 3px; }
+    #calculator-table tbody input { font-size: 14px; padding: 9px 2px; border-width: 1px; border-radius: 8px; }
+    #calculator-table td.result-cell { font-size: 12px; padding: 8px 3px; }
+    #calculator-table .total-row td { font-size: 12.5px; padding: 8px 3px; }
+    #calculator-table .total-row td:first-child { width: 60px; min-width: 60px; max-width: 60px; padding: 0 !important; }
+    .toggle-total-btn { font-size: 10px; }
+    .tipo-tag { font-size: 8px; padding: 1px 5px; }
+    .delete-btn { height: 30px; min-width: 40px; padding: 4px 8px; }
+    #th-ret label { font-size: 11.5px; }
+    #cfg-ret { width: 46px; height: 26px; font-size: 12px; }
+
+    /* Primeira coluna (nº da linha) sempre visível ao deslizar */
+    #calculator-table th:first-child,
+    #calculator-table td:first-child { position: sticky; left: 0; z-index: 2; }
+    #calculator-table thead th:first-child { z-index: 3; }
+    #calculator-table tbody td:first-child { background: inherit; }
+
+    /* Botões por baixo da tabela, fáceis de tocar */
+    .table-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        padding: 14px;
+    }
+    .table-actions .buttons-container {
+        flex-direction: column;
+        width: 100%;
+        gap: 10px;
+    }
+    .table-actions .add-btn {
+        width: 100%;
+        height: 46px;
+        justify-content: center;
+        white-space: normal;
+    }
+    .table-actions .clear-total-btn {
+        position: static;
+        transform: none;
+        width: 100%;
+        min-width: 0;
+        max-width: none;
+        height: 44px;
+        flex-direction: row;
+        gap: 6px;
+    }
+
+    /* Instruções e janelas */
+    .instructions { padding: 20px 16px; }
+    .instructions-header { padding: 12px 16px; }
+    .instructions h3 { font-size: 1.15rem; }
+    .info-explain-btn {
+        flex: 1 1 100%;
+        justify-content: center;
+        padding: 12px 16px;
+    }
+
+    .modal-content {
+        padding: 22px 18px;
+        max-height: 88vh;
+        overflow-y: auto;
+    }
+    .modal-close {
+        top: 8px;
+        right: 8px;
+        padding: 6px 12px;
+        font-size: 26px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .calculator-header { padding: 14px; }
+    .header-icon-box { display: none; }
+    .header-actions-right { gap: 8px; }
+    .calculator-title { font-size: 1rem; }
+    .header-badge { font-size: 0.6rem; }
+}
+
+.calculator-table input::placeholder{color:#94a3b8;font-style:italic;opacity:1;}
+
+@media print {
+    @page {
+        size: landscape; 
+        margin: 15mm 15mm 20mm 15mm; 
+    }
+
+    body {
+        background: white !important;
+        color: #000 !important;
+        padding: 0 !important;
+    }
+
+    .print-only-header {
+        display: flex !important;
+        justify-content: space-between;
+        align-items: flex-end;
+        width: 100%;
+        padding-bottom: 12px;
+        margin-bottom: 25px;
+        border-bottom: 2px solid var(--text-dark);
+    }
+    .print-only-header h2 {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-dark);
+    }
+    .print-only-header p {
+        font-size: 12px;
+        color: var(--text-muted);
+        font-style: italic;
+    }
+
+    .print-only-footer {
+        display: block !important;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        text-align: center !important;
+        padding-top: 12px;
+        padding-bottom: 5px;
+        border-top: 1px dashed #cbd5e1;
+        font-size: 11px;
+        color: #64748b;
+        background: white !important;
+    }
+
+    .tanb-calculator {
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+
+    .calculator-header, 
+    .table-actions, 
+    .scroll-hint, 
+    .instructions, 
+    footer,
+    .modal-overlay {
+        display: none !important;
+    }
+
+    .calculator-table {
+        table-layout: fixed !important; 
+        width: 100% !important;
+        display: table !important;
+    }
+
+        .calculator-table th:nth-child(1), .calculator-table td:nth-child(1) { width: 5% !important; text-align: center !important; display: table-cell !important;}
+    .calculator-table th:nth-child(2), .calculator-table td:nth-child(2) { width: 12% !important; text-align: right !important; display: table-cell !important;}
+    .calculator-table th:nth-child(3), .calculator-table td:nth-child(3) { width: 8% !important; text-align: center !important; display: table-cell !important;}
+    .calculator-table th:nth-child(4), .calculator-table td:nth-child(4) { width: 6% !important; text-align: center !important; display: table-cell !important;}
+    .calculator-table th:nth-child(5), .calculator-table td:nth-child(5) { width: 11.5% !important; text-align: right !important; display: table-cell !important;}
+    .calculator-table th:nth-child(6), .calculator-table td:nth-child(6) { width: 11.5% !important; text-align: right !important; display: table-cell !important;}
+    .calculator-table th:nth-child(7), .calculator-table td:nth-child(7) { width: 11.5% !important; text-align: right !important; display: table-cell !important;}
+    .calculator-table th:nth-child(8), .calculator-table td:nth-child(8) { width: 11.5% !important; text-align: right !important; display: table-cell !important;}
+    .calculator-table th:nth-child(9), .calculator-table td:nth-child(9) { width: 11.5% !important; text-align: right !important; display: table-cell !important;}
+    .calculator-table th:nth-child(10), .calculator-table td:nth-child(10) { width: 11.5% !important; text-align: right !important; display: table-cell !important;}
+
+    .calculator-table th:last-child, 
+    .calculator-table td:last-child {
+        display: none !important;
+        width: 0% !important;
+    }
+
+    .calculator-table th {
+        position: static !important;
+        padding: 10px 6px !important;
+        font-size: 11px !important;
+        background: linear-gradient(180deg, #1e3a8a 0%, #3b82f6 100%) !important;
+        color: #ffffff !important;
+        line-height: 1.3 !important;
+        border-bottom: 2px solid #000 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        display: table-cell !important;
+    }
+
+    .calculator-table td {
+        padding: 10px 6px !important;
+        font-size: 11px !important;
+        white-space: nowrap !important;
+        border-bottom: 1px solid #cbd5e1 !important;
+        display: table-cell !important;
+    }
+
+    tr[data-type="simple"] {
+        background-color: #f8fafc !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    
+    .compound-row {
+        background-color: #f0fdf4 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .calculator-table tbody tr.empty-print-row {
+        display: none !important;
+    }
+
+    .calculator-table input {
+        border: none !important;
+        background: transparent !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        color: #000 !important;
+        font-weight: 700 !important;
+        font-size: 11px !important;
+        text-align: center !important;
+    }
+    
+    .calculator-table td:nth-child(2) input { text-align: right !important; }
+    .calculator-table td:nth-child(3) input { text-align: center !important; }
+    .calculator-table td:nth-child(4) input { text-align: center !important; }
+
+    .total-hidden {
+        display: table-cell !important;
+    }
+    
+    .total-row {
+        background: #fef3c7 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        display: table-row !important;
+    }
+
+    .total-row.is-hidden {
+        display: none !important;
+    }
+    
+    .total-row td {
+        font-size: 11px !important;
+        padding: 10px 6px !important;
+        border-top: 2px solid #000 !important;
+        border-bottom: 2px solid #000 !important;
+        color: #92400e !important;
+        display: table-cell !important;
+    }
+
+    .total-row td:first-child button {
+        display: none !important;
+    }
+    .total-row td:first-child::before {
+        content: "Total";
+        font-weight: 700;
+    }
+    
+    .total-row td:nth-child(2) { text-align: right !important; }
+    .total-row td:nth-child(5), .total-row td:nth-child(6), 
+    .total-row td:nth-child(7), .total-row td:nth-child(8),
+    .total-row td:nth-child(9), .total-row td:nth-child(10) { text-align: right !important; }
+}
+
+/* ===== V25: definições, avisos, exportação e feedback ===== */
+.settings-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border-color);
+}
+.settings-bar label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+.settings-bar input,
+.settings-bar select {
+    height: 40px;
+    padding: 0 10px;
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--text-dark);
+    background: #fff;
+}
+.settings-bar input { width: 90px; text-align: center; }
+.settings-bar input:focus,
+.settings-bar select:focus {
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 4px rgba(30,58,138,.15);
+    outline: none;
+}
+.aviso {
+    margin: 0;
+    padding: 10px 24px;
+    background: #fef2f2;
+    color: #991b1b;
+    border-bottom: 1px solid #fecaca;
+    font-size: 13px;
+    font-weight: 600;
+}
+.aviso[hidden] { display: none; }
+
+.calculator-table input.input-error,
+.settings-bar input.input-error {
+    border-color: #dc2626;
+    background: #fef2f2;
+}
+.calculator-table input.input-error:focus { box-shadow: 0 0 0 4px rgba(220,38,38,.18); }
+
+.best-row .c-taxa::after { content: " 🏆"; }
+
+.calc-note {
+    margin: 0;
+    padding: 12px 24px;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--text-muted);
+    background: #f8fafc;
+    border-top: 1px solid var(--border-color);
+}
+
+.toast {
+    position: fixed;
+    left: 50%;
+    bottom: 76px;
+    transform: translateX(-50%) translateY(10px);
+    max-width: min(32rem, calc(100% - 24px));
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    background: #0f172a;
+    color: #fff;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 10px 30px rgba(0,0,0,.35);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .2s, transform .2s, visibility .2s;
+    z-index: 1100;
+}
+.toast.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
+.toast button {
+    background: none;
+    border: 0;
+    color: #93c5fd;
+    font: inherit;
+    font-weight: 800;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.noscript-msg { color: #fff; text-align: center; padding: 20px; font-weight: 600; }
+
+button:focus-visible,
+select:focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }
+
+@media (max-width: 768px) {
+    .settings-bar { padding: 12px 16px; }
+    .settings-bar label { flex: 1 1 140px; }
+    .settings-bar input, .settings-bar select { width: 100%; }
+    .aviso, .calc-note { padding-left: 16px; padding-right: 16px; }
+}
+
+@media print {
+    .settings-bar, .aviso, .calc-note, .toast, .noscript-msg { display: none !important; }
+}
+
+/* ===== V25.1: campos mais compactos e retenção no cabeçalho ===== */
+.calculator-table tbody input {
+    font-size: 15px;
+    padding: 10px 4px;
+}
+
+@media (min-width: 1025px) {
+    .calculator-table tbody td:nth-child(-n+4) { padding: 10px 5px; }
+}
+
+#th-ret label { display: block; }
+.th-ret-field { display: inline-flex; align-items: center; gap: 3px; margin-top: 4px; }
+#cfg-ret {
+    width: 54px;
+    height: 28px;
+    padding: 0 4px;
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--text-dark);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+}
+#cfg-ret:focus {
+    outline: none;
+    border-color: #fff;
+    background: #fff;
+    transform: none;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.55);
+}
+
+@media print {
+    #cfg-ret { color: #fff !important; background: transparent !important; font-size: 11px !important; }
+}
+
+/* ===== V25.2: cores das linhas TANB (azul) e juros compostos (verde) ===== */
+tr[data-type="simple"] { background-color: #eff6ff; }
+tr[data-type="simple"]:hover { background-color: #dbeafe !important; }
+.compound-row { background-color: #ecfdf5; }
+.compound-row:hover { background-color: #d1fae5 !important; }
+
+tr[data-type="simple"] .result-cell { color: #1e40af; }
+.compound-row .result-cell { color: #047857; }
+
+tr[data-type="simple"] input { border-color: #bfdbfe; }
+.compound-row input { border-color: #a7f3d0; }
+tr[data-type="simple"] input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, .18);
+}
+.compound-row input:focus {
+    border-color: #059669;
+    box-shadow: 0 0 0 4px rgba(5, 150, 105, .18);
+}
+
+.tipo-tag {
+    display: inline-block;
+    margin-top: 3px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .03em;
+}
+tr[data-type="simple"] .tipo-tag { background: #dbeafe; color: #1e40af; }
+.compound-row .tipo-tag { background: #d1fae5; color: #047857; }
+
+tr[data-type="simple"] td:first-child { box-shadow: inset 4px 0 0 #3b82f6; }
+.compound-row td:first-child { box-shadow: inset 4px 0 0 #10b981; }
+
+@media print {
+    tr[data-type="simple"] { background-color: #eff6ff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .compound-row { background-color: #ecfdf5 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .tipo-tag { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+
+/* ===== V25.3: publicidade (AdSense) e consentimento ===== */
+.ad-wrap {
+    margin: 0;
+    padding: 14px 24px;
+    background: #f8fafc;
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+}
+.ad-wrap[hidden], .consent-banner[hidden] { display: none; }
+.ad-wrap:has(ins[data-ad-status="unfilled"]) { display: none; }
+.ad-label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #94a3b8;
+}
+.consent-banner {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    background: rgba(15, 23, 42, 0.95);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,.5);
+    color: #e2e8f0;
+    font-size: 12px;
+    line-height: 1.6;
+    z-index: 900;
+}
+@media (min-width: 640px) {
+    .consent-banner { left: auto; right: 16px; max-width: 384px; }
+}
+.consent-banner p { margin: 0; }
+.consent-more {
+    background: none; border: 0; padding: 0;
+    color: #a5b4fc; font: inherit;
+    text-decoration: underline; text-underline-offset: 2px; cursor: pointer;
+}
+.consent-more:hover { color: #fff; }
+.consent-actions { display: flex; gap: 8px; }
+.consent-actions button {
+    flex: 1;
+    padding: 8px 12px;
+    border: 0;
+    border-radius: 12px;
+    background: rgba(255,255,255,.1);
+    color: #fff;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .2s;
+}
+.consent-actions button:hover { background: rgba(255,255,255,.2); }
+.consent-actions .consent-accept { background: linear-gradient(to right, #4f46e5, #9333ea); }
+.consent-actions .consent-accept:hover { background: linear-gradient(to right, #6366f1, #a855f7); }
+#page-footer {
+    position: relative;
+    z-index: 10;
+    width: calc(100% - 32px);
+    min-height: 60px;
+    margin: 32px 16px 16px;
+    border-radius: 12px;
+    background-color: #222;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    font-size: 12px;
+    color: #94a3b8;
+}
+#footer-toast {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 10px);
+    transform: translate(-50%, 8px);
+    width: max-content;
+    max-width: calc(100vw - 32px);
+    text-align: center;
+    background: rgba(15, 23, 42, 0.97);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 10px 18px;
+    border-radius: 12px;
+    font-size: 13px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s, transform .25s;
+    z-index: 100;
+}
+#footer-toast.show { opacity: 1; transform: translate(-50%, 0); }
+.footer-link {
+    background: none;
+    border: 0;
+    padding: 0;
+    color: #94a3b8;
+    font: inherit;
+    font-size: 11px;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+}
+.footer-link:hover { color: #cbd5e1; }
+.footer-copy { font-size: inherit; text-decoration: none; }
+.footer-copy:hover { text-decoration: underline; text-underline-offset: 2px; }
+.footer-brand { font-size: inherit; text-decoration: none; font-weight: 700; letter-spacing: .04em; }
+.footer-brand:hover { text-decoration: underline; text-underline-offset: 2px; }
+/* «© ano» e «AGAJOTA» no rodapé: botões ocultos (parecem texto; só reagem a 3 cliques seguidos) */
+.footer-oculto, .footer-oculto:hover { cursor: default; text-decoration: none; color: #94a3b8; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
+.footer-oculto:focus-visible { outline: none; }
+@media (max-width: 768px) { .ad-wrap { padding: 12px 16px; } }
+@media print { .ad-wrap, .consent-banner, footer { display: none !important; } }
+
+.ad-wrap.ad-pending { height: 0; padding: 0 !important; border: 0; overflow: hidden; }
+
+/* Janela de Privacidade e Cookies (igual à do site AGAJOTA) */
+.priv-modal .modal-content {
+    max-width: 640px;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: rgba(15, 23, 42, 0.97);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #cbd5e1;
+    text-align: left;
+}
+.priv-modal .modal-close { color: #cbd5e1; }
+.priv-modal .modal-close:hover { color: #fff; }
+.priv-modal .modal-content h3 { color: #fff; margin-bottom: 4px; }
+.priv-card {
+    background: rgba(2, 6, 23, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 16px;
+    padding: 14px 16px;
+    margin-top: 12px;
+}
+.priv-card h4 { color: #fff; font-size: 14px; margin: 0 0 4px; }
+.priv-card p { font-size: 12px; line-height: 1.6; color: #cbd5e1; margin: 0; }
+
+/* Rodapé no fim da página (já não é fixo): menos espaço em baixo no corpo */
+body { padding-bottom: 20px; }
+@media screen and (max-width: 1024px) { body { padding-bottom: 10px; } }
+
+/* ===== V25.4: barra de ferramentas moderna + cabeçalho das colunas fixo mais estável ===== */
+.settings-bar {
+    background: linear-gradient(180deg, #f8fafc, #f1f5f9);
+    gap: 14px 20px;
+}
+.settings-bar select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 32px;
+    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center / 14px;
+    cursor: pointer;
+}
+.tool-actions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .06), 0 4px 12px rgba(15, 23, 42, .05);
+}
+.tool-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 38px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: #334155;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background .18s, color .18s, transform .18s, box-shadow .18s;
+}
+.tool-btn svg {
+    width: 17px;
+    height: 17px;
+    flex-shrink: 0;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.tool-btn:hover {
+    background: #eff6ff;
+    border-color: transparent;
+    color: #1d4ed8;
+}
+.tool-btn:active { transform: scale(.97); }
+.tool-btn-primary {
+    background: linear-gradient(135deg, #2563eb, #1e40af);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, .35);
+}
+.tool-btn-primary:hover {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(37, 99, 235, .45);
+}
+.tool-btn-primary:active { transform: translateY(0) scale(.97); }
+
+@media (max-width: 768px) {
+    .tool-actions { width: 100%; margin-left: 0; }
+    .tool-btn { flex: 1; padding: 0 8px; }
+    .tool-btn-primary { flex: 1.2; }
+}
+@media (max-width: 400px) {
+    .tool-btn { gap: 5px; font-size: 12px; }
+    .tool-btn svg { width: 15px; height: 15px; }
+}
+
+/* Cabeçalho das colunas: plano, sem folga e sem "saltos" ao fazer scroll (desktop) */
+@media screen and (min-width: 1025px) {
+    .calculator-table {
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    .calculator-table thead th {
+        position: sticky;
+        top: calc(var(--header-h, 80px) - 1px); /* -1px tapa a linha fina entre os dois cabeçalhos */
+        z-index: 90;
+        background: linear-gradient(180deg, #0b8ee6 50%, #3b82f6 100%);
+        color: #ffffff;
+        padding: 12px 8px;
+        font-weight: 700;
+        font-size: 14px;
+        line-height: 1.3;
+        border-bottom: 0;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1), inset 0 -2px 0 #2563eb;
+        transition: box-shadow .2s;
+    }
+    .calculator-table.th-stuck thead th {
+        box-shadow: 0 8px 14px -6px rgba(15, 23, 42, .45), inset 0 -2px 0 #2563eb;
+    }
+}
+</style>
+</head>
+<body>
+
+    <noscript><p class="noscript-msg">O Simulador de Juros precisa de JavaScript ativo para funcionar.</p></noscript>
+
+    <div class="print-only-header">
+        <h2>Simulador de Juros (TANB & Juros Compostos)</h2>
+        <p>Relatório de Simulações</p>
+    </div>
+
+<svg style="display: none;" aria-hidden="true">
+    <symbol id="icon-chevron" viewBox="0 0 24 24"><path fill="currentColor" d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></symbol>
+    <symbol id="flag-pt" viewBox="0 0 24 16"><rect width="9.6" height="16" fill="#006600"/><rect x="9.6" width="14.4" height="16" fill="#FF0000"/><circle cx="9.6" cy="8" r="3.3" fill="#FFCC00"/><rect x="8.1" y="6.3" width="3" height="3.5" rx=".7" fill="#FF0000" stroke="#fff" stroke-width=".5"/></symbol>
+    <symbol id="flag-gb" viewBox="0 0 24 16"><rect width="24" height="16" fill="#012169"/><path d="M0 0L24 16M24 0L0 16" stroke="#fff" stroke-width="3.2"/><path d="M0 0L24 16M24 0L0 16" stroke="#C8102E" stroke-width="1.1"/><path d="M12 0V16M0 8H24" stroke="#fff" stroke-width="5.4"/><path d="M12 0V16M0 8H24" stroke="#C8102E" stroke-width="3.2"/></symbol>
+    <symbol id="flag-es" viewBox="0 0 24 16"><rect width="24" height="16" fill="#AA151B"/><rect y="4" width="24" height="8" fill="#F1BF00"/></symbol>
+    <symbol id="flag-fr" viewBox="0 0 24 16"><rect width="8" height="16" fill="#0055A4"/><rect x="8" width="8" height="16" fill="#fff"/><rect x="16" width="8" height="16" fill="#EF4135"/></symbol>
+    <symbol id="flag-de" viewBox="0 0 24 16"><rect width="24" height="5.34" fill="#000"/><rect y="5.33" width="24" height="5.34" fill="#DD0000"/><rect y="10.66" width="24" height="5.34" fill="#FFCE00"/></symbol>
+    <symbol id="flag-it" viewBox="0 0 24 16"><rect width="8" height="16" fill="#009246"/><rect x="8" width="8" height="16" fill="#fff"/><rect x="16" width="8" height="16" fill="#CE2B37"/></symbol>
+</svg>
+<div id="google_translate_element" aria-hidden="true"></div>
+
+    <div class="tanb-calculator">
+        <div class="calculator-header">
+            <div class="header-left-group">
+                <div class="header-icon-box">💰</div>
+                <div>
+                    <span class="header-badge">Simulador de juros</span>
+                    <h1 class="calculator-title">TANB & Juros Compostos</h1>
+                </div>
+            </div>
+            <div class="header-actions-right">
+                <button class="header-btn header-btn-support" onclick="openAboutModal()" title="Suporte" aria-label="Abrir suporte: sugestões, reportar problema ou contacto">
+                    <span class="support-icon" aria-hidden="true">💬</span>
+                    <span class="support-label">Suporte</span>
+                </button>
+                <!-- Seletor de idioma (original: português; tradução via Google Tradutor, só quando escolhido) -->
+                <div id="langWrap" class="notranslate" translate="no">
+                    <button type="button" id="langBtn" class="header-btn header-btn-lang" aria-haspopup="menu" aria-expanded="false" aria-controls="langMenu" aria-label="Idioma: Português" title="Idioma / Language" onclick="alternarMenuIdioma(event)">
+                        <svg id="langFlag" class="lang-flag" aria-hidden="true"><use href="#flag-pt"/></svg>
+                        <svg class="lang-chev" aria-hidden="true"><use href="#icon-chevron"/></svg>
+                    </button>
+                    <div id="langMenu" role="menu" aria-label="Escolher idioma" class="hidden">
+                    <button type="button" role="menuitemradio" aria-checked="true" data-lang="pt" lang="pt" onclick="selecionarIdioma('pt')" class="lang-item">
+                        <svg class="lang-flag" aria-hidden="true"><use href="#flag-pt"/></svg>
+                        <span class="lang-name">Português <span class="lang-orig">(original)</span></span>
+                        <span class="lang-check" aria-hidden="true">✓</span>
+                    </button>
+                    <button type="button" role="menuitemradio" aria-checked="false" data-lang="en" lang="en" onclick="selecionarIdioma('en')" class="lang-item">
+                        <svg class="lang-flag" aria-hidden="true"><use href="#flag-gb"/></svg>
+                        <span class="lang-name">English</span>
+                        <span class="lang-check invisible" aria-hidden="true">✓</span>
+                    </button>
+                    <button type="button" role="menuitemradio" aria-checked="false" data-lang="es" lang="es" onclick="selecionarIdioma('es')" class="lang-item">
+                        <svg class="lang-flag" aria-hidden="true"><use href="#flag-es"/></svg>
+                        <span class="lang-name">Español</span>
+                        <span class="lang-check invisible" aria-hidden="true">✓</span>
+                    </button>
+                    <button type="button" role="menuitemradio" aria-checked="false" data-lang="fr" lang="fr" onclick="selecionarIdioma('fr')" class="lang-item">
+                        <svg class="lang-flag" aria-hidden="true"><use href="#flag-fr"/></svg>
+                        <span class="lang-name">Français</span>
+                        <span class="lang-check invisible" aria-hidden="true">✓</span>
+                    </button>
+                    <button type="button" role="menuitemradio" aria-checked="false" data-lang="de" lang="de" onclick="selecionarIdioma('de')" class="lang-item">
+                        <svg class="lang-flag" aria-hidden="true"><use href="#flag-de"/></svg>
+                        <span class="lang-name">Deutsch</span>
+                        <span class="lang-check invisible" aria-hidden="true">✓</span>
+                    </button>
+                    <button type="button" role="menuitemradio" aria-checked="false" data-lang="it" lang="it" onclick="selecionarIdioma('it')" class="lang-item">
+                        <svg class="lang-flag" aria-hidden="true"><use href="#flag-it"/></svg>
+                        <span class="lang-name">Italiano</span>
+                        <span class="lang-check invisible" aria-hidden="true">✓</span>
+                    </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="settings-bar" role="group" aria-label="Definições da simulação">
+<label>Base (juros simples)
+                <select id="cfg-base" onchange="aplicarConfig()">
+                    <option value="360">360 dias</option>
+                    <option value="365">365 dias</option>
+                </select>
+            </label>
+            <label>Capitalização (compostos)
+                <select id="cfg-cap" onchange="aplicarConfig()">
+                    <option value="diaria">Diária</option>
+                    <option value="mensal">Mensal</option>
+                    <option value="anual">Anual</option>
+                </select>
+            </label>
+            <div class="tool-actions" role="group" aria-label="Exportar e imprimir">
+                <button type="button" class="tool-btn" onclick="exportCSV()" title="Exportar para CSV (Excel)">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+                    <span>Exportar CSV</span>
+                </button>
+                <button type="button" class="tool-btn" onclick="copyResults()" title="Copiar resultados">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/></svg>
+                    <span>Copiar</span>
+                </button>
+                <button type="button" class="tool-btn tool-btn-primary" onclick="printTable()" title="Imprimir simulações">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V4h10v5M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/><rect x="7" y="14" width="10" height="6" rx="1"/></svg>
+                    <span>Imprimir</span>
+                </button>
+            </div>
+        </div>
+        <p class="aviso" id="aviso" role="status" aria-live="polite" hidden></p>
+
+        <p class="scroll-hint">↔ Deslize a tabela para ver todas as colunas</p>
+        <div class="table-scroll">
+        <table class="calculator-table" id="calculator-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Montante a<br>Investir (€)</th>
+                    <th>% Taxa Anual</th>
+                    <th>Dias</th>
+                    <th>Juros<br>Brutos (€)</th>
+                    <th id="th-ret"><label for="cfg-ret">Retenção</label><span class="th-ret-field"><input type="text" id="cfg-ret" data-num="dec" inputmode="decimal" value="28" autocomplete="off" aria-label="Taxa de retenção em percentagem" onchange="aplicarConfig()"><b>%</b></span></th>
+                    <th>Juros<br>Líquidos (€)</th>
+                    <th>Juro Líquido<br>por Dia (€)</th>
+                    <th title="Capital mais juros líquidos">Montante<br>Final (€)</th>
+                    <th title="Taxa anual equivalente do ganho líquido (já com retenção e capitalização)">Taxa Líq.<br>Anual Efetiva</th>
+                    <th>Ação</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Linhas geradas dinamicamente via JavaScript -->
+            </tbody>
+            
+            <tfoot>
+                <tr class="total-row" id="total-row-element">
+                    <td>
+                        <button class="toggle-total-btn" id="toggle-btn-element" onclick="toggleTotals()">Mostrar total</button>
+                    </td>
+                    <td class="total-data total-hidden" id="total-montante" data-label="Montante total"></td>
+                    <td class="total-data total-hidden" id="total-tanb" data-label="TANB média"></td>
+                    <td class="total-data total-hidden" id="total-dias" data-label="Dias médios"></td>
+                    <td class="total-data total-hidden" id="total-brutos" data-label="Juros brutos"></td>
+                    <td class="total-data total-hidden" id="total-retencao" data-label="Retenção"></td>
+                    <td class="total-data total-hidden" id="total-liquidos" data-label="Juros líquidos"></td>
+                    <td class="total-data total-hidden" id="total-dia" data-label="Líquido por dia"></td>
+                    <td class="total-data total-hidden" id="total-final" data-label="Montante final"></td>
+                    <td class="total-data total-hidden" id="total-taxa" data-label="Taxa líq. anual efetiva"></td>
+                    <td class="total-data total-hidden" id="total-blank-last"></td>
+                </tr>
+            </tfoot>
+        </table>
+        </div>
+
+        <div class="table-actions">
+            <div class="buttons-container">
+                <button class="add-btn" onclick="addRow(false)">Adicionar linha TANB</button>
+                <button class="add-btn add-compound-btn" onclick="addRow(true)">Adicionar linha de juros compostos</button>
+            </div>
+            <button class="clear-total-btn" onclick="clearAllRows()">Limpar<br>tudo</button>
+        </div>
+ 
+        <p class="calc-note">ℹ️ Linhas TANB: juros simples, base de <span class="base-txt">360</span> dias. Linhas verdes: juros compostos com capitalização <span class="cap-txt">diária</span> (ano de 365 dias). Retenção de <span class="ret-pct">28</span>% aplicada a todas as linhas. Só as linhas completas e válidas entram nos totais. Simulação meramente informativa; não substitui as condições contratuais da instituição financeira.</p>
+
+        <div class="ad-wrap" id="ad-wrap" hidden>
+            <span class="ad-label">Publicidade</span>
+            <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4094039418988922" data-ad-format="auto" data-full-width-responsive="true"></ins>
+        </div>
+
+        <div class="instructions">
+            <div class="info-buttons-container">
+                <button class="info-explain-btn" onclick="showTanbInfo()">💡 O que é a TANB?</button>
+                <button class="info-explain-btn" onclick="showCompoundInfo()">📈 O que são Juros Compostos?</button>
+            </div>
+
+            <div class="instructions-header">
+                <h3>📖 Como usar o Simulador de Juros:</h3>
+            </div>
+            
+            <ul>
+                <li><strong>Linhas TANB Simples (Azul):</strong> O cálculo dos juros simples baseia-se na convenção do <strong>ano de <span class="base-txt">360</span> dias</strong> (configurável nas definições).</li>
+                <li><strong>Linhas Verdes (Compostas):</strong> Representam investimentos onde o cálculo utiliza o <strong>ano civil de 365 dias</strong>. Os juros são capitalizados com periodicidade <strong class="cap-txt">diária</strong> (configurável) e o imposto (<span class="ret-pct">28</span>%) é deduzido em cada período, reinvestindo o ganho líquido.</li>
+            </ul>
+            
+            <hr>
+            
+            <ul>
+                <li><strong>Definições:</strong> Ajuste a retenção, a base dos juros simples (360 ou 365 dias) e a capitalização dos juros compostos (diária, mensal ou anual);</li>
+            </ul>
+            
+            <hr>
+            
+            <ul>
+                <li><strong>Montante a Investir (€):</strong> Insira o valor que pretende investir (em euros);</li>
+                <li><strong>% Taxa Anual:</strong> Insira a Taxa Anual Nominal Bruta (TANB);</li>    
+                <li><strong>Dias:</strong> Insira o período do investimento em dias;</li>
+                <li><strong>Juros Brutos (€):</strong> Valor total ganho sem a retenção na fonte.</li>
+                <li><strong>Retenção na fonte (€):</strong> Em conformidade com a regulamentação fiscal portuguesa, a taxa de retenção por defeito é de <span class="ret-pct">28</span>% (configurável);</li>
+                <li><strong>Juros Líquidos (€):</strong> Lucro real calculado referente aos dias colocados já livre de impostos;</li>
+                <li><strong>Juro Líquido por dia (€):</strong> Lucro automaticamente calculado como valor médio ganho por dia já com a retenção na fonte.</li>
+                <li><strong>Montante Final (€):</strong> Capital investido mais os juros líquidos;</li>
+                <li><strong>Taxa Líq. Anual Efetiva (%):</strong> Taxa anual equivalente do ganho líquido; permite comparar linhas com prazos e tipos de juros diferentes. A linha com a melhor taxa (quando há duas ou mais) fica assinalada com 🏆;</li>
+                <li><strong>Ação:</strong> Eliminar a linha de simulação (é possível anular logo a seguir).</li>
+            </ul>
+
+            <hr>
+
+            <ul>
+                <li><strong>Exportar CSV / Copiar:</strong> Exporte ou copie as linhas calculadas;</li>
+                <li><strong>Imprimir:</strong> Imprima as linhas calculadas. Para obter um PDF, escolha "Guardar como PDF" na janela de impressão.</li>
+            </ul>
+
+            <hr>
+
+            <ul>
+                <li><strong>Limites:</strong> Montante até 1 000 000 000 000 €, taxa até 100 % e prazo até 36 500 dias.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Janela Modal: TANB -->
+    <div id="tanb-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="tanb-modal-title" onclick="closeModalOnOverlay(event, 'tanb-modal')">
+        <div class="modal-content">
+            <button type="button" class="modal-close" aria-label="Fechar" onclick="closeModal('tanb-modal')">&times;</button>
+            <h3 id="tanb-modal-title">📊 O que é a TANB?</h3>
+            <p>A <strong>TANB (Taxa Anual Nominal Bruta)</strong> é a taxa de juro de referência utilizada para depósitos e investimentos a um ano, antes de qualquer dedução fiscal.</p>
+            <p>É designada por <em>"nominal"</em> porque reflete o ganho bruto teórico sem considerar o reinvestimento de juros, e <em>"bruta"</em> porque não inclui a retenção do imposto (como a taxa de 28% em Portugal).</p>
+        </div>
+    </div>
+
+    <!-- Janela Modal: Juros Compostos -->
+    <div id="compound-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="compound-modal-title" onclick="closeModalOnOverlay(event, 'compound-modal')">
+        <div class="modal-content">
+            <button type="button" class="modal-close" aria-label="Fechar" onclick="closeModal('compound-modal')">&times;</button>
+            <h3 id="compound-modal-title">📈 O que são Juros Compostos?</h3>
+            <p>Trata-se do efeito comummente conhecido como <strong>"juros sobre juros"</strong>.</p>
+            <p>Em vez de receber os rendimentos apenas no final do período, os juros gerados periodicamente são somados ao capital inicial. Nos períodos seguintes, os juros passam a incidir sobre o novo saldo acumulado, gerando um crescimento exponencial do seu investimento ao longo do tempo.</p>
+        </div>
+    </div>
+
+    <!-- Janela Modal de Suporte -->
+    <div id="about-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="about-modal-title" onclick="closeModalOnOverlay(event, 'about-modal')">
+        <div class="modal-content" style="text-align: center;">
+            <button type="button" class="modal-close" aria-label="Fechar" onclick="closeModal('about-modal')">&times;</button>
+            <h3 id="about-modal-title" onclick="triploClique(this, abrirPainelDono)" style="justify-content: center; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; touch-action:manipulation; -webkit-tap-highlight-color:transparent;">💬 Suporte</h3>
+            <p style="text-align: center; margin-bottom: 20px;">Selecione uma opção:</p>
+            
+            <div class="modal-menu-options">
+                <button class="modal-option-btn" onclick="sendEmail('Sugestões')">
+                    <span class="modal-option-icon" aria-hidden="true">💡</span>
+                    <span class="modal-option-text"><strong>Sugestões</strong><small>Ideias para melhorar o simulador</small></span>
+                </button>
+                <button class="modal-option-btn" onclick="sendEmail('Reportar Problema')">
+                    <span class="modal-option-icon" aria-hidden="true">🐛</span>
+                    <span class="modal-option-text"><strong>Reportar Problema</strong><small>Algo não funciona como esperado</small></span>
+                </button>
+                <button class="modal-option-btn" onclick="sendEmail('Contacto')">
+                    <span class="modal-option-icon" aria-hidden="true">✉️</span>
+                    <span class="modal-option-text"><strong>Contacto (E-mail)</strong><small>Enviar mensagem diretamente</small></span>
+                </button>
+                <div class="install-group" id="install-group">
+                    <span class="install-group-label">Aplicação</span>
+                    <button type="button" class="modal-option-btn" id="install-option" onclick="mostrarEstadoApp()">
+                        <span class="modal-option-icon" aria-hidden="true">📲</span>
+                        <span class="modal-option-text"><strong>Instalar app</strong><small>Adicionar ao ecrã principal</small></span>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="print-only-footer" id="dynamic-print-footer"></div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <!-- Janela de Privacidade e Cookies -->
+    <div id="privacy-modal" class="modal-overlay priv-modal" role="dialog" aria-modal="true" aria-labelledby="privacy-modal-title" onclick="closeModalOnOverlay(event, 'privacy-modal')">
+        <div class="modal-content">
+            <button type="button" class="modal-close" aria-label="Fechar" onclick="closeModal('privacy-modal')">&times;</button>
+            <h3 id="privacy-modal-title">🔒 Privacidade e Cookies</h3>
+
+            <div class="priv-card">
+                <h4>Quem é o responsável</h4>
+                <p>Para qualquer questão sobre privacidade, use o botão “Suporte”.</p>
+            </div>
+            <div class="priv-card">
+                <h4>Que dados recolhe este site</h4>
+                <p>Este simulador não tem contas de utilizador, formulários nem comentários, e não recolhe diretamente dados pessoais. Os valores que introduz na tabela são processados no seu navegador e não são enviados para nenhum servidor.</p>
+            </div>
+            <div class="priv-card">
+                <h4>Publicidade (Google AdSense)</h4>
+                <p>O site pode mostrar anúncios do Google AdSense. Só depois de aceitar é que o código de anúncios é carregado, e o Google pode então usar cookies e identificadores para mostrar e medir anúncios. Se recusar, esse código não é carregado. Pode mudar de ideias a qualquer momento em “Cookies”, no rodapé. Mais informação em policies.google.com/technologies/ads.</p>
+            </div>
+            <div class="priv-card">
+                <h4>Tradução do site (Google Tradutor)</h4>
+                <p>O site está em português. Só se escolher outro idioma no botão das bandeiras é que é carregado o Google Tradutor, que pode usar cookies e ver o seu endereço IP. Se voltar ao português, deixa de ser usado.</p>
+            </div>
+            <div class="priv-card">
+                <h4>Armazenamento no seu navegador</h4>
+                <p>Guardamos apenas, no armazenamento local do navegador, a sua escolha sobre cookies, o idioma escolhido e os dados da tabela do simulador, para não voltar a perder o que preencheu. Estes dados não saem do seu dispositivo.</p>
+            </div>
+            <div class="priv-card">
+                <h4>Os seus direitos</h4>
+                <p>Ao abrigo do RGPD, tem direito de acesso, retificação, apagamento e oposição ao tratamento dos seus dados, bem como o direito de apresentar reclamação à CNPD (cnpd.pt).</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="consent-banner" id="consent-banner" role="region" aria-label="Aviso de cookies" hidden>
+        <p>🍪 Este site usa cookies de terceiros para mostrar anúncios, mas só com a sua autorização. <button type="button" class="consent-more" onclick="abrirPrivacidade()">Saber mais</button></p>
+        <div class="consent-actions">
+            <button type="button" onclick="responderConsentimento(false)">Recusar</button>
+            <button type="button" class="consent-accept" onclick="responderConsentimento(true)">Aceitar</button>
+        </div>
+    </div>
+        
+    <script>
+    const MAX_DIAS = 36500, MAX_TAXA = 100, MAX_MONTANTE = 1e12;
+    const CHAVE = 'simulador_depositos_data';
+    const CAPS = ['diaria', 'mensal', 'anual'];
+    const PERIODOS_ANO = { diaria: 365, mensal: 12, anual: 1 };
+    const NOME_CAP = { diaria: 'diária', mensal: 'mensal', anual: 'anual' };
+
+    /* Publicidade (AdSense): cole em ADSENSE_SLOT o ID do bloco de anúncios.
+       Enquanto estiver vazio, não aparece publicidade nem o aviso de consentimento. */
+    const ADSENSE_CLIENT = 'ca-pub-4094039418988922';
+    const ADSENSE_SLOT = '8137560560';
+    const CHAVE_ADS = 'agajota-cookies'; /* mesma chave do site AGAJOTA (valores: 'aceite' / 'recusado') */
+    const CHAVE_ADS_ANTIGA = 'simulador_consentimento_ads';
+
+    /* Data da última atualização do simulador (AAAA-MM-DD): alterar sempre que publicar uma nova versão */
+    const ULTIMA_ATUALIZACAO = '2026-10-28';
+
+    let cfg = { retencao: 28, base: 360, cap: 'diaria' };
+    let totalsVisible = false;
+    let currentTotals = { montante: 0, tanbMed: 0, diasMed: 0, brutos: 0, retencao: 0, liquidos: 0, dia: 0, final: 0, taxaMed: 0 };
+    let toastTimer = null;
+    let ultimoFoco = null;
+
+    const byId = (id) => document.getElementById(id);
+    const linhas = () => [...document.querySelectorAll('#calculator-table tbody tr')];
+    const pctTxt = (n) => String(n).replace('.', ',');
+
+    /* Converte strings PT (com espaços, pontos de milhar e vírgulas) num float de forma segura */
+    function parsePtNumber(val, isPercent = false) {
+        if (!val) return 0;
+        let clean = val.toString().replace(/[€%\s\u00a0\u202f]/g, '');
+        if (clean.includes('.') && clean.includes(',')) {
+            clean = clean.replace(/\./g, '').replace(',', '.');
+        } else if (clean.includes(',')) {
+            clean = clean.replace(',', '.');
+        } else if (!isPercent && /^\d{1,3}(\.\d{3})+$/.test(clean)) {
+            /* só pontos e grupos de 3 dígitos (ex.: 10.000) = separador de milhar */
+            clean = clean.replace(/\./g, '');
+        }
+        return parseFloat(clean) || 0;
+    }
+
+    /* Formata números ao estilo português (vírgula decimal) */
+    function fmt(n, decimals = 2) {
+        return n.toLocaleString('pt-PT', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+    }
+
+    /* ===== Cálculo (única fonte de verdade) ===== */
+    function calcular(montante, tanb, dias, composto) {
+        if (!(montante > 0 && tanb > 0 && dias > 0)) return null;
+        const ret = cfg.retencao / 100;
+        let brutos, liquidos;
+
+        if (composto) {
+            const m = PERIODOS_ANO[cfg.cap];
+            const periodos = dias * m / 365;
+            const finalBruto = montante * Math.pow(1 + (tanb / 100 / m) * (1 - ret), periodos);
+            liquidos = finalBruto - montante;
+            brutos = liquidos / (1 - ret);
+        } else {
+            brutos = montante * (tanb / 100) * (dias / cfg.base);
+            liquidos = brutos * (1 - ret);
+        }
+
+        const final = montante + liquidos;
+        const r = {
+            brutos: brutos,
+            retencao: brutos - liquidos,
+            liquidos: liquidos,
+            ganhoDia: liquidos / dias,
+            final: final,
+            taxaAnual: (Math.pow(final / montante, 365 / dias) - 1) * 100
+        };
+        return Object.values(r).every(Number.isFinite) ? r : null;
+    }
+
+    function lerLinha(row) {
+        const inputs = row.querySelectorAll('input');
+        return {
+            inputs: inputs,
+            composto: row.getAttribute('data-type') === 'compound',
+            montante: parsePtNumber(inputs[0].value),
+            tanb: parsePtNumber(inputs[1].value, true),
+            dias: parseInt(inputs[2].value, 10) || 0
+        };
+    }
+
+    /* Valida os campos de uma linha, assinala os erros e devolve as mensagens */
+    function validarLinha(row, d) {
+        const idx = linhas().indexOf(row) + 1;
+        const msgs = [];
+        const regra = (input, n, max, nome, unidade) => {
+            const txt = input.value.trim();
+            let msg = '';
+            if (txt !== '' && (!/\d/.test(txt) || n < 0)) {
+                msg = nome + ' inválido';
+            } else if (n > max) {
+                msg = nome + ' acima do máximo (' + fmt(max, 0) + unidade + ')';
+            }
+            input.classList.toggle('input-error', msg !== '');
+            input.setAttribute('aria-invalid', msg !== '' ? 'true' : 'false');
+            input.title = msg;
+            if (msg) msgs.push('Linha ' + idx + ': ' + msg);
+        };
+        regra(d.inputs[0], d.montante, MAX_MONTANTE, 'Montante', ' €');
+        regra(d.inputs[1], d.tanb, MAX_TAXA, 'Taxa', ' %');
+        regra(d.inputs[2], d.dias, MAX_DIAS, 'Dias', '');
+        return msgs;
+    }
+
+    function calcularLinha(row) {
+        const d = lerLinha(row);
+        const erros = validarLinha(row, d);
+        const completa = d.montante > 0 && d.tanb > 0 && d.dias > 0;
+        const r = erros.length ? null : calcular(d.montante, d.tanb, d.dias, d.composto);
+        if (!erros.length && completa && !r) {
+            erros.push('Linha ' + (linhas().indexOf(row) + 1) + ': resultado fora do intervalo calculável');
+        }
+        row._erros = erros;
+        row._res = r;
+
+        const c = (cls) => row.querySelector('.' + cls);
+        c('c-brutos').textContent = r ? fmt(r.brutos) + ' €' : '---';
+        c('c-ret').textContent = r ? fmt(r.retencao) + ' €' : '---';
+        c('c-liq').textContent = r ? fmt(r.liquidos) + ' €' : '---';
+        c('c-dia').textContent = r ? fmt(r.ganhoDia, 4) + ' €' : '---';
+        c('c-final').textContent = r ? fmt(r.final) + ' €' : '---';
+        c('c-taxa').textContent = r ? fmt(r.taxaAnual) + ' %' : '---';
+        return r;
+    }
+
+    function mostrarAvisos() {
+        const el = byId('aviso');
+        const msgs = linhas().flatMap(row => row._erros || []);
+        el.textContent = msgs.join(' • ');
+        el.hidden = msgs.length === 0;
+    }
+
+    function recalcularTudo(guardar = true) {
+        linhas().forEach(calcularLinha);
+        updateTotals();
+        mostrarAvisos();
+        if (guardar) saveStateToLocalStorage();
+    }
+
+    function calculateRow(inputElement) {
+        const row = inputElement.closest('tr');
+        if (!row || row.parentElement.tagName === 'TFOOT') return;
+        calcularLinha(row);
+        updateTotals();
+        mostrarAvisos();
+        saveStateToLocalStorage();
+    }
+
+    /* ===== Definições ===== */
+    function sincronizarControlos() {
+        byId('cfg-ret').value = pctTxt(cfg.retencao);
+        byId('cfg-base').value = String(cfg.base);
+        byId('cfg-cap').value = cfg.cap;
+    }
+
+    function atualizarRotulos() {
+        const p = pctTxt(cfg.retencao);
+        document.querySelectorAll('.ret-pct').forEach(e => { e.textContent = p; });
+        document.querySelectorAll('.base-txt').forEach(e => { e.textContent = cfg.base; });
+        document.querySelectorAll('.cap-txt').forEach(e => { e.textContent = NOME_CAP[cfg.cap]; });
+        linhas().forEach(row => { row.querySelector('.c-ret').dataset.label = 'Retenção (' + p + '%)'; });
+    }
+
+    function aplicarConfig() {
+        const campo = byId('cfg-ret');
+        const txt = campo.value.trim();
+        const r = parsePtNumber(txt, true);
+        if (!/\d/.test(txt) || r < 0 || r > 99.9) {
+            toast('Retenção inválida: indique um valor entre 0 e 99,9.');
+            campo.value = pctTxt(cfg.retencao);
+        } else {
+            cfg.retencao = r;
+            campo.value = pctTxt(r);
+        }
+        cfg.base = parseInt(byId('cfg-base').value, 10) === 365 ? 365 : 360;
+        cfg.cap = CAPS.includes(byId('cfg-cap').value) ? byId('cfg-cap').value : 'diaria';
+        atualizarRotulos();
+        recalcularTudo();
+    }
+
+    /* ===== Janelas (modais) com gestão de foco ===== */
+    function openAboutModal() {
+        /* Se a app já está instalada, o botão «Instalar app» fica oculto */
+        const grupo = byId('install-group');
+        if (grupo) grupo.hidden = typeof appJaInstalada === 'function' && appJaInstalada();
+        openModal('about-modal');
+    }
+    function showTanbInfo() { openModal('tanb-modal'); }
+    function showCompoundInfo() { openModal('compound-modal'); }
+
+    function openModal(id) {
+        const modal = byId(id);
+        if (!modal) return;
+        ultimoFoco = document.activeElement;
+        modal.classList.add('active');
+        const alvo = modal.querySelector('.modal-close') || modal;
+        alvo.focus();
+    }
+
+    function closeModal(id) {
+        const modal = byId(id);
+        if (!modal) return;
+        modal.classList.remove('active');
+        if (ultimoFoco && typeof ultimoFoco.focus === 'function') ultimoFoco.focus();
+        ultimoFoco = null;
+    }
+
+    function closeModalOnOverlay(event, id) {
+        if (event.target.id === id) closeModal(id);
+    }
+
+    function sendEmail(tipo) {
+        const email = "jardimhelder@hotmail.com";
+        const assunto = encodeURIComponent(`Simulador de Juros (TANB & Juros Compostos) - [${tipo}]`);
+        const corpo = encodeURIComponent(`Olá,\n\nRelativamente à opção "${tipo}":\n\n"Descreva aqui o que pretende"`);
+
+        closeModal('about-modal');
+        window.location.href = `mailto:${email}?subject=${assunto}&body=${corpo}`;
+    }
+
+    /* ===== Mensagens (substituem alert/confirm) ===== */
+    function esconderToast() {
+        byId('toast').classList.remove('show');
+    }
+
+    function toast(msg, acaoTxt, acaoFn, duracao) {
+        const el = byId('toast');
+        el.textContent = '';
+        const span = document.createElement('span');
+        span.textContent = msg;
+        el.appendChild(span);
+        if (acaoTxt) {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.textContent = acaoTxt;
+            b.onclick = () => { esconderToast(); acaoFn(); };
+            el.appendChild(b);
+        }
+        el.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(esconderToast, duracao || (acaoTxt ? 8000 : 4000));
+    }
+
+    /* ===== Linhas ===== */
+    function addRow(isCompound = false, saveState = true) {
+        const tbody = document.querySelector('#calculator-table tbody');
+
+        const newRow = document.createElement('tr');
+        if (isCompound) {
+            newRow.setAttribute('data-type', 'compound');
+            newRow.classList.add('compound-row');
+        } else {
+            newRow.setAttribute('data-type', 'simple');
+        }
+
+        newRow.innerHTML = `
+            <td class="row-index"></td>
+            <td data-label="Montante a investir (€)"><input type="text" data-num="dec" enterkeyhint="next" placeholder="10 000 €" inputmode="decimal" autocomplete="off" oninput="calculateRow(this)" onfocus="editarCampo(this, false)" onblur="formatarCampo(this, ' €', false)"></td>
+            <td data-label="% Taxa anual"><input type="text" data-num="dec" enterkeyhint="next" placeholder="%" inputmode="decimal" autocomplete="off" oninput="calculateRow(this)" onfocus="editarCampo(this, true)" onblur="formatarCampo(this, ' %', true)"></td>
+            <td data-label="Dias"><input type="text" data-num="int" enterkeyhint="done" placeholder="Dias" inputmode="numeric" autocomplete="off" oninput="calculateRow(this)" onfocus="this.select()"></td>
+            <td class="result-cell c-brutos" data-label="Juros brutos">---</td>
+            <td class="result-cell c-ret" data-label="Retenção">---</td>
+            <td class="result-cell c-liq" data-label="Juros líquidos">---</td>
+            <td class="result-cell c-dia" data-label="Líquido por dia">---</td>
+            <td class="result-cell c-final" data-label="Montante final">---</td>
+            <td class="result-cell c-taxa" data-label="Taxa líq. anual efetiva">---</td>
+            <td><button type="button" class="delete-btn" onclick="deleteRow(this)" title="Eliminar linha">❌</button></td>
+        `;
+
+        tbody.appendChild(newRow);
+        updateRowNumbers();
+        atualizarRotulos();
+        updateTotals();
+        if (saveState) saveStateToLocalStorage();
+        return newRow;
+    }
+
+    function deleteRow(button) {
+        const row = button.closest('tr');
+        if (linhas().length <= 1) {
+            toast('É necessário manter pelo menos uma linha de investimento.');
+            return;
+        }
+        const haDados = Array.from(row.querySelectorAll('input')).some(i => i.value.trim() !== '');
+        const eliminar = () => {
+            if (!row.isConnected) return;
+            const antes = lerEstado();
+            row.remove();
+            updateRowNumbers();
+            recalcularTudo();
+            toast('Linha eliminada.', 'Anular', () => aplicarEstado(antes));
+        };
+        if (haDados) caixaMensagem('Apagar esta linha de simulação?', eliminar); else eliminar();
+    }
+
+    function updateRowNumbers() {
+        linhas().forEach((row, index) => {
+            const n = index + 1;
+            const comp = row.getAttribute('data-type') === 'compound';
+            row.cells[0].innerHTML = n + '<br><small class="tipo-tag">' + (comp ? 'Comp.' : 'TANB') + '</small>';
+            const inp = row.querySelectorAll('input');
+            inp[0].setAttribute('aria-label', 'Linha ' + n + ': montante a investir em euros');
+            inp[1].setAttribute('aria-label', 'Linha ' + n + ': taxa anual em percentagem');
+            inp[2].setAttribute('aria-label', 'Linha ' + n + ': número de dias');
+            row.querySelector('.delete-btn').setAttribute('aria-label', 'Eliminar linha ' + n);
+        });
+    }
+
+    /* Caixa de mensagem/confirmação dentro da página (não usa confirm/alert, que alguns navegadores bloqueiam).
+       Com aoConfirmar: mostra Cancelar + Apagar. Sem aoConfirmar: só OK. */
+    function caixaMensagem(msg, aoConfirmar, aoCancelar, textoConfirmar) {
+      const antigo = document.getElementById("caixaMensagemOverlay");
+      if (antigo) antigo.remove();
+
+      const ov = document.createElement("div");
+      ov.id = "caixaMensagemOverlay";
+      ov.style.cssText = "position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(15,23,42,0.55); z-index:99999; display:flex; align-items:center; justify-content:center; padding:16px;";
+
+      const caixa = document.createElement("div");
+      caixa.style.cssText = "background:#ffffff; border-radius:14px; padding:20px; max-width:340px; width:100%; box-shadow:0 10px 30px rgba(0,0,0,0.3); text-align:center;";
+
+      const texto = document.createElement("div");
+      texto.style.cssText = "font-size:16px; font-weight:700; color:#0f172a; margin-bottom:18px; line-height:1.4; white-space:pre-line;";
+      texto.textContent = msg;
+
+      const botoes = document.createElement("div");
+      botoes.style.cssText = "display:flex; gap:10px; justify-content:center;";
+
+      const estiloBtn = "flex:1; padding:11px 14px; border-radius:10px; border:none; font-size:15px; font-weight:700; cursor:pointer;";
+      const fechar = () => ov.remove();
+      const cancelar = () => { fechar(); if (aoCancelar) aoCancelar(); };
+
+      const btnCancelar = document.createElement("button");
+      btnCancelar.type = "button";
+      btnCancelar.style.cssText = estiloBtn + "background:#e2e8f0; color:#0f172a;";
+      btnCancelar.textContent = aoConfirmar ? "Cancelar" : "OK";
+      btnCancelar.onclick = cancelar;
+      botoes.appendChild(btnCancelar);
+
+      if (aoConfirmar) {
+        const btnSim = document.createElement("button");
+        btnSim.type = "button";
+        btnSim.style.cssText = estiloBtn + "background:#dc2626; color:#ffffff;";
+        btnSim.textContent = textoConfirmar || "Apagar";
+        btnSim.onclick = () => { fechar(); aoConfirmar(); };
+        botoes.appendChild(btnSim);
+      }
+
+      caixa.appendChild(texto);
+      caixa.appendChild(botoes);
+      ov.appendChild(caixa);
+      ov.addEventListener("click", (e) => { if (!aoConfirmar || e.target === ov) cancelar(); });
+      ov.addEventListener("keydown", (e) => { if (e.key === "Escape") cancelar(); });
+      document.body.appendChild(ov);
+      btnCancelar.focus();
+    }
+
+    function clearAllRows() {
+        const haDados = linhas().some(r => Array.from(r.querySelectorAll('input')).some(i => i.value.trim() !== ''));
+        const limpar = () => {
+            const antes = lerEstado();
+            try { localStorage.removeItem(CHAVE); } catch (e) {}
+            initTableDefaultRows();
+            toast('Simulações apagadas e tabela reposta.', 'Anular', () => aplicarEstado(antes));
+        };
+        if (haDados) caixaMensagem('Apagar todas as simulações e repor as linhas iniciais?', limpar); else limpar();
+    }
+
+    function initTableDefaultRows() {
+        const tbody = document.querySelector('#calculator-table tbody');
+        tbody.innerHTML = '';
+
+        addRow(false, false);
+        addRow(false, false);
+        addRow(false, false);
+        addRow(true, false);
+
+        recalcularTudo();
+    }
+
+    /* ===== Totais ===== */
+    function updateTotals() {
+        const t = { montante: 0, tanbMed: 0, diasMed: 0, brutos: 0, retencao: 0, liquidos: 0, dia: 0, final: 0, taxaMed: 0 };
+        let sTanb = 0, sDias = 0, sTaxa = 0, validas = 0;
+        let melhor = null, minTaxa = Infinity, maxTaxa = -Infinity;
+
+        /* Regra única: só contam as linhas completas e válidas */
+        linhas().forEach(row => {
+            row.classList.remove('best-row');
+            row.removeAttribute('title');
+            const r = row._res;
+            if (!r) return;
+            const d = lerLinha(row);
+
+            t.montante += d.montante;
+            t.brutos += r.brutos;
+            t.retencao += r.retencao;
+            t.liquidos += r.liquidos;
+            t.dia += r.ganhoDia;
+            t.final += r.final;
+            sTanb += d.montante * d.tanb;
+            sDias += d.montante * d.dias;
+            sTaxa += d.montante * r.taxaAnual;
+            validas++;
+
+            minTaxa = Math.min(minTaxa, r.taxaAnual);
+            if (r.taxaAnual > maxTaxa) { maxTaxa = r.taxaAnual; melhor = row; }
+        });
+
+        if (t.montante > 0) {
+            t.tanbMed = sTanb / t.montante;
+            t.diasMed = sDias / t.montante;
+            t.taxaMed = sTaxa / t.montante;
+        }
+
+        if (validas >= 2 && melhor && maxTaxa - minTaxa > 1e-9) {
+            melhor.classList.add('best-row');
+            melhor.title = 'Melhor taxa líquida anual efetiva';
+        }
+
+        currentTotals = t;
+        renderTotals();
+    }
+
+    function renderTotals() {
+        const cells = document.querySelectorAll('.total-data');
+
+        if (!totalsVisible) {
+            cells.forEach(cell => cell.textContent = "");
+            return;
+        }
+
+        const t = currentTotals;
+        const media = (v, txt) => v > 0 ? 'Média Pond.<br><span style="font-size:15px; font-weight:700;">' + txt + '</span>' : "---";
+
+        if (t.montante === 0) {
+            byId('total-montante').textContent = "---";
+            byId('total-tanb').textContent = "---";
+            byId('total-dias').textContent = "---";
+        } else {
+            byId('total-montante').textContent = fmt(t.montante) + ' €';
+            byId('total-tanb').innerHTML = media(t.tanbMed, fmt(t.tanbMed) + ' %');
+            byId('total-dias').innerHTML = media(t.diasMed, Math.round(t.diasMed) + ' d');
+        }
+
+        byId('total-brutos').textContent = t.brutos > 0 ? fmt(t.brutos) + ' €' : "---";
+        byId('total-retencao').textContent = t.retencao > 0 ? fmt(t.retencao) + ' €' : "---";
+        byId('total-liquidos').textContent = t.liquidos > 0 ? fmt(t.liquidos) + ' €' : "---";
+        byId('total-dia').textContent = t.dia > 0 ? fmt(t.dia, 4) + ' €' : "---";
+        byId('total-final').textContent = t.final > 0 ? fmt(t.final) + ' €' : "---";
+        byId('total-taxa').innerHTML = t.montante > 0 && t.taxaMed > 0 ? media(t.taxaMed, fmt(t.taxaMed) + ' %') : "---";
+        byId('total-blank-last').textContent = "";
+    }
+
+    function toggleTotals() {
+        totalsVisible = !totalsVisible;
+        const btn = byId('toggle-btn-element');
+        const totalRow = byId('total-row-element');
+        const cells = document.querySelectorAll('.total-data');
+
+        if (totalsVisible) {
+            btn.textContent = 'Ocultar total';
+            totalRow.classList.remove('is-hidden');
+            cells.forEach(cell => cell.classList.remove('total-hidden'));
+        } else {
+            btn.textContent = 'Mostrar total';
+            totalRow.classList.add('is-hidden');
+            cells.forEach(cell => cell.classList.add('total-hidden'));
+        }
+
+        renderTotals();
+    }
+
+    /* ===== Estado guardado ===== */
+    function lerEstado() {
+        return {
+            cfg: { retencao: cfg.retencao, base: cfg.base, cap: cfg.cap },
+            rows: linhas().map(row => {
+                const i = row.querySelectorAll('input');
+                return {
+                    isCompound: row.getAttribute('data-type') === 'compound',
+                    montante: i[0].value,
+                    tanb: i[1].value,
+                    dias: i[2].value
+                };
+            })
+        };
+    }
+
+    function aplicarEstado(estado) {
+        const c = estado.cfg || {};
+        if (typeof c.retencao === 'number' && c.retencao >= 0 && c.retencao <= 99.9) cfg.retencao = c.retencao;
+        if (c.base === 360 || c.base === 365) cfg.base = c.base;
+        if (CAPS.includes(c.cap)) cfg.cap = c.cap;
+        sincronizarControlos();
+
+        document.querySelector('#calculator-table tbody').innerHTML = '';
+        estado.rows.forEach(item => {
+            const row = addRow(!!item.isCompound, false);
+            const i = row.querySelectorAll('input');
+            if (item.montante) i[0].value = String(item.montante);
+            if (item.tanb) i[1].value = String(item.tanb);
+            if (item.dias) i[2].value = String(item.dias);
+        });
+        atualizarRotulos();
+        recalcularTudo();
+    }
+
+    function saveStateToLocalStorage() {
+        try {
+            localStorage.setItem(CHAVE, JSON.stringify(lerEstado()));
+        } catch (e) {
+            /* armazenamento indisponível: a app continua a funcionar sem guardar */
+        }
+    }
+
+    function loadStateFromLocalStorage() {
+        try {
+            const saved = localStorage.getItem(CHAVE);
+            if (!saved) return false;
+            let data = JSON.parse(saved);
+            if (Array.isArray(data)) data = { rows: data };
+            if (!data || !Array.isArray(data.rows) || data.rows.length === 0) return false;
+            aplicarEstado(data);
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    /* ===== Campos de montante e percentagem ===== */
+    function formatarCampo(input, sufixo, isPercent) {
+        const n = parsePtNumber(input.value, isPercent);
+        if (input.value.trim() === '') {
+            input.value = '';
+        } else if (n !== 0) {
+            input.value = n.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + sufixo;
+        }
+        calculateRow(input);
+    }
+
+    function editarCampo(input, isPercent) {
+        const n = parsePtNumber(input.value, isPercent);
+        input.value = n > 0 ? n.toString().replace('.', ',') : '';
+        input.select();
+    }
+
+    function updatePageFooter() {
+        const el = byId('anoAtual');
+        if (el) el.textContent = new Date().getFullYear();
+    }
+
+    /* 3 cliques seguidos (em 1,5 s) para ativar a ação dos botões ocultos do rodapé */
+    function triploClique(el, fn, ev) {
+        el._n = (el._n || 0) + 1;
+        clearTimeout(el._t);
+        if (el._n >= 3) { el._n = 0; fn(ev); return; }
+        el._t = setTimeout(function () { el._n = 0; }, 1500);
+    }
+
+    /* ---------------- ÁREA DE CONTROLO (escondida) ----------------
+       Abre com 3 cliques seguidos em "Suporte" (título da janela Suporte) + senha do dono (SENHA_DONO). */
+    /* Senha do dono: para a mudar, alterar só o texto entre aspas.
+       Atenção: como o site corre no navegador, esta senha serve para evitar toques acidentais e não é uma proteção forte. */
+    const SENHA_DONO = '112';
+    /* Página de diagnóstico da app instalável (tem de estar na mesma pasta do index.html) */
+    const DIAGNOSTICO_PWA = 'diagnostico-pwa.html';
+    let dnDados = null;
+
+    function pdCaixa(id, z) {
+      const antigo = document.getElementById(id); if (antigo) antigo.remove();
+      const ov = document.createElement('div');
+      ov.id = id;
+      ov.style.cssText = 'position:fixed; inset:0; background:rgba(15,23,42,0.55); z-index:' + z + '; display:flex; align-items:center; justify-content:center; padding:16px;';
+      const caixa = document.createElement('div');
+      caixa.style.cssText = 'background:#ffffff; border-radius:14px; padding:20px; max-width:340px; width:100%; box-shadow:0 10px 30px rgba(0,0,0,0.3); text-align:center;';
+      ov.appendChild(caixa);
+      ov.addEventListener('click', function (e) { if (e.target === ov) ov.remove(); });
+      return { ov: ov, caixa: caixa };
+    }
+    function pdBotao(texto, fundo, cor, acao) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.style.cssText = 'flex:1; padding:11px 14px; border-radius:10px; border:none; font-size:15px; font-weight:700; cursor:pointer; background:' + fundo + '; color:' + cor + ';';
+      b.textContent = texto; b.onclick = acao; return b;
+    }
+
+    function pedirSenhaDono(aoValidar) {
+      const c = pdCaixa('senhaDonoOverlay', 99998), ov = c.ov, caixa = c.caixa;
+      const titulo = document.createElement('div');
+      titulo.style.cssText = 'font-size:16px; font-weight:700; color:#0f172a; margin-bottom:12px;';
+      titulo.textContent = 'Área de controlo — introduza a senha';
+      const campo = document.createElement('input');
+      campo.type = 'password'; campo.autocomplete = 'off'; campo.placeholder = 'Senha';
+      campo.style.cssText = 'width:100%; box-sizing:border-box; padding:11px 12px; border:2px solid #cbd5e1; border-radius:10px; font-size:16px; text-align:center; color:#0f172a; background:#fff;';
+      const erro = document.createElement('div');
+      erro.style.cssText = 'color:#dc2626; font-size:14px; font-weight:700; margin-top:8px; min-height:18px;';
+      const botoes = document.createElement('div');
+      botoes.style.cssText = 'display:flex; gap:10px; margin-top:12px;';
+      function validar() {
+        if (campo.value === SENHA_DONO) { ov.remove(); aoValidar(); }
+        else { erro.textContent = 'Senha incorreta.'; campo.value = ''; campo.focus(); }
+      }
+      botoes.appendChild(pdBotao('Cancelar', '#e2e8f0', '#0f172a', function () { ov.remove(); }));
+      botoes.appendChild(pdBotao('Entrar', '#2563eb', '#ffffff', validar));
+      campo.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); validar(); }
+        else if (e.key === 'Escape') { e.stopPropagation(); ov.remove(); }
+      });
+      caixa.appendChild(titulo); caixa.appendChild(campo); caixa.appendChild(erro); caixa.appendChild(botoes);
+      document.body.appendChild(ov);
+      campo.focus();
+    }
+
+    function pdConfirmar(msg, aoConfirmar, rotulo) {
+      const c = pdCaixa('pdConfirmarOverlay', 99999), ov = c.ov, caixa = c.caixa;
+      const t = document.createElement('div');
+      t.style.cssText = 'font-size:15px; font-weight:600; color:#0f172a; line-height:1.4;';
+      t.textContent = msg;
+      const botoes = document.createElement('div');
+      botoes.style.cssText = 'display:flex; gap:10px; margin-top:16px;';
+      botoes.appendChild(pdBotao('Cancelar', '#e2e8f0', '#0f172a', function () { ov.remove(); }));
+      botoes.appendChild(pdBotao(rotulo || 'Confirmar', '#2563eb', '#ffffff', function () { ov.remove(); aoConfirmar(); }));
+      caixa.appendChild(t); caixa.appendChild(botoes);
+      document.body.appendChild(ov);
+    }
+
+    function abrirPainelDono() {
+      pedirSenhaDono(function () { closeModal('about-modal'); montarPainelDono(); });
+    }
+    function fecharPainelDono() {
+      const ov = document.getElementById('painelDonoOverlay');
+      if (ov) ov.remove();
+    }
+    function dnEsc(s) {
+      return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; });
+    }
+    function dnBytes(n) {
+      if (!isFinite(n)) return '?';
+      if (n < 1024) return n + ' B';
+      if (n < 1048576) return (n / 1024).toFixed(1) + ' KB';
+      if (n < 1073741824) return (n / 1048576).toFixed(1) + ' MB';
+      return (n / 1073741824).toFixed(2) + ' GB';
+    }
+    function dnBrowser() {
+      const u = navigator.userAgent; let b = 'Desconhecido', m;
+      if ((m = u.match(/Edg\/(\d+)/))) b = 'Edge ' + m[1];
+      else if ((m = u.match(/OPR\/(\d+)/))) b = 'Opera ' + m[1];
+      else if ((m = u.match(/SamsungBrowser\/(\d+)/))) b = 'Samsung Internet ' + m[1];
+      else if ((m = u.match(/(?:Chrome|CriOS)\/(\d+)/))) b = 'Chrome ' + m[1];
+      else if ((m = u.match(/(?:Firefox|FxiOS)\/(\d+)/))) b = 'Firefox ' + m[1];
+      else if ((m = u.match(/Version\/(\d+).*Safari/))) b = 'Safari ' + m[1];
+      let so = '';
+      if (/Android/.test(u)) { m = u.match(/Android ([\d.]+)/); so = 'Android ' + (m ? m[1] : ''); }
+      else if (/iPhone|iPad|iPod/.test(u)) so = 'iOS';
+      else if (/Windows/.test(u)) so = 'Windows';
+      else if (/Mac OS X/.test(u)) so = 'macOS';
+      else if (/Linux/.test(u)) so = 'Linux';
+      return so ? b + ' · ' + so : b;
+    }
+    function dnDataAtualizacao() {
+      const d = new Date(ULTIMA_ATUALIZACAO + 'T12:00:00');
+      return isNaN(d) ? ULTIMA_ATUALIZACAO : d.toLocaleDateString('pt-PT', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+
+    /* recolhe o diagnóstico (só lê; não altera nada) */
+    async function dnColetar() {
+      const avisos = [];
+      let ls = null; try { ls = localStorage; } catch (e) {}
+      const standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+      const cons = lerConsentimento();
+
+      const app = [
+        ['Última atualização', dnDataAtualizacao()],
+        ['Aberta como', standalone ? 'App instalada' : 'Browser'],
+        ['Endereço', location.protocol === 'file:' ? 'ficheiro local' : location.host + location.pathname],
+        ['Idioma do site', (ls && ls.getItem('idioma')) || 'pt'],
+        ['Cookies', cons === 'aceite' ? 'aceites' : cons === 'recusado' ? 'recusados' : 'por responder'],
+        ['Linhas na tabela', String(linhas().length)],
+        ['Simulação guardada', ls && ls.getItem(CHAVE) ? 'sim' : 'não']
+      ];
+
+      const net = (navigator.connection && navigator.connection.effectiveType) ? ' (' + navigator.connection.effectiveType + ')' : '';
+      const disp = [
+        ['Ecrã', innerWidth + ' × ' + innerHeight + ' px · ×' + (window.devicePixelRatio || 1)],
+        ['Browser', dnBrowser()],
+        ['Idioma · fuso', navigator.language + ' · ' + (Intl.DateTimeFormat().resolvedOptions().timeZone || '?')],
+        ['Rede', (navigator.onLine ? 'online' : 'offline') + net]
+      ];
+      if (!navigator.onLine) avisos.push('Sem ligação à internet neste momento.');
+
+      let sw;
+      if (location.protocol === 'file:') sw = 'não aplicável (ficheiro local)';
+      else if (!('serviceWorker' in navigator)) sw = 'não suportado';
+      else {
+        try {
+          const r = await navigator.serviceWorker.getRegistrations();
+          sw = r.length ? 'ativo (' + r.length + ')' : 'nenhum registado';
+          if (!r.length) avisos.push('O service worker não está registado (confirme que o ficheiro sw.js está no servidor).');
+        } catch (e) { sw = 'erro ao ler'; }
+      }
+      let cch, cacheNomes = [];
+      if ('caches' in window) {
+        try { cacheNomes = await caches.keys(); cch = cacheNomes.length ? cacheNomes.join(', ') : 'nenhuma'; } catch (e) { cch = 'erro ao ler'; }
+      } else cch = 'não suportado';
+
+      const arm = [];
+      if (ls) {
+        const ks = Object.keys(ls); let tot = 0;
+        ks.forEach(function (k) { tot += k.length + (ls.getItem(k) || '').length; });
+        arm.push(['Dados locais', ks.length + ' chave(s) · ' + dnBytes(tot * 2)]);
+        ks.forEach(function (k) { const v = ls.getItem(k) || ''; arm.push(['· ' + k, v.length > 40 ? v.slice(0, 40) + '…' : v]); });
+      } else arm.push(['Dados locais', 'indisponíveis']);
+      if (navigator.storage && navigator.storage.estimate) {
+        try {
+          const e = await navigator.storage.estimate();
+          if (e.quota) {
+            arm.push(['Espaço usado', dnBytes(e.usage) + ' de ' + dnBytes(e.quota)]);
+            if (e.usage / e.quota > 0.8) avisos.push('O armazenamento do browser está quase cheio.');
+          }
+        } catch (x) {}
+      }
+      arm.push(['Service worker', sw]);
+      arm.push(['Cache da app', cch]);
+
+      const er = window.__erros || [];
+      const erros = er.length
+        ? er.slice(-8).map(function (x) { return [new Date(x.t).toLocaleTimeString('pt-PT'), (x.tipo === 'recurso' ? 'Não carregou: ' : x.tipo === 'promessa' ? 'Falha: ' : 'Erro: ') + x.msg]; })
+        : [['—', 'Nenhum erro desde que a página abriu']];
+      if (er.length) avisos.push(er.length + ' erro(s) desde que a página abriu (ver abaixo).');
+
+      return { avisos: avisos, fatos: { cacheNomes: cacheNomes, recursos: er.filter(function (x) { return x.tipo === 'recurso'; }).length }, grupos: [
+        { t: 'Aplicação', l: app }, { t: 'Dispositivo', l: disp },
+        { t: 'Armazenamento', l: arm }, { t: 'Erros desde que abriu', l: erros }
+      ] };
+    }
+
+    function dnTexto() {
+      let t = 'Simulador de Juros — diagnóstico (' + new Date().toLocaleString('pt-PT') + ')\n';
+      if (!dnDados) return t;
+      t += '\nAvisos: ' + (dnDados.avisos.length ? '\n- ' + dnDados.avisos.join('\n- ') : 'nenhum') + '\n';
+      dnDados.grupos.forEach(function (g) {
+        t += '\n[' + g.t + ']\n' + g.l.map(function (r) { return r[0] + ': ' + r[1]; }).join('\n') + '\n';
+      });
+      return t;
+    }
+    async function dnCopiar(btn) {
+      const t = dnTexto(); let ok = false;
+      try { await navigator.clipboard.writeText(t); ok = true; }
+      catch (e) {
+        try {
+          const ta = document.createElement('textarea');
+          ta.value = t; ta.style.cssText = 'position:fixed; opacity:0;';
+          document.body.appendChild(ta); ta.select(); ok = document.execCommand('copy'); ta.remove();
+        } catch (x) {}
+      }
+      const antes = btn.textContent;
+      btn.textContent = ok ? '✅ Copiado' : '❌ Não foi possível copiar';
+      setTimeout(function () { btn.textContent = antes; }, 1800);
+    }
+
+    /* reposições */
+    async function dnApagarCaches() {
+      try { if ('serviceWorker' in navigator) { const r = await navigator.serviceWorker.getRegistrations(); await Promise.all(r.map(function (x) { return x.unregister(); })); } } catch (e) {}
+      try { if ('caches' in window) { const k = await caches.keys(); await Promise.all(k.map(function (x) { return caches.delete(x); })); } } catch (e) {}
+    }
+    function dnLimparCookieTradutor() {
+      const exp = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+      document.cookie = exp;
+      document.cookie = exp + '; domain=' + location.hostname;
+      document.cookie = exp + '; domain=.' + location.hostname;
+    }
+    function dnLimparCache() {
+      pdConfirmar('Limpar a cache e recarregar a app? As definições mantêm-se.', async function () { await dnApagarCaches(); location.reload(); }, 'Limpar');
+    }
+    function dnReporDefinicoes() {
+      pdConfirmar('Repor as definições? O idioma volta a português, o aviso de cookies pode voltar a aparecer e o estado da app instalada é esquecido. As simulações mantêm-se.', function () {
+        dnLimparCookieTradutor();
+        try { ['idioma', 'simulador-app-instalada', CHAVE_ADS, CHAVE_ADS_ANTIGA].forEach(function (k) { localStorage.removeItem(k); }); } catch (e) {}
+        location.reload();
+      }, 'Repor');
+    }
+    function dnReporSite() {
+      pdConfirmar('Repor o site ao estado original? Apaga tudo o que está guardado neste dispositivo (simulações, definições e cache) e recarrega a página.', async function () {
+        try { localStorage.clear(); sessionStorage.clear(); } catch (e) {}
+        dnLimparCookieTradutor();
+        await dnApagarCaches();
+        try { history.replaceState(null, ''); } catch (e) {}
+        location.reload();
+      }, 'Repor tudo');
+    }
+
+    function dnRender(c) {
+      const pos = c.scrollTop;
+      let h = '<div class="pd-sec">Avisos</div>';
+      h += dnDados.avisos.length
+        ? dnDados.avisos.map(function (a) { return '<div class="pd-aviso">⚠️ ' + dnEsc(a) + '</div>'; }).join('')
+        : '<div class="pd-ok">✅ Sem avisos</div>';
+      dnDados.grupos.forEach(function (g) {
+        h += '<div class="pd-sec">' + dnEsc(g.t) + '</div><div class="pd-card">' +
+          g.l.map(function (r) { return '<div class="pd-row"><span>' + dnEsc(r[0]) + '</span><b>' + dnEsc(r[1]) + '</b></div>'; }).join('') + '</div>';
+      });
+      h += '<div class="pd-sec">Ferramentas</div>' +
+        '<button type="button" class="pd-btn pd-azul" onclick="dnCopiar(this)">📋 Copiar diagnóstico</button>' +
+        '<div class="pd-nota">Copia tudo isto como texto, para colar numa mensagem.</div>' +
+        '<button type="button" class="pd-btn" onclick="dnAtualizar()">🔃 Atualizar diagnóstico</button>' +
+        '<a class="pd-btn pd-azul" style="text-decoration:none;" href="' + dnEsc(DIAGNOSTICO_PWA) + '" target="_blank" rel="noopener">🩺 Diagnóstico da app instalável</a>' +
+        '<div class="pd-nota">Verifica se o site pode ser instalado como app no telemóvel (manifesto, ícones e service worker). Abre ' + dnEsc(DIAGNOSTICO_PWA) + ' num novo separador.</div>';
+      h += '<div class="pd-sec">Reposição</div>' +
+        '<button type="button" class="pd-btn pd-amarelo" onclick="dnLimparCache()">🧽 Atualizar app (limpar cache)</button>' +
+        '<div class="pd-nota">Mantém as definições. Útil quando aparece uma versão antiga do site.</div>' +
+        '<button type="button" class="pd-btn pd-amarelo" onclick="dnReporDefinicoes()">↩️ Repor definições</button>' +
+        '<div class="pd-nota">O idioma, o aviso de cookies e o estado da app instalada voltam ao início. As simulações mantêm-se.</div>' +
+        '<button type="button" class="pd-btn pd-vermelho" onclick="dnReporSite()">⚠️ Repor site original</button>' +
+        '<div class="pd-nota">Apaga tudo o que está guardado neste dispositivo e recarrega a página.</div>';
+      c.innerHTML = h;
+      c.scrollTop = pos;
+    }
+    async function dnAtualizar() {
+      dnDados = await dnColetar();
+      const c = document.getElementById('pdCorpo');
+      if (c) dnRender(c);
+    }
+    function montarPainelDono() {
+      fecharPainelDono();
+      const ov = document.createElement('div');
+      ov.id = 'painelDonoOverlay';
+      ov.innerHTML = '<div role="dialog" aria-modal="true" aria-label="Área de controlo">' +
+        '<div class="pd-head"><strong>🛠️ Área de controlo</strong><span class="pd-x" onclick="fecharPainelDono()" aria-label="Fechar">×</span></div>' +
+        '<div class="pd-body" id="pdCorpo">A recolher diagnóstico…</div></div>';
+      ov.addEventListener('click', function (e) { if (e.target === ov) fecharPainelDono(); });
+      document.body.appendChild(ov);
+      dnAtualizar();
+    }
+
+    /* ===== Exportar, copiar e imprimir ===== */
+    function tabelaDados() {
+        const num = (n, d = 2) => n.toFixed(d).replace('.', ',');
+        const cab = ['#', 'Tipo', 'Montante (€)', 'Taxa anual (%)', 'Dias', 'Juros brutos (€)',
+            'Retenção ' + pctTxt(cfg.retencao) + '% (€)', 'Juros líquidos (€)', 'Líquido por dia (€)',
+            'Montante final (€)', 'Taxa líquida anual efetiva (%)'];
+        const corpo = [];
+        linhas().forEach((row, i) => {
+            const r = row._res;
+            if (!r) return;
+            const d = lerLinha(row);
+            corpo.push([i + 1, d.composto ? 'Composto' : 'TANB', num(d.montante), num(d.tanb), d.dias,
+                num(r.brutos), num(r.retencao), num(r.liquidos), num(r.ganhoDia, 4), num(r.final), num(r.taxaAnual)]);
+        });
+        return { cab: cab, corpo: corpo };
+    }
+
+    function exportCSV() {
+        const { cab, corpo } = tabelaDados();
+        if (!corpo.length) {
+            toast('Preencha pelo menos uma linha da simulação antes de exportar.');
+            return;
+        }
+        const csv = '\uFEFF' + [cab, ...corpo].map(l => l.join(';')).join('\r\n');
+        const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'simulacao-juros-' + new Date().toISOString().slice(0, 10) + '.csv';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        toast('Ficheiro CSV exportado.');
+    }
+
+    function copiarTexto(t) {
+        if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(t);
+        return new Promise((resolve, reject) => {
+            const ta = document.createElement('textarea');
+            ta.value = t;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy') ? resolve() : reject(); } catch (e) { reject(e); }
+            ta.remove();
+        });
+    }
+
+    function copyResults() {
+        const { cab, corpo } = tabelaDados();
+        if (!corpo.length) {
+            toast('Preencha pelo menos uma linha da simulação antes de copiar.');
+            return;
+        }
+        const texto = [cab, ...corpo].map(l => l.join('\t')).join('\n');
+        copiarTexto(texto)
+            .then(() => toast('Resultados copiados (podem ser colados numa folha de cálculo).'))
+            .catch(() => toast('Não foi possível copiar. Experimente exportar o CSV.'));
+    }
+
+    function printTable() {
+        const rows = linhas();
+
+        if (!rows.some(r => r._res)) {
+            toast('Preencha pelo menos uma linha da simulação antes de imprimir.');
+            return;
+        }
+
+        rows.forEach(row => row.classList.toggle('empty-print-row', !row._res));
+
+        const agora = new Date();
+        const dia = String(agora.getDate()).padStart(2, '0');
+        const mes = String(agora.getMonth() + 1).padStart(2, '0');
+        const ano = agora.getFullYear();
+        const horas = String(agora.getHours()).padStart(2, '0');
+        const minutos = String(agora.getMinutes()).padStart(2, '0');
+
+        const dataHoraFormatada = `${dia}/${mes}/${ano}, ${horas}:${minutos}`;
+
+        const sub = document.querySelector('.print-only-header p');
+        if (sub) {
+            sub.textContent = 'Relatório de Simulações • Retenção ' + pctTxt(cfg.retencao) + '% • Juros simples: base ' + cfg.base + ' dias • Compostos: capitalização ' + NOME_CAP[cfg.cap];
+        }
+
+        byId('dynamic-print-footer').innerHTML = `© ${ano} AGAJOTA | 💰 Simulador de Juros | ${dataHoraFormatada} | Valores meramente informativos`;
+
+        window.print();
+    }
+
+    /* ===== Publicidade e consentimento ===== */
+    function lerConsentimento() {
+        try {
+            let v = localStorage.getItem(CHAVE_ADS);
+            if (!v) {
+                /* migra a escolha guardada na versão anterior do simulador */
+                const antigo = localStorage.getItem(CHAVE_ADS_ANTIGA);
+                if (antigo === 'granted' || antigo === 'denied') {
+                    v = antigo === 'granted' ? 'aceite' : 'recusado';
+                    localStorage.setItem(CHAVE_ADS, v);
+                }
+                if (antigo !== null) localStorage.removeItem(CHAVE_ADS_ANTIGA);
+            }
+            return v;
+        } catch (e) { return null; }
+    }
+
+    function guardarConsentimento(valor) {
+        try { localStorage.setItem(CHAVE_ADS, valor); } catch (e) {}
+    }
+
+    function carregarAnuncios() {
+        if (!ADSENSE_SLOT || byId('adsense-script')) return;
+        const wrap = byId('ad-wrap');
+        const ins = wrap.querySelector('ins');
+        ins.setAttribute('data-ad-slot', ADSENSE_SLOT);
+
+        /* O bloco só fica visível quando o Google devolve mesmo um anúncio */
+        wrap.hidden = false;
+        wrap.classList.add('ad-pending');
+        new MutationObserver(() => {
+            const estado = ins.getAttribute('data-ad-status');
+            if (estado === 'filled') wrap.classList.remove('ad-pending');
+            else if (estado === 'unfilled') wrap.hidden = true;
+        }).observe(ins, { attributes: true, attributeFilter: ['data-ad-status'] });
+
+        const s = document.createElement('script');
+        s.id = 'adsense-script';
+        s.async = true;
+        s.crossOrigin = 'anonymous';
+        s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + ADSENSE_CLIENT;
+        s.onload = () => { try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch (e) {} };
+        s.onerror = () => { wrap.hidden = true; };
+        document.head.appendChild(s);
+    }
+
+    function mostrarConsentimento() {
+        byId('consent-banner').hidden = false;
+    }
+
+    function textoUltimaAtualizacao() {
+        const d = new Date(ULTIMA_ATUALIZACAO + 'T12:00:00');
+        return 'Última atualização: ' + d.toLocaleDateString('pt-PT', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+
+    let footerToastTimer = null;
+    function mostrarUltimaAtualizacao() {
+        const el = byId('footer-toast');
+        if (!el) return;
+        el.textContent = textoUltimaAtualizacao();
+        el.classList.add('show');
+        clearTimeout(footerToastTimer);
+        footerToastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+    }
+
+    function abrirConsentimento() {
+        mostrarConsentimento();
+    }
+
+    function abrirPrivacidade() {
+        openModal('privacy-modal');
+    }
+
+    function responderConsentimento(aceitar) {
+        guardarConsentimento(aceitar ? 'aceite' : 'recusado');
+        byId('consent-banner').hidden = true;
+        if (aceitar) {
+            carregarAnuncios();
+        } else if (byId('adsense-script')) {
+            location.reload(); /* retira a publicidade já carregada; os dados da tabela ficam guardados */
+        } else {
+            byId('ad-wrap').hidden = true;
+            toast('Preferência guardada: sem publicidade.');
+        }
+    }
+
+    function iniciarPublicidade() {
+        if (!ADSENSE_SLOT) return;
+        const c = lerConsentimento();
+        if (c === 'aceite') carregarAnuncios();
+        else if (c !== 'recusado') mostrarConsentimento();
+    }
+
+    /* ===== Campos editáveis: só aceitam números ===== */
+    /* Em fase de captura, para limpar o valor antes de qualquer cálculo */
+    document.addEventListener('input', function (e) {
+        const el = e.target;
+        const tipo = el && el.dataset ? el.dataset.num : null;
+        if (!tipo) return;
+        let v = el.value;
+        if (tipo === 'int') {
+            v = v.replace(/\D/g, '');
+        } else {
+            v = v.replace(/[^\d.,]/g, '');
+            const i = v.indexOf(',');
+            if (i !== -1) v = v.slice(0, i + 1) + v.slice(i + 1).replace(/,/g, '');
+        }
+        if (v !== el.value) el.value = v;
+    }, true);
+
+    /* ===== Cabeçalho fixo: estado compacto ao fazer scroll ===== */
+    (function () {
+        const header = document.querySelector('.calculator-header');
+        if (!header || !('IntersectionObserver' in window)) return;
+
+        const sentinel = document.createElement('div');
+        sentinel.setAttribute('aria-hidden', 'true');
+        sentinel.style.cssText = 'height:1px;margin-bottom:-1px;pointer-events:none;';
+        header.parentNode.insertBefore(sentinel, header);
+
+        new IntersectionObserver(([e]) => {
+            header.classList.toggle('is-stuck', !e.isIntersecting);
+        }).observe(sentinel);
+
+    })();
+
+
+    /* ===== Cabeçalho das colunas: sombra só quando está fixo; altura do cabeçalho sempre atualizada ===== */
+    (function () {
+        const header = document.querySelector('.calculator-header');
+        const tabela = document.getElementById('calculator-table');
+        if (!header || !tabela) return;
+
+        const medir = () => document.documentElement.style.setProperty('--header-h', header.offsetHeight + 'px');
+        if ('ResizeObserver' in window) new ResizeObserver(medir).observe(header);
+        window.addEventListener('resize', medir);
+        medir();
+
+        let pendente = false;
+        function verificar() {
+            pendente = false;
+            const th = tabela.querySelector('thead th');
+            if (!th) return;
+            const colado = th.getBoundingClientRect().top <= header.offsetHeight + 1;
+            tabela.classList.toggle('th-stuck', colado);
+        }
+        window.addEventListener('scroll', () => {
+            if (!pendente) { pendente = true; requestAnimationFrame(verificar); }
+        }, { passive: true });
+        window.addEventListener('resize', verificar);
+        verificar();
+    })();
+
+    /* ===== Arranque ===== */
+    window.onload = function(){
+        if (!loadStateFromLocalStorage()) {
+            sincronizarControlos();
+            initTableDefaultRows();
+        }
+        atualizarRotulos();
+        updatePageFooter();
+        iniciarPublicidade();
+
+        const totalRow = byId('total-row-element');
+        if (totalRow) {
+            totalRow.classList.add('is-hidden');
+        }
+
+        /* Esc fecha a janela aberta; Tab fica preso dentro dela */
+        document.addEventListener('keydown', function(e) {
+            const modal = document.querySelector('.modal-overlay.active');
+            if (!modal) return;
+            if (e.key === 'Escape') {
+                closeModal(modal.id);
+                return;
+            }
+            if (e.key === 'Tab') {
+                const f = [...modal.querySelectorAll('button, [href], input, select, textarea')].filter(el => !el.disabled);
+                if (!f.length) return;
+                const primeiro = f[0], ultimo = f[f.length - 1];
+                if (e.shiftKey && document.activeElement === primeiro) {
+                    e.preventDefault();
+                    ultimo.focus();
+                } else if (!e.shiftKey && document.activeElement === ultimo) {
+                    e.preventDefault();
+                    primeiro.focus();
+                }
+            }
+        });
+
+        document.addEventListener('keydown', function(e){
+            if (e.key !== 'Enter') return;
+
+            const input = e.target;
+            if (input.tagName !== 'INPUT') return;
+
+            const row = input.closest('tr');
+            if (!row || row.parentElement.tagName === 'TFOOT') return;
+
+            const inputs = [...row.querySelectorAll('input')];
+            let idx = inputs.indexOf(input);
+
+            if (idx === 2) {
+                e.preventDefault();
+                input.blur();
+                return;
+            }
+
+            if (idx < inputs.length - 1){
+                e.preventDefault();
+                inputs[idx+1].focus();
+                inputs[idx+1].select();
+            }
+        });
+    };
+</script>
+
+<footer id="page-footer">
+    <span><button type="button" class="footer-link footer-copy footer-oculto" tabindex="-1" onclick="triploClique(this, mostrarEstadoApp, event)">© <span id="anoAtual">2026</span></button> <button type="button" class="footer-link footer-brand footer-oculto" tabindex="-1" onclick="triploClique(this, mostrarUltimaAtualizacao, event)">AGAJOTA</button></span>
+    <button type="button" class="footer-link" onclick="abrirPrivacidade()">Privacidade</button>
+    <button type="button" class="footer-link" onclick="abrirConsentimento()">Cookies</button>
+    <div id="footer-toast" role="status" aria-live="polite"></div>
+</footer>
+
+<script>
+/* PWA: regista o service worker (só em HTTPS ou localhost) */
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').catch(function () { /* sem suporte: o simulador funciona normalmente */ });
+    });
+}
+</script>
+
+  <!-- Seletor de idioma (original: português; tradução via Google Tradutor, só quando escolhido) -->
+  <script>
+    (function () {
+      const IDIOMAS = { pt: 'Português', en: 'English', es: 'Español', fr: 'Français', de: 'Deutsch', it: 'Italiano' };
+      const BANDEIRA = { pt: 'pt', en: 'gb', es: 'es', fr: 'fr', de: 'de', it: 'it' };
+      const btn = document.getElementById('langBtn');
+      const menu = document.getElementById('langMenu');
+      let atual = 'pt';
+      let scriptPedido = false;
+      let traducaoCarregada = false;
+
+      try { const g = localStorage.getItem('idioma'); if (g && IDIOMAS[g]) atual = g; } catch (e) {}
+
+      function guardar(code) {
+        try { if (code === 'pt') localStorage.removeItem('idioma'); else localStorage.setItem('idioma', code); } catch (e) {}
+      }
+
+      function definirCookie(valor) {
+        document.cookie = 'googtrans=' + valor + '; path=/';
+        try { document.cookie = 'googtrans=' + valor + '; path=/; domain=' + location.hostname; } catch (e) {}
+      }
+
+      function limparCookies() {
+        const exp = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+        document.cookie = exp;
+        document.cookie = exp + '; domain=' + location.hostname;
+        document.cookie = exp + '; domain=.' + location.hostname;
+      }
+
+      function atualizarUI() {
+        document.querySelector('#langFlag use').setAttribute('href', '#flag-' + BANDEIRA[atual]);
+        btn.setAttribute('aria-label', 'Idioma: ' + IDIOMAS[atual]);
+        menu.querySelectorAll('.lang-item').forEach(function (it) {
+          const ativo = it.dataset.lang === atual;
+          it.setAttribute('aria-checked', ativo ? 'true' : 'false');
+          it.querySelector('.lang-check').classList.toggle('invisible', !ativo);
+        });
+      }
+
+      function aplicarNoCombo(code, tentativa) {
+        const combo = document.querySelector('select.goog-te-combo');
+        if (!combo) {
+          if (tentativa < 40) setTimeout(function () { aplicarNoCombo(code, tentativa + 1); }, 150);
+          return;
+        }
+        combo.value = code;
+        combo.dispatchEvent(new Event('change'));
+      }
+
+      function carregarTradutor(aplicarAoIniciar) {
+        scriptPedido = true;
+        window.googleTranslateInit = function () {
+          traducaoCarregada = true;
+          new google.translate.TranslateElement(
+            { pageLanguage: 'pt', includedLanguages: 'en,es,fr,de,it', autoDisplay: false },
+            'google_translate_element'
+          );
+          if (aplicarAoIniciar && atual !== 'pt') aplicarNoCombo(atual, 0);
+        };
+        const sc = document.createElement('script');
+        sc.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateInit';
+        sc.async = true;
+        sc.onerror = function () { // sem ligação ou bloqueado: volta ao original
+          scriptPedido = false;
+          atual = 'pt';
+          guardar('pt');
+          limparCookies();
+          atualizarUI();
+        };
+        document.head.appendChild(sc);
+      }
+
+      function abrirMenu() {
+        menu.classList.remove('hidden');
+        btn.setAttribute('aria-expanded', 'true');
+        const ativo = menu.querySelector('[aria-checked="true"]') || menu.querySelector('.lang-item');
+        if (ativo) ativo.focus();
+      }
+
+      window.fecharMenuIdioma = function () {
+        if (menu.classList.contains('hidden')) return false;
+        menu.classList.add('hidden');
+        btn.setAttribute('aria-expanded', 'false');
+        return true;
+      };
+
+      window.alternarMenuIdioma = function (e) {
+        if (e) e.stopPropagation();
+        if (menu.classList.contains('hidden')) abrirMenu();
+        else { window.fecharMenuIdioma(); btn.focus(); }
+      };
+
+      window.selecionarIdioma = function (code) {
+        if (!IDIOMAS[code]) return;
+        window.fecharMenuIdioma();
+        btn.focus();
+        if (code === atual) return;
+        const estavaTraduzido = atual !== 'pt';
+        atual = code;
+        guardar(code);
+        atualizarUI();
+
+        if (code === 'pt') {
+          limparCookies();
+          if (estavaTraduzido && (traducaoCarregada || scriptPedido)) location.reload(); // repõe o original
+          return;
+        }
+        definirCookie('/pt/' + code);
+        if (traducaoCarregada) aplicarNoCombo(code, 0);
+        else if (!scriptPedido) carregarTradutor(true);
+      };
+
+      // Fechar ao clicar fora; setas para navegar no menu
+      document.addEventListener('click', function (e) {
+        if (!document.getElementById('langWrap').contains(e.target)) window.fecharMenuIdioma();
+      });
+      menu.addEventListener('keydown', function (e) {
+        const itens = Array.from(menu.querySelectorAll('.lang-item'));
+        const i = itens.indexOf(document.activeElement);
+        if (e.key === 'ArrowDown') { e.preventDefault(); itens[(i + 1) % itens.length].focus(); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); itens[(i - 1 + itens.length) % itens.length].focus(); }
+        else if (e.key === 'Tab') { window.fecharMenuIdioma(); }
+      });
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && window.fecharMenuIdioma()) btn.focus();
+      });
+
+      // Idioma escolhido numa visita anterior
+      atualizarUI();
+      if (atual !== 'pt') {
+        definirCookie('/pt/' + atual);
+        carregarTradutor(false);
+      }
+    })();
+  </script>
+
+</body>
+</html>
