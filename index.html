@@ -7,6 +7,18 @@
     <meta name="theme-color" content="#1e3a8a">
     <meta name="google-adsense-account" content="ca-pub-4094039418988922">
 
+    <!-- Coletor de erros para a Área de controlo -->
+    <script>
+      window.__erros = [];
+      function __regErro(tipo, msg) { if (window.__erros.length < 30) window.__erros.push({ t: Date.now(), tipo: tipo, msg: String(msg).slice(0, 160) }); }
+      window.addEventListener('error', function (e) {
+        var t = e.target;
+        if (t && t !== window && (t.src || t.href)) __regErro('recurso', t.src || t.href);
+        else __regErro('erro', e.message || 'erro desconhecido');
+      }, true);
+      window.addEventListener('unhandledrejection', function (e) { __regErro('promessa', (e.reason && e.reason.message) || e.reason || 'rejeição'); });
+    </script>
+
     <!-- PWA: app instalável -->
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -53,6 +65,12 @@
             } else {
                 toast('📲 Instalar app. ' + textoAjuda(), null, null, 14000);
             }
+        };
+        /* Verdadeiro se a app já está instalada (aberta como app, ou instalada e lembrada/provável no browser) */
+        window.appJaInstalada = function () {
+            if (emApp()) return true;
+            if (pedido) return false;
+            return lembrada() || provavel();
         };
         window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); pedido = e; lembrar(false); });
         window.addEventListener('appinstalled', function () {
@@ -711,6 +729,59 @@ footer{
     color: #dbeafe;
 }
 
+/* ===== Seletor de idioma ===== */
+#langWrap { position: relative; }
+.header-btn-lang { width: auto; padding: 0 10px; gap: 6px; }
+.lang-flag { width: 24px; height: 16px; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,.3); flex-shrink: 0; }
+.lang-chev { width: 14px; height: 14px; opacity: .75; }
+#langMenu {
+    position: absolute; right: 0; top: calc(100% + 10px); z-index: 200;
+    width: 240px; padding: 6px; border-radius: 16px;
+    background: rgba(15, 23, 42, 0.97); border: 1px solid rgba(255,255,255,.15);
+    box-shadow: 0 16px 40px rgba(0,0,0,.45);
+}
+#langMenu[hidden] { display: none; }
+.lang-item {
+    width: 100%; display: flex; align-items: center; gap: 12px; padding: 8px 12px;
+    border: 0; border-radius: 12px; background: none; color: #e2e8f0;
+    font: inherit; font-size: 14px; text-align: left; cursor: pointer; transition: background .15s;
+}
+.lang-item:hover, .lang-item:focus-visible { background: rgba(255,255,255,.1); outline: none; }
+.lang-name { flex: 1; white-space: nowrap; }
+.lang-orig { font-size: 10px; color: #94a3b8; }
+.lang-check { color: #34d399; font-size: 12px; font-weight: 700; }
+.lang-check.invisible { visibility: hidden; }
+.calculator-header.is-stuck .header-btn-lang { width: auto; }
+/* Tradutor: esconde a barra/balões do Google (o seletor de idioma é o nosso) */
+#google_translate_element { display: none; }
+.goog-te-banner-frame, .goog-te-balloon-frame, #goog-gt-tt, .goog-tooltip, .goog-te-spinner-pos,
+iframe.skiptranslate { display: none !important; }
+body { top: 0 !important; }
+.goog-text-highlight { background: none !important; box-shadow: none !important; }
+
+/* ===== Área de controlo (oculta: 3 cliques em «Suporte» + senha) ===== */
+#painelDonoOverlay { position: fixed; inset: 0; z-index: 99997; background: rgba(15,23,42,.6); display: flex; align-items: center; justify-content: center; padding: 12px; }
+#painelDonoOverlay > div { width: 100%; max-width: 480px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; background: #f8fafc; color: #0f172a; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.4); }
+.pd-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: #0f172a; color: #fff; font-size: 1rem; }
+.pd-x { cursor: pointer; font-size: 26px; line-height: 1; padding: 0 4px; color: #cbd5e1; }
+.pd-body { overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 4px 14px 16px; text-align: left; }
+.pd-sec { margin: 18px 0 8px; padding: 16px 2px 0; border-top: 2px solid #cbd5e1; font-size: .7rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: #64748b; }
+.pd-sec:first-child { margin-top: 10px; padding-top: 0; border-top: 0; }
+.pd-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 2px 12px; }
+.pd-row { display: grid; grid-template-columns: 40% 1fr; gap: 8px; padding: 7px 0; border-bottom: 1px solid #eef2f7; font-size: 13px; word-break: break-word; }
+.pd-row:last-child { border-bottom: 0; }
+.pd-row span { color: #64748b; font-weight: 600; }
+.pd-row b { font-weight: 700; }
+.pd-aviso, .pd-ok { padding: 9px 12px; border-radius: 10px; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.pd-aviso { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+.pd-ok { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+.pd-btn { display: block; box-sizing: border-box; width: 100%; margin-top: 8px; padding: 11px 14px; border: 0; border-radius: 10px; background: #e2e8f0; color: #0f172a; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; text-align: left; }
+.pd-btn:disabled { opacity: .6; cursor: default; }
+.pd-azul { background: #2563eb; color: #fff; }
+.pd-amarelo { background: #fde68a; color: #78350f; }
+.pd-vermelho { background: #dc2626; color: #fff; }
+.pd-nota { margin: 3px 4px 0; font-size: 12px; color: #64748b; line-height: 1.35; }
+
 .install-group {
     display: flex;
     flex-direction: column;
@@ -719,6 +790,7 @@ footer{
     padding-top: 14px;
     border-top: 1px solid #cbd5e1;
 }
+.install-group[hidden] { display: none; }
 .install-group-label {
     font-size: 11px;
     font-weight: 700;
@@ -1342,7 +1414,41 @@ tr[data-type="simple"] td:first-child { box-shadow: inset 4px 0 0 #3b82f6; }
 .consent-actions button:hover { background: rgba(255,255,255,.2); }
 .consent-actions .consent-accept { background: linear-gradient(to right, #4f46e5, #9333ea); }
 .consent-actions .consent-accept:hover { background: linear-gradient(to right, #6366f1, #a855f7); }
-#page-footer { gap: 16px; font-size: 12px; color: #94a3b8; }
+#page-footer {
+    position: relative;
+    z-index: 10;
+    width: calc(100% - 32px);
+    min-height: 60px;
+    margin: 32px 16px 16px;
+    border-radius: 12px;
+    background-color: #222;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    font-size: 12px;
+    color: #94a3b8;
+}
+#footer-toast {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 10px);
+    transform: translate(-50%, 8px);
+    width: max-content;
+    max-width: calc(100vw - 32px);
+    text-align: center;
+    background: rgba(15, 23, 42, 0.97);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 10px 18px;
+    border-radius: 12px;
+    font-size: 13px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s, transform .25s;
+    z-index: 100;
+}
+#footer-toast.show { opacity: 1; transform: translate(-50%, 0); }
 .footer-link {
     background: none;
     border: 0;
@@ -1359,6 +1465,9 @@ tr[data-type="simple"] td:first-child { box-shadow: inset 4px 0 0 #3b82f6; }
 .footer-copy:hover { text-decoration: underline; text-underline-offset: 2px; }
 .footer-brand { font-size: inherit; text-decoration: none; font-weight: 700; letter-spacing: .04em; }
 .footer-brand:hover { text-decoration: underline; text-underline-offset: 2px; }
+/* «© ano» e «AGAJOTA» no rodapé: botões ocultos (parecem texto; só reagem a 3 cliques seguidos) */
+.footer-oculto, .footer-oculto:hover { cursor: default; text-decoration: none; color: #94a3b8; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
+.footer-oculto:focus-visible { outline: none; }
 @media (max-width: 768px) { .ad-wrap { padding: 12px 16px; } }
 @media print { .ad-wrap, .consent-banner, footer { display: none !important; } }
 
@@ -1506,6 +1615,17 @@ body { padding-bottom: 20px; }
         <p>Relatório de Simulações</p>
     </div>
 
+<svg style="display: none;" aria-hidden="true">
+    <symbol id="icon-chevron" viewBox="0 0 24 24"><path fill="currentColor" d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></symbol>
+    <symbol id="flag-pt" viewBox="0 0 24 16"><rect width="9.6" height="16" fill="#006600"/><rect x="9.6" width="14.4" height="16" fill="#FF0000"/><circle cx="9.6" cy="8" r="3.3" fill="#FFCC00"/><rect x="8.1" y="6.3" width="3" height="3.5" rx=".7" fill="#FF0000" stroke="#fff" stroke-width=".5"/></symbol>
+    <symbol id="flag-gb" viewBox="0 0 24 16"><rect width="24" height="16" fill="#012169"/><path d="M0 0L24 16M24 0L0 16" stroke="#fff" stroke-width="3.2"/><path d="M0 0L24 16M24 0L0 16" stroke="#C8102E" stroke-width="1.1"/><path d="M12 0V16M0 8H24" stroke="#fff" stroke-width="5.4"/><path d="M12 0V16M0 8H24" stroke="#C8102E" stroke-width="3.2"/></symbol>
+    <symbol id="flag-es" viewBox="0 0 24 16"><rect width="24" height="16" fill="#AA151B"/><rect y="4" width="24" height="8" fill="#F1BF00"/></symbol>
+    <symbol id="flag-fr" viewBox="0 0 24 16"><rect width="8" height="16" fill="#0055A4"/><rect x="8" width="8" height="16" fill="#fff"/><rect x="16" width="8" height="16" fill="#EF4135"/></symbol>
+    <symbol id="flag-de" viewBox="0 0 24 16"><rect width="24" height="5.34" fill="#000"/><rect y="5.33" width="24" height="5.34" fill="#DD0000"/><rect y="10.66" width="24" height="5.34" fill="#FFCE00"/></symbol>
+    <symbol id="flag-it" viewBox="0 0 24 16"><rect width="8" height="16" fill="#009246"/><rect x="8" width="8" height="16" fill="#fff"/><rect x="16" width="8" height="16" fill="#CE2B37"/></symbol>
+</svg>
+<div id="google_translate_element" aria-hidden="true"></div>
+
     <div class="tanb-calculator">
         <div class="calculator-header">
             <div class="header-left-group">
@@ -1520,6 +1640,45 @@ body { padding-bottom: 20px; }
                     <span class="support-icon" aria-hidden="true">💬</span>
                     <span class="support-label">Suporte</span>
                 </button>
+                <!-- Seletor de idioma (original: português; tradução via Google Tradutor, só quando escolhido) -->
+                <div id="langWrap" class="notranslate" translate="no">
+                    <button type="button" id="langBtn" class="header-btn header-btn-lang" aria-haspopup="menu" aria-expanded="false" aria-controls="langMenu" aria-label="Idioma: Português" title="Idioma / Language" onclick="alternarMenuIdioma(event)">
+                        <svg id="langFlag" class="lang-flag" aria-hidden="true"><use href="#flag-pt"/></svg>
+                        <svg class="lang-chev" aria-hidden="true"><use href="#icon-chevron"/></svg>
+                    </button>
+                    <div id="langMenu" role="menu" aria-label="Escolher idioma" hidden>
+                    <button type="button" role="menuitemradio" aria-checked="true" data-lang="pt" lang="pt" onclick="selecionarIdioma('pt')" class="lang-item">
+                        <svg class="lang-flag" aria-hidden="true"><use href="#flag-pt"/></svg>
+                        <span class="lang-name">Português <span class="lang-orig">(original)</span></span>
+                        <span class="lang-check" aria-hidden="true">✓</span>
+                    </button>
+                    <button type="button" role="menuitemradio" aria-checked="false" data-lang="en" lang="en" onclick="selecionarIdioma('en')" class="lang-item">
+                        <svg class="lang-flag" aria-hidden="true"><use href="#flag-gb"/></svg>
+                        <span class="lang-name">English</span>
+                        <span class="lang-check invisible" aria-hidden="true">✓</span>
+                    </button>
+                    <button type="button" role="menuitemradio" aria-checked="false" data-lang="es" lang="es" onclick="selecionarIdioma('es')" class="lang-item">
+                        <svg class="lang-flag" aria-hidden="true"><use href="#flag-es"/></svg>
+                        <span class="lang-name">Español</span>
+                        <span class="lang-check invisible" aria-hidden="true">✓</span>
+                    </button>
+                    <button type="button" role="menuitemradio" aria-checked="false" data-lang="fr" lang="fr" onclick="selecionarIdioma('fr')" class="lang-item">
+                        <svg class="lang-flag" aria-hidden="true"><use href="#flag-fr"/></svg>
+                        <span class="lang-name">Français</span>
+                        <span class="lang-check invisible" aria-hidden="true">✓</span>
+                    </button>
+                    <button type="button" role="menuitemradio" aria-checked="false" data-lang="de" lang="de" onclick="selecionarIdioma('de')" class="lang-item">
+                        <svg class="lang-flag" aria-hidden="true"><use href="#flag-de"/></svg>
+                        <span class="lang-name">Deutsch</span>
+                        <span class="lang-check invisible" aria-hidden="true">✓</span>
+                    </button>
+                    <button type="button" role="menuitemradio" aria-checked="false" data-lang="it" lang="it" onclick="selecionarIdioma('it')" class="lang-item">
+                        <svg class="lang-flag" aria-hidden="true"><use href="#flag-it"/></svg>
+                        <span class="lang-name">Italiano</span>
+                        <span class="lang-check invisible" aria-hidden="true">✓</span>
+                    </button>
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -1686,7 +1845,7 @@ body { padding-bottom: 20px; }
     <div id="about-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="about-modal-title" onclick="closeModalOnOverlay(event, 'about-modal')">
         <div class="modal-content" style="text-align: center;">
             <button type="button" class="modal-close" aria-label="Fechar" onclick="closeModal('about-modal')">&times;</button>
-            <h3 id="about-modal-title" style="justify-content: center;">💬 Suporte</h3>
+            <h3 id="about-modal-title" onclick="triploClique(this, abrirPainelDono)" style="justify-content: center; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; touch-action:manipulation; -webkit-tap-highlight-color:transparent;">💬 Suporte</h3>
             <p style="text-align: center; margin-bottom: 20px;">Selecione uma opção:</p>
             
             <div class="modal-menu-options">
@@ -1737,8 +1896,12 @@ body { padding-bottom: 20px; }
                 <p>O site pode mostrar anúncios do Google AdSense. Só depois de aceitar é que o código de anúncios é carregado, e o Google pode então usar cookies e identificadores para mostrar e medir anúncios. Se recusar, esse código não é carregado. Pode mudar de ideias a qualquer momento em “Cookies”, no rodapé. Mais informação em policies.google.com/technologies/ads.</p>
             </div>
             <div class="priv-card">
+                <h4>Tradução do site (Google Tradutor)</h4>
+                <p>O site está em português. Só se escolher outro idioma no botão das bandeiras é que é carregado o Google Tradutor, que pode usar cookies e ver o seu endereço IP. Se voltar ao português, deixa de ser usado.</p>
+            </div>
+            <div class="priv-card">
                 <h4>Armazenamento no seu navegador</h4>
-                <p>Guardamos apenas, no armazenamento local do navegador, a sua escolha sobre cookies e os dados da tabela do simulador, para não voltar a perder o que preencheu. Estes dados não saem do seu dispositivo.</p>
+                <p>Guardamos apenas, no armazenamento local do navegador, a sua escolha sobre cookies, o idioma escolhido e os dados da tabela do simulador, para não voltar a perder o que preencheu. Estes dados não saem do seu dispositivo.</p>
             </div>
             <div class="priv-card">
                 <h4>Os seus direitos</h4>
@@ -1770,7 +1933,7 @@ body { padding-bottom: 20px; }
     const CHAVE_ADS_ANTIGA = 'simulador_consentimento_ads';
 
     /* Data da última atualização do simulador (AAAA-MM-DD): alterar sempre que publicar uma nova versão */
-    const ULTIMA_ATUALIZACAO = '2026-10-25';
+    const ULTIMA_ATUALIZACAO = '2026-10-28';
 
     let cfg = { retencao: 28, base: 360, cap: 'diaria' };
     let totalsVisible = false;
@@ -1942,7 +2105,12 @@ body { padding-bottom: 20px; }
     }
 
     /* ===== Janelas (modais) com gestão de foco ===== */
-    function openAboutModal() { openModal('about-modal'); }
+    function openAboutModal() {
+        /* Se a app já está instalada, o botão «Instalar app» fica oculto */
+        const grupo = byId('install-group');
+        if (grupo) grupo.hidden = typeof appJaInstalada === 'function' && appJaInstalada();
+        openModal('about-modal');
+    }
     function showTanbInfo() { openModal('tanb-modal'); }
     function showCompoundInfo() { openModal('compound-modal'); }
 
@@ -2304,13 +2472,291 @@ body { padding-bottom: 20px; }
     }
 
     function updatePageFooter() {
-        const currentYear = new Date().getFullYear();
-        const pageFooter = byId('page-footer');
-        if (pageFooter) {
-            pageFooter.innerHTML = `<span><button type="button" class="footer-link footer-copy" onclick="mostrarEstadoApp()" title="Instalar app" aria-label="Instalar app ou ver se já está instalada">© ${currentYear}</button> <button type="button" class="footer-link footer-brand" onclick="mostrarUltimaAtualizacao()" title="Ver última atualização" aria-label="Ver data da última atualização">AGAJOTA</button></span>` +
-                '<button type="button" class="footer-link" onclick="abrirPrivacidade()">Privacidade</button>' +
-                '<button type="button" class="footer-link" onclick="abrirConsentimento()">Cookies</button>';
-        }
+        const el = byId('anoAtual');
+        if (el) el.textContent = new Date().getFullYear();
+    }
+
+    /* 3 cliques seguidos (em 1,5 s) para ativar a ação dos botões ocultos do rodapé */
+    function triploClique(el, fn, ev) {
+        el._n = (el._n || 0) + 1;
+        clearTimeout(el._t);
+        if (el._n >= 3) { el._n = 0; fn(ev); return; }
+        el._t = setTimeout(function () { el._n = 0; }, 1500);
+    }
+
+    /* ---------------- ÁREA DE CONTROLO (escondida) ----------------
+       Abre com 3 cliques seguidos em "Suporte" (título da janela Suporte) + senha do dono (SENHA_DONO). */
+    /* Senha do dono: para a mudar, alterar só o texto entre aspas.
+       Atenção: como o site corre no navegador, esta senha serve para evitar toques acidentais e não é uma proteção forte. */
+    const SENHA_DONO = '112';
+    /* Página de diagnóstico da app instalável (tem de estar na mesma pasta do index.html) */
+    const DIAGNOSTICO_PWA = 'diagnostico-pwa.html';
+    let dnDados = null;
+
+    function pdCaixa(id, z) {
+      const antigo = document.getElementById(id); if (antigo) antigo.remove();
+      const ov = document.createElement('div');
+      ov.id = id;
+      ov.style.cssText = 'position:fixed; inset:0; background:rgba(15,23,42,0.55); z-index:' + z + '; display:flex; align-items:center; justify-content:center; padding:16px;';
+      const caixa = document.createElement('div');
+      caixa.style.cssText = 'background:#ffffff; border-radius:14px; padding:20px; max-width:340px; width:100%; box-shadow:0 10px 30px rgba(0,0,0,0.3); text-align:center;';
+      ov.appendChild(caixa);
+      ov.addEventListener('click', function (e) { if (e.target === ov) ov.remove(); });
+      return { ov: ov, caixa: caixa };
+    }
+    function pdBotao(texto, fundo, cor, acao) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.style.cssText = 'flex:1; padding:11px 14px; border-radius:10px; border:none; font-size:15px; font-weight:700; cursor:pointer; background:' + fundo + '; color:' + cor + ';';
+      b.textContent = texto; b.onclick = acao; return b;
+    }
+
+    function pedirSenhaDono(aoValidar) {
+      const c = pdCaixa('senhaDonoOverlay', 99998), ov = c.ov, caixa = c.caixa;
+      const titulo = document.createElement('div');
+      titulo.style.cssText = 'font-size:16px; font-weight:700; color:#0f172a; margin-bottom:12px;';
+      titulo.textContent = 'Área de controlo — introduza a senha';
+      const campo = document.createElement('input');
+      campo.type = 'password'; campo.autocomplete = 'off'; campo.placeholder = 'Senha';
+      campo.style.cssText = 'width:100%; box-sizing:border-box; padding:11px 12px; border:2px solid #cbd5e1; border-radius:10px; font-size:16px; text-align:center; color:#0f172a; background:#fff;';
+      const erro = document.createElement('div');
+      erro.style.cssText = 'color:#dc2626; font-size:14px; font-weight:700; margin-top:8px; min-height:18px;';
+      const botoes = document.createElement('div');
+      botoes.style.cssText = 'display:flex; gap:10px; margin-top:12px;';
+      function validar() {
+        if (campo.value === SENHA_DONO) { ov.remove(); aoValidar(); }
+        else { erro.textContent = 'Senha incorreta.'; campo.value = ''; campo.focus(); }
+      }
+      botoes.appendChild(pdBotao('Cancelar', '#e2e8f0', '#0f172a', function () { ov.remove(); }));
+      botoes.appendChild(pdBotao('Entrar', '#2563eb', '#ffffff', validar));
+      campo.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); validar(); }
+        else if (e.key === 'Escape') { e.stopPropagation(); ov.remove(); }
+      });
+      caixa.appendChild(titulo); caixa.appendChild(campo); caixa.appendChild(erro); caixa.appendChild(botoes);
+      document.body.appendChild(ov);
+      campo.focus();
+    }
+
+    function pdConfirmar(msg, aoConfirmar, rotulo) {
+      const c = pdCaixa('pdConfirmarOverlay', 99999), ov = c.ov, caixa = c.caixa;
+      const t = document.createElement('div');
+      t.style.cssText = 'font-size:15px; font-weight:600; color:#0f172a; line-height:1.4;';
+      t.textContent = msg;
+      const botoes = document.createElement('div');
+      botoes.style.cssText = 'display:flex; gap:10px; margin-top:16px;';
+      botoes.appendChild(pdBotao('Cancelar', '#e2e8f0', '#0f172a', function () { ov.remove(); }));
+      botoes.appendChild(pdBotao(rotulo || 'Confirmar', '#2563eb', '#ffffff', function () { ov.remove(); aoConfirmar(); }));
+      caixa.appendChild(t); caixa.appendChild(botoes);
+      document.body.appendChild(ov);
+    }
+
+    function abrirPainelDono() {
+      pedirSenhaDono(function () { closeModal('about-modal'); montarPainelDono(); });
+    }
+    function fecharPainelDono() {
+      const ov = document.getElementById('painelDonoOverlay');
+      if (ov) ov.remove();
+    }
+    function dnEsc(s) {
+      return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; });
+    }
+    function dnBytes(n) {
+      if (!isFinite(n)) return '?';
+      if (n < 1024) return n + ' B';
+      if (n < 1048576) return (n / 1024).toFixed(1) + ' KB';
+      if (n < 1073741824) return (n / 1048576).toFixed(1) + ' MB';
+      return (n / 1073741824).toFixed(2) + ' GB';
+    }
+    function dnBrowser() {
+      const u = navigator.userAgent; let b = 'Desconhecido', m;
+      if ((m = u.match(/Edg\/(\d+)/))) b = 'Edge ' + m[1];
+      else if ((m = u.match(/OPR\/(\d+)/))) b = 'Opera ' + m[1];
+      else if ((m = u.match(/SamsungBrowser\/(\d+)/))) b = 'Samsung Internet ' + m[1];
+      else if ((m = u.match(/(?:Chrome|CriOS)\/(\d+)/))) b = 'Chrome ' + m[1];
+      else if ((m = u.match(/(?:Firefox|FxiOS)\/(\d+)/))) b = 'Firefox ' + m[1];
+      else if ((m = u.match(/Version\/(\d+).*Safari/))) b = 'Safari ' + m[1];
+      let so = '';
+      if (/Android/.test(u)) { m = u.match(/Android ([\d.]+)/); so = 'Android ' + (m ? m[1] : ''); }
+      else if (/iPhone|iPad|iPod/.test(u)) so = 'iOS';
+      else if (/Windows/.test(u)) so = 'Windows';
+      else if (/Mac OS X/.test(u)) so = 'macOS';
+      else if (/Linux/.test(u)) so = 'Linux';
+      return so ? b + ' · ' + so : b;
+    }
+    function dnDataAtualizacao() {
+      const d = new Date(ULTIMA_ATUALIZACAO + 'T12:00:00');
+      return isNaN(d) ? ULTIMA_ATUALIZACAO : d.toLocaleDateString('pt-PT', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+
+    /* recolhe o diagnóstico (só lê; não altera nada) */
+    async function dnColetar() {
+      const avisos = [];
+      let ls = null; try { ls = localStorage; } catch (e) {}
+      const standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+      const cons = lerConsentimento();
+
+      const app = [
+        ['Última atualização', dnDataAtualizacao()],
+        ['Aberta como', standalone ? 'App instalada' : 'Browser'],
+        ['Endereço', location.protocol === 'file:' ? 'ficheiro local' : location.host + location.pathname],
+        ['Idioma do site', (ls && ls.getItem('idioma')) || 'pt'],
+        ['Cookies', cons === 'aceite' ? 'aceites' : cons === 'recusado' ? 'recusados' : 'por responder'],
+        ['Linhas na tabela', String(linhas().length)],
+        ['Simulação guardada', ls && ls.getItem(CHAVE) ? 'sim' : 'não']
+      ];
+
+      const net = (navigator.connection && navigator.connection.effectiveType) ? ' (' + navigator.connection.effectiveType + ')' : '';
+      const disp = [
+        ['Ecrã', innerWidth + ' × ' + innerHeight + ' px · ×' + (window.devicePixelRatio || 1)],
+        ['Browser', dnBrowser()],
+        ['Idioma · fuso', navigator.language + ' · ' + (Intl.DateTimeFormat().resolvedOptions().timeZone || '?')],
+        ['Rede', (navigator.onLine ? 'online' : 'offline') + net]
+      ];
+      if (!navigator.onLine) avisos.push('Sem ligação à internet neste momento.');
+
+      let sw;
+      if (location.protocol === 'file:') sw = 'não aplicável (ficheiro local)';
+      else if (!('serviceWorker' in navigator)) sw = 'não suportado';
+      else {
+        try {
+          const r = await navigator.serviceWorker.getRegistrations();
+          sw = r.length ? 'ativo (' + r.length + ')' : 'nenhum registado';
+          if (!r.length) avisos.push('O service worker não está registado (confirme que o ficheiro sw.js está no servidor).');
+        } catch (e) { sw = 'erro ao ler'; }
+      }
+      let cch, cacheNomes = [];
+      if ('caches' in window) {
+        try { cacheNomes = await caches.keys(); cch = cacheNomes.length ? cacheNomes.join(', ') : 'nenhuma'; } catch (e) { cch = 'erro ao ler'; }
+      } else cch = 'não suportado';
+
+      const arm = [];
+      if (ls) {
+        const ks = Object.keys(ls); let tot = 0;
+        ks.forEach(function (k) { tot += k.length + (ls.getItem(k) || '').length; });
+        arm.push(['Dados locais', ks.length + ' chave(s) · ' + dnBytes(tot * 2)]);
+        ks.forEach(function (k) { const v = ls.getItem(k) || ''; arm.push(['· ' + k, v.length > 40 ? v.slice(0, 40) + '…' : v]); });
+      } else arm.push(['Dados locais', 'indisponíveis']);
+      if (navigator.storage && navigator.storage.estimate) {
+        try {
+          const e = await navigator.storage.estimate();
+          if (e.quota) {
+            arm.push(['Espaço usado', dnBytes(e.usage) + ' de ' + dnBytes(e.quota)]);
+            if (e.usage / e.quota > 0.8) avisos.push('O armazenamento do browser está quase cheio.');
+          }
+        } catch (x) {}
+      }
+      arm.push(['Service worker', sw]);
+      arm.push(['Cache da app', cch]);
+
+      const er = window.__erros || [];
+      const erros = er.length
+        ? er.slice(-8).map(function (x) { return [new Date(x.t).toLocaleTimeString('pt-PT'), (x.tipo === 'recurso' ? 'Não carregou: ' : x.tipo === 'promessa' ? 'Falha: ' : 'Erro: ') + x.msg]; })
+        : [['—', 'Nenhum erro desde que a página abriu']];
+      if (er.length) avisos.push(er.length + ' erro(s) desde que a página abriu (ver abaixo).');
+
+      return { avisos: avisos, fatos: { cacheNomes: cacheNomes, recursos: er.filter(function (x) { return x.tipo === 'recurso'; }).length }, grupos: [
+        { t: 'Aplicação', l: app }, { t: 'Dispositivo', l: disp },
+        { t: 'Armazenamento', l: arm }, { t: 'Erros desde que abriu', l: erros }
+      ] };
+    }
+
+    function dnTexto() {
+      let t = 'Simulador de Juros — diagnóstico (' + new Date().toLocaleString('pt-PT') + ')\n';
+      if (!dnDados) return t;
+      t += '\nAvisos: ' + (dnDados.avisos.length ? '\n- ' + dnDados.avisos.join('\n- ') : 'nenhum') + '\n';
+      dnDados.grupos.forEach(function (g) {
+        t += '\n[' + g.t + ']\n' + g.l.map(function (r) { return r[0] + ': ' + r[1]; }).join('\n') + '\n';
+      });
+      return t;
+    }
+    async function dnCopiar(btn) {
+      const t = dnTexto(); let ok = false;
+      try { await navigator.clipboard.writeText(t); ok = true; }
+      catch (e) {
+        try {
+          const ta = document.createElement('textarea');
+          ta.value = t; ta.style.cssText = 'position:fixed; opacity:0;';
+          document.body.appendChild(ta); ta.select(); ok = document.execCommand('copy'); ta.remove();
+        } catch (x) {}
+      }
+      const antes = btn.textContent;
+      btn.textContent = ok ? '✅ Copiado' : '❌ Não foi possível copiar';
+      setTimeout(function () { btn.textContent = antes; }, 1800);
+    }
+
+    /* reposições */
+    async function dnApagarCaches() {
+      try { if ('serviceWorker' in navigator) { const r = await navigator.serviceWorker.getRegistrations(); await Promise.all(r.map(function (x) { return x.unregister(); })); } } catch (e) {}
+      try { if ('caches' in window) { const k = await caches.keys(); await Promise.all(k.map(function (x) { return caches.delete(x); })); } } catch (e) {}
+    }
+    function dnLimparCookieTradutor() {
+      const exp = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+      document.cookie = exp;
+      document.cookie = exp + '; domain=' + location.hostname;
+      document.cookie = exp + '; domain=.' + location.hostname;
+    }
+    function dnLimparCache() {
+      pdConfirmar('Limpar a cache e recarregar a app? As definições mantêm-se.', async function () { await dnApagarCaches(); location.reload(); }, 'Limpar');
+    }
+    function dnReporDefinicoes() {
+      pdConfirmar('Repor as definições? O idioma volta a português, o aviso de cookies pode voltar a aparecer e o estado da app instalada é esquecido. As simulações mantêm-se.', function () {
+        dnLimparCookieTradutor();
+        try { ['idioma', 'simulador-app-instalada', CHAVE_ADS, CHAVE_ADS_ANTIGA].forEach(function (k) { localStorage.removeItem(k); }); } catch (e) {}
+        location.reload();
+      }, 'Repor');
+    }
+    function dnReporSite() {
+      pdConfirmar('Repor o site ao estado original? Apaga tudo o que está guardado neste dispositivo (simulações, definições e cache) e recarrega a página.', async function () {
+        try { localStorage.clear(); sessionStorage.clear(); } catch (e) {}
+        dnLimparCookieTradutor();
+        await dnApagarCaches();
+        try { history.replaceState(null, ''); } catch (e) {}
+        location.reload();
+      }, 'Repor tudo');
+    }
+
+    function dnRender(c) {
+      const pos = c.scrollTop;
+      let h = '<div class="pd-sec">Avisos</div>';
+      h += dnDados.avisos.length
+        ? dnDados.avisos.map(function (a) { return '<div class="pd-aviso">⚠️ ' + dnEsc(a) + '</div>'; }).join('')
+        : '<div class="pd-ok">✅ Sem avisos</div>';
+      dnDados.grupos.forEach(function (g) {
+        h += '<div class="pd-sec">' + dnEsc(g.t) + '</div><div class="pd-card">' +
+          g.l.map(function (r) { return '<div class="pd-row"><span>' + dnEsc(r[0]) + '</span><b>' + dnEsc(r[1]) + '</b></div>'; }).join('') + '</div>';
+      });
+      h += '<div class="pd-sec">Ferramentas</div>' +
+        '<button type="button" class="pd-btn pd-azul" onclick="dnCopiar(this)">📋 Copiar diagnóstico</button>' +
+        '<div class="pd-nota">Copia tudo isto como texto, para colar numa mensagem.</div>' +
+        '<button type="button" class="pd-btn" onclick="dnAtualizar()">🔃 Atualizar diagnóstico</button>' +
+        '<a class="pd-btn pd-azul" style="text-decoration:none;" href="' + dnEsc(DIAGNOSTICO_PWA) + '" target="_blank" rel="noopener">🩺 Diagnóstico da app instalável</a>' +
+        '<div class="pd-nota">Verifica se o site pode ser instalado como app no telemóvel (manifesto, ícones e service worker). Abre ' + dnEsc(DIAGNOSTICO_PWA) + ' num novo separador.</div>';
+      h += '<div class="pd-sec">Reposição</div>' +
+        '<button type="button" class="pd-btn pd-amarelo" onclick="dnLimparCache()">🧽 Atualizar app (limpar cache)</button>' +
+        '<div class="pd-nota">Mantém as definições. Útil quando aparece uma versão antiga do site.</div>' +
+        '<button type="button" class="pd-btn pd-amarelo" onclick="dnReporDefinicoes()">↩️ Repor definições</button>' +
+        '<div class="pd-nota">O idioma, o aviso de cookies e o estado da app instalada voltam ao início. As simulações mantêm-se.</div>' +
+        '<button type="button" class="pd-btn pd-vermelho" onclick="dnReporSite()">⚠️ Repor site original</button>' +
+        '<div class="pd-nota">Apaga tudo o que está guardado neste dispositivo e recarrega a página.</div>';
+      c.innerHTML = h;
+      c.scrollTop = pos;
+    }
+    async function dnAtualizar() {
+      dnDados = await dnColetar();
+      const c = document.getElementById('pdCorpo');
+      if (c) dnRender(c);
+    }
+    function montarPainelDono() {
+      fecharPainelDono();
+      const ov = document.createElement('div');
+      ov.id = 'painelDonoOverlay';
+      ov.innerHTML = '<div role="dialog" aria-modal="true" aria-label="Área de controlo">' +
+        '<div class="pd-head"><strong>🛠️ Área de controlo</strong><span class="pd-x" onclick="fecharPainelDono()" aria-label="Fechar">×</span></div>' +
+        '<div class="pd-body" id="pdCorpo">A recolher diagnóstico…</div></div>';
+      ov.addEventListener('click', function (e) { if (e.target === ov) fecharPainelDono(); });
+      document.body.appendChild(ov);
+      dnAtualizar();
     }
 
     /* ===== Exportar, copiar e imprimir ===== */
@@ -2458,8 +2904,14 @@ body { padding-bottom: 20px; }
         return 'Última atualização: ' + d.toLocaleDateString('pt-PT', { day: 'numeric', month: 'long', year: 'numeric' });
     }
 
+    let footerToastTimer = null;
     function mostrarUltimaAtualizacao() {
-        toast(textoUltimaAtualizacao());
+        const el = byId('footer-toast');
+        if (!el) return;
+        el.textContent = textoUltimaAtualizacao();
+        el.classList.add('show');
+        clearTimeout(footerToastTimer);
+        footerToastTimer = setTimeout(() => el.classList.remove('show'), 2500);
     }
 
     function abrirConsentimento() {
@@ -2614,7 +3066,12 @@ body { padding-bottom: 20px; }
     };
 </script>
 
-<footer id="page-footer"></footer>
+<footer id="page-footer">
+    <span><button type="button" class="footer-link footer-copy footer-oculto" tabindex="-1" onclick="triploClique(this, mostrarEstadoApp, event)">© <span id="anoAtual">2026</span></button> <button type="button" class="footer-link footer-brand footer-oculto" tabindex="-1" onclick="triploClique(this, mostrarUltimaAtualizacao, event)">AGAJOTA</button></span>
+    <button type="button" class="footer-link" onclick="abrirPrivacidade()">Privacidade</button>
+    <button type="button" class="footer-link" onclick="abrirConsentimento()">Cookies</button>
+    <div id="footer-toast" role="status" aria-live="polite"></div>
+</footer>
 
 <script>
 /* PWA: regista o service worker (só em HTTPS ou localhost) */
@@ -2624,6 +3081,143 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     });
 }
 </script>
+
+  <!-- Seletor de idioma (original: português; tradução via Google Tradutor, só quando escolhido) -->
+  <script>
+    (function () {
+      const IDIOMAS = { pt: 'Português', en: 'English', es: 'Español', fr: 'Français', de: 'Deutsch', it: 'Italiano' };
+      const BANDEIRA = { pt: 'pt', en: 'gb', es: 'es', fr: 'fr', de: 'de', it: 'it' };
+      const btn = document.getElementById('langBtn');
+      const menu = document.getElementById('langMenu');
+      let atual = 'pt';
+      let scriptPedido = false;
+      let traducaoCarregada = false;
+
+      try { const g = localStorage.getItem('idioma'); if (g && IDIOMAS[g]) atual = g; } catch (e) {}
+
+      function guardar(code) {
+        try { if (code === 'pt') localStorage.removeItem('idioma'); else localStorage.setItem('idioma', code); } catch (e) {}
+      }
+
+      function definirCookie(valor) {
+        document.cookie = 'googtrans=' + valor + '; path=/';
+        try { document.cookie = 'googtrans=' + valor + '; path=/; domain=' + location.hostname; } catch (e) {}
+      }
+
+      function limparCookies() {
+        const exp = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+        document.cookie = exp;
+        document.cookie = exp + '; domain=' + location.hostname;
+        document.cookie = exp + '; domain=.' + location.hostname;
+      }
+
+      function atualizarUI() {
+        document.querySelector('#langFlag use').setAttribute('href', '#flag-' + BANDEIRA[atual]);
+        btn.setAttribute('aria-label', 'Idioma: ' + IDIOMAS[atual]);
+        menu.querySelectorAll('.lang-item').forEach(function (it) {
+          const ativo = it.dataset.lang === atual;
+          it.setAttribute('aria-checked', ativo ? 'true' : 'false');
+          it.querySelector('.lang-check').classList.toggle('invisible', !ativo);
+        });
+      }
+
+      function aplicarNoCombo(code, tentativa) {
+        const combo = document.querySelector('select.goog-te-combo');
+        if (!combo) {
+          if (tentativa < 40) setTimeout(function () { aplicarNoCombo(code, tentativa + 1); }, 150);
+          return;
+        }
+        combo.value = code;
+        combo.dispatchEvent(new Event('change'));
+      }
+
+      function carregarTradutor(aplicarAoIniciar) {
+        scriptPedido = true;
+        window.googleTranslateInit = function () {
+          traducaoCarregada = true;
+          new google.translate.TranslateElement(
+            { pageLanguage: 'pt', includedLanguages: 'en,es,fr,de,it', autoDisplay: false },
+            'google_translate_element'
+          );
+          if (aplicarAoIniciar && atual !== 'pt') aplicarNoCombo(atual, 0);
+        };
+        const sc = document.createElement('script');
+        sc.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateInit';
+        sc.async = true;
+        sc.onerror = function () { // sem ligação ou bloqueado: volta ao original
+          scriptPedido = false;
+          atual = 'pt';
+          guardar('pt');
+          limparCookies();
+          atualizarUI();
+        };
+        document.head.appendChild(sc);
+      }
+
+      function abrirMenu() {
+        menu.classList.remove('hidden');
+        btn.setAttribute('aria-expanded', 'true');
+        const ativo = menu.querySelector('[aria-checked="true"]') || menu.querySelector('.lang-item');
+        if (ativo) ativo.focus();
+      }
+
+      window.fecharMenuIdioma = function () {
+        if (menu.classList.contains('hidden')) return false;
+        menu.classList.add('hidden');
+        btn.setAttribute('aria-expanded', 'false');
+        return true;
+      };
+
+      window.alternarMenuIdioma = function (e) {
+        if (e) e.stopPropagation();
+        if (menu.classList.contains('hidden')) abrirMenu();
+        else { window.fecharMenuIdioma(); btn.focus(); }
+      };
+
+      window.selecionarIdioma = function (code) {
+        if (!IDIOMAS[code]) return;
+        window.fecharMenuIdioma();
+        btn.focus();
+        if (code === atual) return;
+        const estavaTraduzido = atual !== 'pt';
+        atual = code;
+        guardar(code);
+        atualizarUI();
+
+        if (code === 'pt') {
+          limparCookies();
+          if (estavaTraduzido && (traducaoCarregada || scriptPedido)) location.reload(); // repõe o original
+          return;
+        }
+        definirCookie('/pt/' + code);
+        if (traducaoCarregada) aplicarNoCombo(code, 0);
+        else if (!scriptPedido) carregarTradutor(true);
+      };
+
+      // Fechar ao clicar fora; setas para navegar no menu
+      document.addEventListener('click', function (e) {
+        if (!document.getElementById('langWrap').contains(e.target)) window.fecharMenuIdioma();
+      });
+      menu.addEventListener('keydown', function (e) {
+        const itens = Array.from(menu.querySelectorAll('.lang-item'));
+        const i = itens.indexOf(document.activeElement);
+        if (e.key === 'ArrowDown') { e.preventDefault(); itens[(i + 1) % itens.length].focus(); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); itens[(i - 1 + itens.length) % itens.length].focus(); }
+        else if (e.key === 'Tab') { window.fecharMenuIdioma(); }
+      });
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && window.fecharMenuIdioma()) btn.focus();
+      });
+
+      // Idioma escolhido numa visita anterior
+      atualizarUI();
+      if (atual !== 'pt') {
+        definirCookie('/pt/' + atual);
+        carregarTradutor(false);
+      }
+    })();
+  </script>
 
 </body>
 </html>
