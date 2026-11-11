@@ -423,6 +423,7 @@ footer{
 }
 .scroll-hint { display: none; }
 .scroll-fade { display: none; }
+.scroll-fade-left { display: none; }
 
 .total-row {
     background: #fef3c7; 
@@ -788,7 +789,7 @@ iframe.skiptranslate { display: none !important; }
 body { top: 0 !important; }
 .goog-text-highlight { background: none !important; box-shadow: none !important; }
 
-/* ===== Área de controlo (oculta: 3 cliques em «Suporte» + senha) ===== */
+/* ===== Área de controlo (oculta: 3 toques na data de atualização do menu + senha) ===== */
 #painelDonoOverlay { position: fixed; inset: 0; z-index: 99997; background: rgba(15,23,42,.6); display: flex; align-items: center; justify-content: center; padding: 12px; }
 #painelDonoOverlay > div { width: 100%; max-width: 480px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; background: #f8fafc; color: #0f172a; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.4); }
 .pd-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: #0f172a; color: #fff; font-size: 1rem; }
@@ -921,28 +922,52 @@ body { top: 0 !important; }
     /* Indicador lateral: sombra azul + seta, enquanto houver mais colunas à direita */
     .table-wrap { position: relative; }
     .scroll-fade {
-        display: block; position: absolute; top: 0; bottom: 16px; right: 0; width: 38px;
+        display: flex; flex-direction: column; justify-content: flex-end; position: absolute; top: 0; bottom: 16px; right: 0; width: 38px;
         z-index: 6; pointer-events: none; opacity: 0; transition: opacity .25s;
         background: linear-gradient(to left, rgba(30,64,175,.38), rgba(30,64,175,0));
     }
     .scroll-fade.visivel { opacity: 1; }
-    .scroll-fade span {
-        position: sticky; top: 42vh; display: flex; align-items: center; justify-content: center;
-        width: 28px; height: 48px; margin-left: auto;
-        border-radius: 24px 0 0 24px; background: #1e40af; color: #fff;
+    .scroll-fade button, .scroll-fade-left button {
+        border: 0; padding: 0; cursor: pointer; font-family: inherit;
+        pointer-events: none; -webkit-tap-highlight-color: transparent;
+    }
+    .scroll-fade.visivel button, .scroll-fade-left.visivel button { pointer-events: auto; }
+    .scroll-fade button:active, .scroll-fade-left button:active { background: #1d4ed8; }
+    .scroll-fade-left {
+        display: flex; flex-direction: column; justify-content: flex-end; position: absolute; top: 0; bottom: 16px; left: 0; width: 38px;
+        z-index: 6; pointer-events: none; opacity: 0; transition: opacity .25s;
+        background: linear-gradient(to right, rgba(30,64,175,.38), rgba(30,64,175,0));
+    }
+    .scroll-fade-left.visivel { opacity: 1; }
+    .scroll-fade-left button {
+        position: sticky; bottom: 6px; flex: 0 0 auto; align-self: flex-start; margin: 0 0 6px;
+        display: flex; align-items: center; justify-content: center;
+        width: 28px; height: 72px;
+        border-radius: 0 28px 28px 0; background: #1e40af; color: #fff;
+        font-size: 24px; font-weight: 800; line-height: 1;
+        box-shadow: 0 2px 8px rgba(0,0,0,.35);
+        animation: empurraSetaEsq 1.4s ease-in-out infinite;
+    }
+    @keyframes empurraSetaEsq { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(4px); } }
+    @media (prefers-reduced-motion: reduce) { .scroll-fade-left button { animation: none; } }
+    .scroll-fade button {
+        position: sticky; bottom: 6px; flex: 0 0 auto; align-self: flex-end; margin: 0 0 6px;
+        display: flex; align-items: center; justify-content: center;
+        width: 28px; height: 72px;
+        border-radius: 28px 0 0 28px; background: #1e40af; color: #fff;
         font-size: 24px; font-weight: 800; line-height: 1;
         box-shadow: 0 2px 8px rgba(0,0,0,.35);
         animation: empurraSeta 1.4s ease-in-out infinite;
     }
     @keyframes empurraSeta { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-4px); } }
-    @media (prefers-reduced-motion: reduce) { .scroll-fade span { animation: none; } }
+    @media (prefers-reduced-motion: reduce) { .scroll-fade button { animation: none; } }
 
-    #calculator-table { min-width: 944px; }
+    #calculator-table { min-width: 956px; }
     #calculator-table thead th:nth-child(1)  { width: 60px; }
     #calculator-table thead th:nth-child(2)  { width: 118px; }
     #calculator-table thead th:nth-child(3)  { width: 74px; }
     #calculator-table thead th:nth-child(4)  { width: 60px; }
-    #calculator-table thead th:nth-child(5)  { width: 92px; }
+    #calculator-table thead th:nth-child(5)  { width: 104px; }
     #calculator-table thead th:nth-child(6)  { width: 100px; }
     #calculator-table thead th:nth-child(7)  { width: 92px; }
     #calculator-table thead th:nth-child(8)  { width: 92px; }
@@ -1090,6 +1115,8 @@ body { top: 0 !important; }
     .table-actions, 
     .scroll-hint, 
     .scroll-fade, 
+    .scroll-fade-left, 
+    .ret-regioes, 
     .instructions, 
     footer,
     .modal-overlay {
@@ -1323,8 +1350,23 @@ select:focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }
     .aviso, .calc-note { padding-left: 16px; padding-right: 16px; }
 }
 
+.so-impressao { display: none; }
 @media print {
-    .settings-bar, .aviso, .calc-note, .toast, .noscript-msg { display: none !important; }
+    .settings-bar, .aviso, .toast, .noscript-msg { display: none !important; }
+    /* A nota informativa fica no fim da folha, para quem lê a simulação em papel */
+    .calc-note {
+        display: block !important;
+        margin: 14px 0 40px !important;
+        padding: 10px 0 0 !important;
+        background: none !important;
+        border-top: 1px solid #cbd5e1 !important;
+        color: #334155 !important;
+        font-size: 10.5px !important;
+        line-height: 1.5 !important;
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+    .so-impressao { display: inline; }
 }
 
 /* ===== V25.1: campos mais compactos e retenção no cabeçalho ===== */
@@ -1338,6 +1380,17 @@ select:focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }
 }
 
 #th-ret label { display: block; }
+.ret-regioes { display: flex; justify-content: center; margin-top: 4px; }
+.ret-regioes button {
+    flex: 1 1 0; min-width: 0; margin: 0; padding: 3px 2px;
+    border: 1px solid rgba(255, 255, 255, 0.75); background: transparent; color: #fff;
+    font: inherit; font-size: 10.5px; font-weight: 700; line-height: 1.15;
+    cursor: pointer; transform: none; box-shadow: none; -webkit-tap-highlight-color: transparent;
+}
+.ret-regioes button:first-child { border-radius: 8px 0 0 8px; }
+.ret-regioes button:last-child { border-radius: 0 8px 8px 0; border-left-width: 0; }
+.ret-regioes button.on { background: #fff; color: #1e40af; }
+.ret-regioes button:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
 .th-ret-field { display: inline-flex; align-items: center; gap: 3px; margin-top: 4px; }
 #cfg-ret {
     width: 54px;
@@ -1690,20 +1743,23 @@ body { padding-bottom: 20px; }
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
                     </button>
                     <div id="menuLista" role="menu" hidden>
-                        <button type="button" role="menuitem" class="menu-item" onclick="fecharMenu(); partilharSimulador();" title="Partilhar o endereço do site (não uma simulação)">
-                            <span class="mi" aria-hidden="true">📤</span><span class="mi-nome">Partilhar o site</span>
+                        <button type="button" role="menuitem" class="menu-item" onclick="fecharMenu(); openAboutModal();" aria-label="Abrir sugestões e problemas: enviar uma sugestão ou reportar um problema">
+                            <span class="mi" aria-hidden="true">💬</span><span class="mi-nome">Sugestões e problemas</span>
                         </button>
                         <button type="button" role="menuitem" class="menu-item" onclick="fecharMenu(); openModal('ajuda-modal');">
-                            <span class="mi" aria-hidden="true">❓</span><span class="mi-nome">Ajuda</span>
-                        </button>
-                        <button type="button" role="menuitem" class="menu-item" onclick="fecharMenu(); openAboutModal();" aria-label="Abrir suporte: sugestões, reportar problema ou contacto">
-                            <span class="mi" aria-hidden="true">💬</span><span class="mi-nome">Suporte</span>
+                            <span class="mi" aria-hidden="true">❓</span><span class="mi-nome">Ajuda no simulador</span>
                         </button>
                         <button type="button" role="menuitem" id="menuInstalar" class="menu-item" onclick="fecharMenu(); mostrarEstadoApp();">
                             <span class="mi" aria-hidden="true">📲</span><span class="mi-nome">Instalar app</span>
                         </button>
+                        <button type="button" role="menuitem" class="menu-item" onclick="fecharMenu(); sendEmail('Contacto');" title="Enviar uma mensagem por e-mail">
+                            <span class="mi" aria-hidden="true">✉️</span><span class="mi-nome">Contacto (E-mail)</span>
+                        </button>
                         <button type="button" role="menuitem" class="menu-item" onclick="fecharMenu(); openModal('apoio-modal');">
-                            <span class="mi" aria-hidden="true">☕</span><span class="mi-nome">Apoiar o desenvolvedor</span>
+                            <span class="mi" aria-hidden="true">☕</span><span class="mi-nome">Apoiar o Projeto</span>
+                        </button>
+                        <button type="button" role="menuitem" class="menu-item" onclick="fecharMenu(); partilharSimulador();" title="Partilhar o endereço do site (não uma simulação)">
+                            <span class="mi" aria-hidden="true">📤</span><span class="mi-nome">Partilhar o site</span>
                         </button>
                         <div class="menu-sep"></div>
                         <button type="button" role="menuitem" id="menuUpd" class="menu-item menu-upd" onclick="triploClique(this, function () { fecharMenu(); abrirPainelDono(); }, event)"></button>
@@ -1791,7 +1847,8 @@ body { padding-bottom: 20px; }
 
         <p class="scroll-hint">↔ Deslize a tabela para ver todas as colunas</p>
         <div class="table-wrap">
-        <div class="scroll-fade" id="scroll-fade" aria-hidden="true"><span>›</span></div>
+        <div class="scroll-fade-left" id="scroll-fade-left"><button type="button" id="scroll-seta-esq" aria-label="Ver colunas anteriores">‹</button></div>
+        <div class="scroll-fade" id="scroll-fade"><button type="button" id="scroll-seta-dir" aria-label="Ver mais colunas">›</button></div>
         <div class="table-scroll">
         <table class="calculator-table" id="calculator-table">
             <thead>
@@ -1801,7 +1858,7 @@ body { padding-bottom: 20px; }
                     <th>% Taxa Anual</th>
                     <th>Dias</th>
                     <th>Juros<br>Brutos (€)</th>
-                    <th id="th-ret"><label for="cfg-ret">Retenção</label><span class="th-ret-field"><input type="text" id="cfg-ret" data-num="dec" inputmode="decimal" value="28" autocomplete="off" aria-label="Taxa de retenção em percentagem" onchange="aplicarConfig()"><b>%</b></span></th>
+                    <th id="th-ret"><label for="cfg-ret">Retenção</label><span class="ret-regioes" role="group" aria-label="Região fiscal"><button type="button" id="ret-continente" aria-pressed="true" title="Portugal Continental" aria-label="Portugal Continental" onclick="escolherRegiao('continente')">Contin.</button><button type="button" id="ret-ilhas" aria-pressed="false" title="Açores e Madeira" aria-label="Açores e Madeira" onclick="escolherRegiao('ilhas')">Ilhas</button></span><span class="th-ret-field"><input type="text" id="cfg-ret" data-num="dec" inputmode="decimal" value="28" autocomplete="off" aria-label="Taxa de retenção em percentagem" onchange="aplicarConfig()"><b>%</b></span></th>
                     <th>Juros<br>Líquidos (€)</th>
                     <th>Juro Líquido<br>por Dia (€)</th>
                     <th title="Capital mais juros líquidos">Montante<br>Final (€)</th>
@@ -1842,7 +1899,7 @@ body { padding-bottom: 20px; }
             <button class="clear-total-btn" onclick="clearAllRows()">Limpar<br>tudo</button>
         </div>
  
-        <p class="calc-note">ℹ️ Linhas TANB: juros simples, base de <span class="base-txt">360</span> dias. Linhas verdes: juros compostos com capitalização <span class="cap-txt">diária</span> (ano de 365 dias). Retenção de <span class="ret-pct">28</span>% aplicada a todas as linhas. Só as linhas completas e válidas entram nos totais. Simulação meramente informativa; não substitui as condições contratuais da instituição financeira.</p>
+        <p class="calc-note">ℹ️ Linhas TANB: juros simples, base de <span class="base-txt">360</span> dias. Linhas verdes: juros compostos com capitalização <span class="cap-txt">diária</span> (ano de 365 dias). Retenção de <span class="ret-pct">28</span>% aplicada a todas as linhas (<span class="ret-reg-txt">Portugal Continental</span>). <span class="so-impressao">TANB é a taxa anual nominal bruta, isto é, antes de impostos; a retenção na fonte é o imposto (IRS) que o banco desconta aos juros. </span>Só as linhas completas e válidas entram nos totais. Simulação meramente informativa; não substitui as condições contratuais da instituição financeira.</p>
 
         <div class="ad-wrap" id="ad-wrap" hidden>
             <span class="ad-label">Publicidade</span>
@@ -1877,7 +1934,7 @@ body { padding-bottom: 20px; }
                 <li><strong>% Taxa Anual:</strong> Insira a Taxa Anual Nominal Bruta (TANB);</li>    
                 <li><strong>Dias:</strong> Insira o período do investimento em dias;</li>
                 <li><strong>Juros Brutos (€):</strong> Valor total ganho sem a retenção na fonte.</li>
-                <li><strong>Retenção na fonte (€):</strong> Em conformidade com a regulamentação fiscal portuguesa, a taxa de retenção por defeito é de <span class="ret-pct">28</span>% (configurável);</li>
+                <li><strong>Retenção na fonte (€):</strong> Em conformidade com a regulamentação fiscal portuguesa, a taxa de retenção é de <span class="ret-cont">28</span>% em Portugal Continental e de <span class="ret-ilhas">19,6</span>% nos Açores e Madeira (escolha a região na coluna «Retenção»; o valor também pode ser editado);</li>
                 <li><strong>Juros Líquidos (€):</strong> Lucro real calculado referente aos dias colocados já livre de impostos;</li>
                 <li><strong>Juro Líquido por dia (€):</strong> Lucro automaticamente calculado como valor médio ganho por dia já com a retenção na fonte.</li>
                 <li><strong>Montante Final (€):</strong> Capital investido mais os juros líquidos;</li>
@@ -1906,7 +1963,23 @@ body { padding-bottom: 20px; }
             <button type="button" class="modal-close" aria-label="Fechar" onclick="closeModal('tanb-modal')">&times;</button>
             <h3 id="tanb-modal-title">📊 O que é a TANB?</h3>
             <p>A <strong>TANB (Taxa Anual Nominal Bruta)</strong> é a taxa de juro de referência utilizada para depósitos e investimentos a um ano, antes de qualquer dedução fiscal.</p>
-            <p>É designada por <em>"nominal"</em> porque reflete o ganho bruto teórico sem considerar o reinvestimento de juros, e <em>"bruta"</em> porque não inclui a retenção do imposto (como a taxa de 28% em Portugal).</p>
+            <p>É designada por <em>"nominal"</em> porque reflete o ganho bruto teórico sem considerar o reinvestimento de juros, e <em>"bruta"</em> porque não inclui a retenção do imposto (como a taxa de <span class="ret-cont">28</span>% em Portugal Continental).</p>
+        </div>
+    </div>
+
+    <!-- Janela Modal: Retenção na fonte -->
+    <div id="retencao-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="retencao-modal-title" onclick="closeModalOnOverlay(event, 'retencao-modal')">
+        <div class="modal-content">
+            <button type="button" class="modal-close" aria-label="Fechar" onclick="closeModal('retencao-modal')">&times;</button>
+            <h3 id="retencao-modal-title">🧾 O que é a retenção na fonte?</h3>
+            <p>Em Portugal, o Estado retém uma parte dos <strong>juros brutos (TANB)</strong> de depósitos a prazo e contas poupança. É um imposto (IRS, ao abrigo do artigo 71.º do CIRS) descontado <strong>automaticamente pelo banco</strong> no momento do pagamento dos juros, do que resulta a <strong>TANL (Taxa Anual Nominal Líquida)</strong>.</p>
+            <p><strong>Particulares (IRS), consoante o domicílio fiscal:</strong></p>
+            <ul style="margin: 0 0 12px 20px; padding: 0; line-height: 1.6;">
+                <li><strong>Portugal Continental:</strong> <span class="ret-cont">28</span>%, ou seja, TANL = TANB × <span class="ret-fator-cont">0,72</span></li>
+                <li><strong>Açores e Madeira:</strong> <span class="ret-ilhas">19,6</span>%, ou seja, TANL = TANB × <span class="ret-fator-ilhas">0,804</span></li>
+            </ul>
+            <p>Na coluna «Retenção» da tabela, escolha <strong>Contin.</strong> ou <strong>Ilhas</strong> conforme o seu domicílio fiscal; Portugal Continental vem predefinido. O valor da percentagem também pode ser editado.</p>
+            <p><small>Informação geral para particulares. Confirme as condições aplicáveis ao seu caso junto do seu banco.</small></p>
         </div>
     </div>
 
@@ -1939,6 +2012,10 @@ body { padding-bottom: 20px; }
                     <span class="modal-option-icon" aria-hidden="true">📈</span>
                     <span class="modal-option-text"><strong>O que são juros compostos?</strong><small>O efeito «juros sobre juros»</small></span>
                 </button>
+                <button type="button" class="modal-option-btn" onclick="closeModal('ajuda-modal'); showRetencaoInfo();">
+                    <span class="modal-option-icon" aria-hidden="true">🧾</span>
+                    <span class="modal-option-text"><strong>O que é a retenção na fonte?</strong><small>Taxas em Portugal Continental e nas ilhas</small></span>
+                </button>
             </div>
         </div>
     </div>
@@ -1947,8 +2024,8 @@ body { padding-bottom: 20px; }
     <div id="apoio-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="apoio-modal-title" onclick="closeModalOnOverlay(event, 'apoio-modal')">
         <div class="modal-content" style="text-align: center;">
             <button type="button" class="modal-close" aria-label="Fechar" onclick="closeModal('apoio-modal')">&times;</button>
-            <h3 id="apoio-modal-title" style="justify-content: center;">☕ Apoiar o Desenvolvedor</h3>
-            <p style="text-align: center; margin-bottom: 20px;">Se gosta deste simulador e das ferramentas desenvolvidas, pode apoiar o desenvolvedor com um café virtual.</p>
+            <h3 id="apoio-modal-title" style="justify-content: center;">☕ Apoiar o Projeto</h3>
+            <p style="text-align: center; margin-bottom: 20px;">Se gosta deste simulador e das ferramentas desenvolvidas, pode apoiar o projeto com um café virtual.</p>
             <div class="modal-menu-options">
                 <a class="modal-option-btn" href="https://paypal.me/gard3npt" target="_blank" rel="noopener noreferrer" onclick="closeModal('apoio-modal')" style="text-decoration: none;">
                     <span class="modal-option-icon" aria-hidden="true">💙</span>
@@ -1958,11 +2035,11 @@ body { padding-bottom: 20px; }
         </div>
     </div>
 
-    <!-- Janela Modal de Suporte -->
+    <!-- Janela Modal: Sugestões e problemas -->
     <div id="about-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="about-modal-title" onclick="closeModalOnOverlay(event, 'about-modal')">
         <div class="modal-content" style="text-align: center;">
             <button type="button" class="modal-close" aria-label="Fechar" onclick="closeModal('about-modal')">&times;</button>
-            <h3 id="about-modal-title" style="justify-content: center; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; touch-action:manipulation; -webkit-tap-highlight-color:transparent;">💬 Suporte</h3>
+            <h3 id="about-modal-title" style="justify-content: center; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; touch-action:manipulation; -webkit-tap-highlight-color:transparent;">💬 Sugestões e problemas</h3>
             <p style="text-align: center; margin-bottom: 20px;">Selecione uma opção:</p>
             
             <div class="modal-menu-options">
@@ -1973,10 +2050,6 @@ body { padding-bottom: 20px; }
                 <button class="modal-option-btn" onclick="sendEmail('Reportar Problema')">
                     <span class="modal-option-icon" aria-hidden="true">🐛</span>
                     <span class="modal-option-text"><strong>Reportar Problema</strong><small>Algo não funciona como esperado</small></span>
-                </button>
-                <button class="modal-option-btn" onclick="sendEmail('Contacto')">
-                    <span class="modal-option-icon" aria-hidden="true">✉️</span>
-                    <span class="modal-option-text"><strong>Contacto (E-mail)</strong><small>Enviar mensagem diretamente</small></span>
                 </button>
                 <div class="install-group" id="install-group">
                     <span class="install-group-label">Aplicação</span>
@@ -2002,7 +2075,7 @@ body { padding-bottom: 20px; }
 
             <div class="priv-card">
                 <h4>Quem é o responsável</h4>
-                <p>Para qualquer questão sobre privacidade, use “Suporte”, no menu (☰).</p>
+                <p>Para qualquer questão sobre privacidade, use “Contacto”, no menu (☰).</p>
             </div>
             <div class="priv-card">
                 <h4>Que dados recolhe este site</h4>
@@ -2018,7 +2091,7 @@ body { padding-bottom: 20px; }
             </div>
             <div class="priv-card">
                 <h4>Partilhar e apoiar</h4>
-                <p>A opção “Partilhar o site” usa a função de partilha do seu dispositivo (ou copia o endereço do site) e este site não recebe nada. A opção “Apoiar o desenvolvedor” é apenas uma ligação ao PayPal, que abre noutro separador e tem as suas próprias políticas de privacidade; este site não recebe nem guarda dados de pagamento.</p>
+                <p>A opção “Partilhar o site” usa a função de partilha do seu dispositivo (ou copia o endereço do site) e este site não recebe nada. A opção “Apoiar o Projeto” é apenas uma ligação ao PayPal, que abre noutro separador e tem as suas próprias políticas de privacidade; este site não recebe nem guarda dados de pagamento.</p>
             </div>
             <div class="priv-card">
                 <h4>Armazenamento no seu navegador</h4>
@@ -2054,9 +2127,13 @@ body { padding-bottom: 20px; }
     const CHAVE_ADS_ANTIGA = 'simulador_consentimento_ads';
 
     /* Data da última atualização do simulador (AAAA-MM-DD): alterar sempre que publicar uma nova versão */
-    let ULTIMA_ATUALIZACAO = '2026-11-11';
+    let ULTIMA_ATUALIZACAO = '2026-11-12';
 
-    let cfg = { retencao: 28, base: 360, cap: 'diaria' };
+    /* Retenção na fonte por defeito (%): alterável em Administrador 2 */
+    let RETENCAO_DEFEITO = 28;   /* Portugal Continental */
+    let RETENCAO_ILHAS = 19.6;   /* Açores e Madeira */
+
+    let cfg = { retencao: RETENCAO_DEFEITO, base: 360, cap: 'diaria' };
     let totalsVisible = false;
     let currentTotals = { montante: 0, tanbMed: 0, diasMed: 0, brutos: 0, retencao: 0, liquidos: 0, dia: 0, final: 0, taxaMed: 0 };
     let toastTimer = null;
@@ -2203,9 +2280,33 @@ body { padding-bottom: 20px; }
     function atualizarRotulos() {
         const p = pctTxt(cfg.retencao);
         document.querySelectorAll('.ret-pct').forEach(e => { e.textContent = p; });
+        document.querySelectorAll('.ret-cont').forEach(e => { e.textContent = pctTxt(RETENCAO_DEFEITO); });
+        document.querySelectorAll('.ret-ilhas').forEach(e => { e.textContent = pctTxt(RETENCAO_ILHAS); });
+        const fator = (t) => pctTxt(+(1 - t / 100).toFixed(4));
+        document.querySelectorAll('.ret-fator-cont').forEach(e => { e.textContent = fator(RETENCAO_DEFEITO); });
+        document.querySelectorAll('.ret-fator-ilhas').forEach(e => { e.textContent = fator(RETENCAO_ILHAS); });
+        const bC = byId('ret-continente'), bI = byId('ret-ilhas');
+        if (bC && bI) {
+            const iC = cfg.retencao === RETENCAO_DEFEITO;
+            const iI = !iC && cfg.retencao === RETENCAO_ILHAS;
+            bC.classList.toggle('on', iC); bC.setAttribute('aria-pressed', String(iC));
+            bI.classList.toggle('on', iI); bI.setAttribute('aria-pressed', String(iI));
+            bC.title = 'Portugal Continental (' + pctTxt(RETENCAO_DEFEITO) + '%)';
+            bI.title = 'Açores e Madeira (' + pctTxt(RETENCAO_ILHAS) + '%)';
+            document.querySelectorAll('.ret-reg-txt').forEach(e => {
+                e.textContent = iC ? 'Portugal Continental' : iI ? 'Açores e Madeira' : 'taxa personalizada';
+            });
+        }
         document.querySelectorAll('.base-txt').forEach(e => { e.textContent = cfg.base; });
         document.querySelectorAll('.cap-txt').forEach(e => { e.textContent = NOME_CAP[cfg.cap]; });
         linhas().forEach(row => { row.querySelector('.c-ret').dataset.label = 'Retenção (' + p + '%)'; });
+    }
+
+    function escolherRegiao(reg) {
+        cfg.retencao = reg === 'ilhas' ? RETENCAO_ILHAS : RETENCAO_DEFEITO;
+        sincronizarControlos();
+        atualizarRotulos();
+        recalcularTudo();
     }
 
     function aplicarConfig() {
@@ -2234,6 +2335,7 @@ body { padding-bottom: 20px; }
     }
     function showTanbInfo() { openModal('tanb-modal'); }
     function showCompoundInfo() { openModal('compound-modal'); }
+    function showRetencaoInfo() { openModal('retencao-modal'); }
 
     function openModal(id) {
         const modal = byId(id);
@@ -2261,7 +2363,7 @@ body { padding-bottom: 20px; }
         const assunto = encodeURIComponent(`Simulador de Juros (TANB & Juros Compostos) - [${tipo}]`);
         const corpo = encodeURIComponent(`Olá,\n\nRelativamente à opção "${tipo}":\n\n"Descreva aqui o que pretende"`);
 
-        closeModal('about-modal');
+        if (byId('about-modal').classList.contains('active')) closeModal('about-modal');
         window.location.href = `mailto:${email}?subject=${assunto}&body=${corpo}`;
     }
 
@@ -2606,7 +2708,7 @@ body { padding-bottom: 20px; }
     }
 
     /* ---------------- ÁREA DE CONTROLO (escondida) ----------------
-       Abre com 3 cliques seguidos em "Suporte" (título da janela Suporte) + senha do dono (SENHA_DONO). */
+       Abre com 3 toques seguidos na data de atualização do menu (☰) + senha do dono (SENHA_DONO). */
     /* Senha do dono: para a mudar, alterar só o texto entre aspas.
        Atenção: como o site corre no navegador, esta senha serve para evitar toques acidentais e não é uma proteção forte. */
     const SENHA_DONO = '112';
@@ -2858,8 +2960,8 @@ body { padding-bottom: 20px; }
       }, 'Repor tudo');
     }
 
-    /* ===== Administrador: modo 1 = diagnóstico e ferramentas; modo 2 = data de atualização e guardar ===== */
-    let dnModo = 1, dnDataEd = '';
+    /* ===== Administrador: modo 1 = diagnóstico e ferramentas; modo 2 = data de atualização, retenção e guardar ===== */
+    let dnModo = 1, dnDataEd = '', dnRetEd = '', dnRetIlEd = '';
     function dnFeedback(btn, txt) {
       const antes = btn.textContent;
       btn.textContent = txt;
@@ -2870,6 +2972,13 @@ body { padding-bottom: 20px; }
       if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) { dnFeedback(btn, '❌ Escolha uma data válida'); return null; }
       return d;
     }
+    function dnLerRet(btn, id, atual) {
+      const el = document.getElementById(id);
+      const txt = (el ? el.value : atual).trim();
+      const r = parsePtNumber(txt, true);
+      if (!/\d/.test(txt) || !(r >= 0 && r <= 99.9)) { dnFeedback(btn, '❌ Retenção entre 0 e 99,9'); return null; }
+      return r;
+    }
     function dnDataHoje() {
       const t = new Date();
       dnDataEd = t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0');
@@ -2878,7 +2987,17 @@ body { padding-bottom: 20px; }
     }
     function dnAplicarData(btn) {
       const d = dnLerData(btn); if (!d) return;
+      const r = dnLerRet(btn, 'pdRetDef', dnRetEd); if (r === null) return;
+      const ri = dnLerRet(btn, 'pdRetIlhas', dnRetIlEd); if (ri === null) return;
       ULTIMA_ATUALIZACAO = d;
+      RETENCAO_DEFEITO = r;
+      RETENCAO_ILHAS = ri;
+      cfg.retencao = r;
+      dnRetEd = pctTxt(r);
+      dnRetIlEd = pctTxt(ri);
+      sincronizarControlos();
+      atualizarRotulos();
+      recalcularTudo();
       const upd = document.getElementById('menuUpd');
       if (upd) upd.textContent = textoUltimaAtualizacao();
       dnFeedback(btn, '✅ Aplicado');
@@ -2886,6 +3005,8 @@ body { padding-bottom: 20px; }
     }
     async function dnDescarregarIndex(btn) {
       const d = dnLerData(btn); if (!d) return;
+      const r = dnLerRet(btn, 'pdRetDef', dnRetEd); if (r === null) return;
+      const ri = dnLerRet(btn, 'pdRetIlhas', dnRetIlEd); if (ri === null) return;
       try {
         const r = await fetch(location.href.split('#')[0], { cache: 'no-store' });
         if (!r.ok) throw 0;
@@ -2893,6 +3014,13 @@ body { padding-bottom: 20px; }
         let achou = 0;
         src = src.replace(/((?:const|let)\s+ULTIMA_ATUALIZACAO\s*=\s*')[^']*(')/, function (m, a, b) { achou++; return a + d + b; });
         if (achou !== 1) throw 0;
+        let achouRet = 0;
+        src = src.replace(/(let\s+RETENCAO_DEFEITO\s*=\s*)[0-9.]+(;)/, function (m, a, b) { achouRet++; return a + String(r) + b; });
+        if (achouRet !== 1) throw 0;
+        let achouIl = 0;
+        src = src.replace(/(let\s+RETENCAO_ILHAS\s*=\s*)[0-9.]+(;)/, function (m, a, b) { achouIl++; return a + String(ri) + b; });
+        if (achouIl !== 1) throw 0;
+        src = src.replace(/(id="cfg-ret"[^>]*?value=")[^"]*(")/, function (m, a, b) { return a + pctTxt(r) + b; });
         const url = URL.createObjectURL(new Blob([src], { type: 'text/html;charset=utf-8' }));
         const a = document.createElement('a');
         a.href = url; a.download = 'index.html';
@@ -2924,11 +3052,19 @@ body { padding-bottom: 20px; }
           '<input id="pdSiteData" class="pd-input" type="date" value="' + dnEsc(dnDataEd) + '" oninput="dnDataEd = this.value">' +
           '</div>' +
           '<button type="button" class="pd-btn" onclick="dnDataHoje()">📅 Usar a data de hoje</button>';
+        h += '<div class="pd-sec">Taxa de retenção do Estado português</div>' +
+          '<div class="pd-card" style="padding:4px 12px 12px;">' +
+          '<label class="pd-lbl" for="pdRetDef">Portugal Continental (%)</label>' +
+          '<input id="pdRetDef" class="pd-input" type="text" inputmode="decimal" autocomplete="off" value="' + dnEsc(dnRetEd) + '" oninput="dnRetEd = this.value">' +
+          '<label class="pd-lbl" for="pdRetIlhas">Açores e Madeira (%)</label>' +
+          '<input id="pdRetIlhas" class="pd-input" type="text" inputmode="decimal" autocomplete="off" value="' + dnEsc(dnRetIlEd) + '" oninput="dnRetIlEd = this.value">' +
+          '</div>' +
+          '<div class="pd-nota">Taxas de retenção na fonte aplicadas pelo Estado português aos juros (entre 0 e 99,9). Na coluna «Retenção» da tabela, o utilizador escolhe entre as duas; Portugal Continental vem predefinido. Atualize aqui se as taxas legais mudarem. Quem já tiver outro valor guardado no dispositivo mantém o seu.</div>';
         h += '<div class="pd-sec">Guardar alterações</div>' +
           '<button type="button" class="pd-btn pd-azul" onclick="dnAplicarData(this)">✅ Aplicar neste ecrã</button>' +
-          '<div class="pd-nota">Mostra já a nova data, só para ver. Não fica guardada no site.</div>' +
+          '<div class="pd-nota">Mostra já a nova data e a nova retenção, só para ver. Não ficam guardadas no site.</div>' +
           '<button type="button" class="pd-btn pd-azul" onclick="dnDescarregarIndex(this)">⬇️ Descarregar index.html corrigido</button>' +
-          '<div class="pd-nota">Descarrega o index.html com esta data já escrita. Depois é só substituir o ficheiro no servidor.</div>';
+          '<div class="pd-nota">Descarrega o index.html com esta data e esta retenção já escritas. Depois é só substituir o ficheiro no servidor.</div>';
         c.innerHTML = h;
         c.scrollTop = pos;
         return;
@@ -2964,14 +3100,14 @@ body { padding-bottom: 20px; }
     }
     function montarPainelDono() {
       fecharPainelDono();
-      dnModo = 1; dnDataEd = ULTIMA_ATUALIZACAO;
+      dnModo = 1; dnDataEd = ULTIMA_ATUALIZACAO; dnRetEd = pctTxt(RETENCAO_DEFEITO); dnRetIlEd = pctTxt(RETENCAO_ILHAS);
       const ov = document.createElement('div');
       ov.id = 'painelDonoOverlay';
       ov.innerHTML = '<div role="dialog" aria-modal="true" aria-label="Área de controlo">' +
         '<div class="pd-head"><span style="display:flex;align-items:center;"><strong>🛠️ Área de controlo</strong>' +
         '<span class="pd-modo" role="group" aria-label="Modo do administrador">' +
         '<button type="button" class="on" aria-current="true" title="1: diagnóstico e ferramentas" aria-label="Administrador 1" onclick="dnIrModo(1)">1</button>' +
-        '<button type="button" title="2: data de atualização e guardar alterações" aria-label="Administrador 2" onclick="dnIrModo(2)">2</button>' +
+        '<button type="button" title="2: data de atualização, retenção e guardar alterações" aria-label="Administrador 2" onclick="dnIrModo(2)">2</button>' +
         '</span></span><span class="pd-x" onclick="fecharPainelDono()" aria-label="Fechar">×</span></div>' +
         '<div class="pd-body" id="pdCorpo">A recolher diagnóstico…</div></div>';
       ov.addEventListener('click', function (e) { if (e.target === ov) fecharPainelDono(); });
@@ -3507,9 +3643,11 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     (function () {
       const sc = document.querySelector('.table-scroll');
       const fade = document.getElementById('scroll-fade');
+      const fadeEsq = document.getElementById('scroll-fade-left');
       if (!sc || !fade) return;
       function atualizar() {
         fade.classList.toggle('visivel', sc.scrollWidth - sc.clientWidth - sc.scrollLeft > 4);
+        if (fadeEsq) fadeEsq.classList.toggle('visivel', sc.scrollLeft > 4);
       }
       sc.addEventListener('scroll', atualizar, { passive: true });
       window.addEventListener('resize', atualizar);
@@ -3519,6 +3657,14 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
         const tb = document.getElementById('calculator-table');
         if (tb) ro.observe(tb);
       }
+      function deslizar(dir) {
+        const calmo = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+        sc.scrollBy({ left: dir * sc.clientWidth * 0.8, behavior: calmo ? 'auto' : 'smooth' });
+      }
+      const bDir = document.getElementById('scroll-seta-dir');
+      const bEsq = document.getElementById('scroll-seta-esq');
+      if (bDir) bDir.addEventListener('click', () => deslizar(1));
+      if (bEsq) bEsq.addEventListener('click', () => deslizar(-1));
       atualizar();
     })();
   </script>
