@@ -729,6 +729,28 @@ footer{
     color: #dbeafe;
 }
 
+/* ===== Menu de três linhas (canto superior esquerdo) ===== */
+.menu-wrap { position: relative; }
+.menu-wrap #menuBtn svg { width: 22px; height: 22px; }
+#menuLista {
+    position: absolute; left: 0; top: calc(100% + 10px); z-index: 200;
+    width: 270px; padding: 6px; border-radius: 16px;
+    background: rgba(15, 23, 42, 0.97); border: 1px solid rgba(255,255,255,.15);
+    box-shadow: 0 16px 40px rgba(0,0,0,.45);
+}
+#menuLista[hidden] { display: none; }
+.menu-item {
+    width: 100%; display: flex; align-items: center; gap: 12px; padding: 10px 12px;
+    border: 0; border-radius: 12px; background: none; color: #e2e8f0;
+    font: inherit; font-size: 14px; text-align: left; cursor: pointer; transition: background .15s;
+}
+.menu-item:hover, .menu-item:focus-visible { background: rgba(255,255,255,.1); outline: none; }
+.menu-item .mi { width: 24px; display: inline-flex; justify-content: center; flex-shrink: 0; font-size: 16px; }
+.menu-item .mi-nome { flex: 1; }
+.menu-sep { height: 1px; background: rgba(255,255,255,.12); margin: 6px 4px; }
+.menu-upd { justify-content: center; font-size: 12px; color: #94a3b8; cursor: default; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.menu-upd:hover { background: none; }
+
 /* ===== Seletor de idioma ===== */
 #langWrap { position: relative; }
 .header-btn-lang { width: auto; padding: 0 10px; gap: 6px; }
@@ -1629,6 +1651,14 @@ body { padding-bottom: 20px; }
     <div class="tanb-calculator">
         <div class="calculator-header">
             <div class="header-left-group">
+                <div class="menu-wrap">
+                    <button type="button" id="menuBtn" class="header-btn" aria-haspopup="menu" aria-expanded="false" aria-controls="menuLista" aria-label="Menu" title="Menu">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+                    </button>
+                    <div id="menuLista" role="menu" hidden>
+                        <button type="button" role="menuitem" id="menuUpd" class="menu-item menu-upd" onclick="triploClique(this, function () { fecharMenu(); abrirPainelDono(); }, event)"></button>
+                    </div>
+                </div>
                 <div class="header-icon-box">💰</div>
                 <div>
                     <span class="header-badge">Simulador de juros</span>
@@ -1933,7 +1963,7 @@ body { padding-bottom: 20px; }
     const CHAVE_ADS_ANTIGA = 'simulador_consentimento_ads';
 
     /* Data da última atualização do simulador (AAAA-MM-DD): alterar sempre que publicar uma nova versão */
-    const ULTIMA_ATUALIZACAO = '2026-10-28';
+    const ULTIMA_ATUALIZACAO = '2026-11-11';
 
     let cfg = { retencao: 28, base: 360, cap: 'diaria' };
     let totalsVisible = false;
@@ -2649,6 +2679,27 @@ body { padding-bottom: 20px; }
       arm.push(['Service worker', sw]);
       arm.push(['Cache da app', cch]);
 
+      const ads = [];
+      const insAd = document.querySelector('#ad-wrap ins');
+      const adEst = insAd ? insAd.getAttribute('data-ad-status') : null;
+      const pubId = String(ADSENSE_CLIENT).replace(/^ca-/, '');
+      ads.push(['Consentimento', cons === 'aceite' ? 'aceite (anúncios permitidos)' : cons === 'recusado' ? 'recusado (anúncios bloqueados)' : 'por responder (anúncios por carregar)']);
+      ads.push(['Bloco de anúncio (slot)', ADSENSE_SLOT ? 'definido' : 'não definido']);
+      if (!ADSENSE_SLOT) avisos.push('O bloco de anúncio (ADSENSE_SLOT) não está definido, por isso não aparecem anúncios.');
+      ads.push(['Script do Google', window.__adsScript === 'ok' ? 'carregou' : window.__adsScript === 'erro' ? 'não carregou' : byId('adsense-script') ? 'a carregar…' : 'não pedido']);
+      if (window.__adsScript === 'erro') avisos.push('O script do AdSense não carregou (bloqueador de anúncios, rede ou conta ainda sem aprovação).');
+      ads.push(['Espaço do anúncio', adEst === 'filled' ? 'com anúncio' : adEst === 'unfilled' ? 'sem anúncio devolvido' : cons === 'aceite' ? 'à espera do Google' : 'inativo']);
+      if (location.protocol === 'file:') ads.push(['ads.txt', 'não aplicável (ficheiro local)']);
+      else {
+        try {
+          const rt = await fetch(location.origin + '/ads.txt', { cache: 'no-store' });
+          const tx = rt.ok ? await rt.text() : '';
+          if (!rt.ok) { ads.push(['ads.txt', 'não encontrado (' + rt.status + ')']); avisos.push('O ads.txt não responde em ' + location.origin + '/ads.txt.'); }
+          else if (tx.indexOf(pubId) < 0) { ads.push(['ads.txt', 'existe, mas sem o ID ' + pubId]); avisos.push('O ads.txt não contém o ID de editor do AdSense.'); }
+          else ads.push(['ads.txt', 'responde e contém o ID de editor']);
+        } catch (x) { ads.push(['ads.txt', 'não foi possível verificar']); }
+      }
+
       const er = window.__erros || [];
       const erros = er.length
         ? er.slice(-8).map(function (x) { return [new Date(x.t).toLocaleTimeString('pt-PT'), (x.tipo === 'recurso' ? 'Não carregou: ' : x.tipo === 'promessa' ? 'Falha: ' : 'Erro: ') + x.msg]; })
@@ -2657,7 +2708,7 @@ body { padding-bottom: 20px; }
 
       return { avisos: avisos, fatos: { cacheNomes: cacheNomes, recursos: er.filter(function (x) { return x.tipo === 'recurso'; }).length }, grupos: [
         { t: 'Aplicação', l: app }, { t: 'Dispositivo', l: disp },
-        { t: 'Armazenamento', l: arm }, { t: 'Erros desde que abriu', l: erros }
+        { t: 'Armazenamento', l: arm }, { t: 'AdSense', l: ads }, { t: 'Erros desde que abriu', l: erros }
       ] };
     }
 
@@ -2890,8 +2941,8 @@ body { padding-bottom: 20px; }
         s.async = true;
         s.crossOrigin = 'anonymous';
         s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + ADSENSE_CLIENT;
-        s.onload = () => { try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch (e) {} };
-        s.onerror = () => { wrap.hidden = true; };
+        s.onload = () => { window.__adsScript = 'ok'; try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch (e) {} };
+        s.onerror = () => { window.__adsScript = 'erro'; wrap.hidden = true; };
         document.head.appendChild(s);
     }
 
@@ -3216,6 +3267,33 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
         definirCookie('/pt/' + atual);
         carregarTradutor(false);
       }
+    })();
+  </script>
+
+  <!-- Menu de três linhas (à esquerda): data de atualização; 3 toques na data = administrador -->
+  <script>
+    (function () {
+      const btn = document.getElementById('menuBtn');
+      const lista = document.getElementById('menuLista');
+      const wrap = btn.parentNode;
+      const upd = document.getElementById('menuUpd');
+      if (upd && typeof textoUltimaAtualizacao === 'function') upd.textContent = textoUltimaAtualizacao();
+
+      window.fecharMenu = function () {
+        if (lista.hidden) return false;
+        lista.hidden = true;
+        btn.setAttribute('aria-expanded', 'false');
+        return true;
+      };
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (lista.hidden) { lista.hidden = false; btn.setAttribute('aria-expanded', 'true'); }
+        else window.fecharMenu();
+      });
+      document.addEventListener('click', function (e) { if (!wrap.contains(e.target)) window.fecharMenu(); });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && window.fecharMenu()) btn.focus();
+      });
     })();
   </script>
 
