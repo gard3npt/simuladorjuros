@@ -422,6 +422,7 @@ footer{
     transform: translateY(-50%);
 }
 .scroll-hint { display: none; }
+.scroll-fade { display: none; }
 
 .total-row {
     background: #fef3c7; 
@@ -738,7 +739,7 @@ footer{
     background: rgba(15, 23, 42, 0.97); border: 1px solid rgba(255,255,255,.15);
     box-shadow: 0 16px 40px rgba(0,0,0,.45);
 }
-#menuLista[hidden] { display: none; }
+#menuLista[hidden], .menu-item[hidden] { display: none; }
 .menu-item {
     width: 100%; display: flex; align-items: center; gap: 12px; padding: 10px 12px;
     border: 0; border-radius: 12px; background: none; color: #e2e8f0;
@@ -750,6 +751,12 @@ footer{
 .menu-sep { height: 1px; background: rgba(255,255,255,.12); margin: 6px 4px; }
 .menu-upd { justify-content: center; font-size: 12px; color: #94a3b8; cursor: default; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 .menu-upd:hover { background: none; }
+
+/* Destaque do guia «Como usar» quando se vem do menu Ajuda */
+.instructions { scroll-margin-top: 90px; }
+.instructions.destaque { animation: destaqueGuia 1.8s ease-out; }
+@keyframes destaqueGuia { 0% { box-shadow: 0 0 0 4px rgba(59,130,246,.65); } 100% { box-shadow: 0 0 0 4px rgba(59,130,246,0); } }
+@media (prefers-reduced-motion: reduce) { .instructions.destaque { animation: none; } }
 
 /* ===== Seletor de idioma ===== */
 #langWrap { position: relative; }
@@ -802,6 +809,11 @@ body { top: 0 !important; }
 .pd-azul { background: #2563eb; color: #fff; }
 .pd-amarelo { background: #fde68a; color: #78350f; }
 .pd-vermelho { background: #dc2626; color: #fff; }
+.pd-lbl { display: block; margin-top: 8px; font-size: 12px; font-weight: 700; color: #475569; }
+.pd-input { display: block; box-sizing: border-box; width: 100%; margin-top: 4px; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 10px; background: #fff; color: #0f172a; font: inherit; font-size: 15px; font-weight: 600; }
+.pd-head .pd-modo { display: inline-flex; gap: 6px; margin-left: 10px; vertical-align: middle; }
+.pd-head .pd-modo button { width: 32px; height: 30px; padding: 0; border: 0; border-radius: 8px; background: rgba(255,255,255,.14); color: #e2e8f0; font: inherit; font-size: 14px; font-weight: 800; cursor: pointer; line-height: 1; }
+.pd-head .pd-modo button.on { background: #2563eb; color: #fff; cursor: default; }
 .pd-nota { margin: 3px 4px 0; font-size: 12px; color: #64748b; line-height: 1.35; }
 
 .install-group {
@@ -897,12 +909,33 @@ body { top: 0 !important; }
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior-x: contain;
-        scrollbar-width: thin;
-        scrollbar-color: #94a3b8 #e2e8f0;
     }
-    .table-scroll::-webkit-scrollbar { height: 10px; }
-    .table-scroll::-webkit-scrollbar-track { background: #e2e8f0; }
-    .table-scroll::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 6px; }
+    /* Barra de deslizar horizontal bem visível (azul, grossa) */
+    .table-scroll::-webkit-scrollbar { height: 16px; }
+    .table-scroll::-webkit-scrollbar-track { background: #dbeafe; border-radius: 8px; }
+    .table-scroll::-webkit-scrollbar-thumb { background: #2563eb; border-radius: 8px; border: 3px solid #dbeafe; }
+    @supports not selector(::-webkit-scrollbar) {
+        .table-scroll { scrollbar-width: auto; scrollbar-color: #2563eb #dbeafe; }
+    }
+
+    /* Indicador lateral: sombra azul + seta, enquanto houver mais colunas à direita */
+    .table-wrap { position: relative; }
+    .scroll-fade {
+        display: block; position: absolute; top: 0; bottom: 16px; right: 0; width: 38px;
+        z-index: 6; pointer-events: none; opacity: 0; transition: opacity .25s;
+        background: linear-gradient(to left, rgba(30,64,175,.38), rgba(30,64,175,0));
+    }
+    .scroll-fade.visivel { opacity: 1; }
+    .scroll-fade span {
+        position: sticky; top: 42vh; display: flex; align-items: center; justify-content: center;
+        width: 28px; height: 48px; margin-left: auto;
+        border-radius: 24px 0 0 24px; background: #1e40af; color: #fff;
+        font-size: 24px; font-weight: 800; line-height: 1;
+        box-shadow: 0 2px 8px rgba(0,0,0,.35);
+        animation: empurraSeta 1.4s ease-in-out infinite;
+    }
+    @keyframes empurraSeta { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-4px); } }
+    @media (prefers-reduced-motion: reduce) { .scroll-fade span { animation: none; } }
 
     #calculator-table { min-width: 944px; }
     #calculator-table thead th:nth-child(1)  { width: 60px; }
@@ -1056,6 +1089,7 @@ body { top: 0 !important; }
     .calculator-header, 
     .table-actions, 
     .scroll-hint, 
+    .scroll-fade, 
     .instructions, 
     footer,
     .modal-overlay {
@@ -1656,6 +1690,22 @@ body { padding-bottom: 20px; }
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
                     </button>
                     <div id="menuLista" role="menu" hidden>
+                        <button type="button" role="menuitem" class="menu-item" onclick="fecharMenu(); partilharSimulador();" title="Partilhar o endereço do site (não uma simulação)">
+                            <span class="mi" aria-hidden="true">📤</span><span class="mi-nome">Partilhar o site</span>
+                        </button>
+                        <button type="button" role="menuitem" class="menu-item" onclick="fecharMenu(); openModal('ajuda-modal');">
+                            <span class="mi" aria-hidden="true">❓</span><span class="mi-nome">Ajuda</span>
+                        </button>
+                        <button type="button" role="menuitem" class="menu-item" onclick="fecharMenu(); openAboutModal();" aria-label="Abrir suporte: sugestões, reportar problema ou contacto">
+                            <span class="mi" aria-hidden="true">💬</span><span class="mi-nome">Suporte</span>
+                        </button>
+                        <button type="button" role="menuitem" id="menuInstalar" class="menu-item" onclick="fecharMenu(); mostrarEstadoApp();">
+                            <span class="mi" aria-hidden="true">📲</span><span class="mi-nome">Instalar app</span>
+                        </button>
+                        <button type="button" role="menuitem" class="menu-item" onclick="fecharMenu(); openModal('apoio-modal');">
+                            <span class="mi" aria-hidden="true">☕</span><span class="mi-nome">Apoiar o desenvolvedor</span>
+                        </button>
+                        <div class="menu-sep"></div>
                         <button type="button" role="menuitem" id="menuUpd" class="menu-item menu-upd" onclick="triploClique(this, function () { fecharMenu(); abrirPainelDono(); }, event)"></button>
                     </div>
                 </div>
@@ -1666,10 +1716,6 @@ body { padding-bottom: 20px; }
                 </div>
             </div>
             <div class="header-actions-right">
-                <button class="header-btn header-btn-support" onclick="openAboutModal()" title="Suporte" aria-label="Abrir suporte: sugestões, reportar problema ou contacto">
-                    <span class="support-icon" aria-hidden="true">💬</span>
-                    <span class="support-label">Suporte</span>
-                </button>
                 <!-- Seletor de idioma (original: português; tradução via Google Tradutor, só quando escolhido) -->
                 <div id="langWrap" class="notranslate" translate="no">
                     <button type="button" id="langBtn" class="header-btn header-btn-lang" aria-haspopup="menu" aria-expanded="false" aria-controls="langMenu" aria-label="Idioma: Português" title="Idioma / Language" onclick="alternarMenuIdioma(event)">
@@ -1744,6 +1790,8 @@ body { padding-bottom: 20px; }
         <p class="aviso" id="aviso" role="status" aria-live="polite" hidden></p>
 
         <p class="scroll-hint">↔ Deslize a tabela para ver todas as colunas</p>
+        <div class="table-wrap">
+        <div class="scroll-fade" id="scroll-fade" aria-hidden="true"><span>›</span></div>
         <div class="table-scroll">
         <table class="calculator-table" id="calculator-table">
             <thead>
@@ -1783,6 +1831,7 @@ body { padding-bottom: 20px; }
                 </tr>
             </tfoot>
         </table>
+        </div>
         </div>
 
         <div class="table-actions">
@@ -1871,11 +1920,49 @@ body { padding-bottom: 20px; }
         </div>
     </div>
 
+    <!-- Janela Modal: Ajuda -->
+    <div id="ajuda-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="ajuda-modal-title" onclick="closeModalOnOverlay(event, 'ajuda-modal')">
+        <div class="modal-content" style="text-align: center;">
+            <button type="button" class="modal-close" aria-label="Fechar" onclick="closeModal('ajuda-modal')">&times;</button>
+            <h3 id="ajuda-modal-title" style="justify-content: center;">❓ Ajuda</h3>
+            <p style="text-align: center; margin-bottom: 20px;">Selecione uma opção:</p>
+            <div class="modal-menu-options">
+                <button type="button" class="modal-option-btn" onclick="irParaGuia()">
+                    <span class="modal-option-icon" aria-hidden="true">📖</span>
+                    <span class="modal-option-text"><strong>Como usar o simulador</strong><small>Ir para o guia, no fim da página</small></span>
+                </button>
+                <button type="button" class="modal-option-btn" onclick="closeModal('ajuda-modal'); showTanbInfo();">
+                    <span class="modal-option-icon" aria-hidden="true">📊</span>
+                    <span class="modal-option-text"><strong>O que é a TANB?</strong><small>Taxa Anual Nominal Bruta</small></span>
+                </button>
+                <button type="button" class="modal-option-btn" onclick="closeModal('ajuda-modal'); showCompoundInfo();">
+                    <span class="modal-option-icon" aria-hidden="true">📈</span>
+                    <span class="modal-option-text"><strong>O que são juros compostos?</strong><small>O efeito «juros sobre juros»</small></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Janela Modal: Apoiar o projeto -->
+    <div id="apoio-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="apoio-modal-title" onclick="closeModalOnOverlay(event, 'apoio-modal')">
+        <div class="modal-content" style="text-align: center;">
+            <button type="button" class="modal-close" aria-label="Fechar" onclick="closeModal('apoio-modal')">&times;</button>
+            <h3 id="apoio-modal-title" style="justify-content: center;">☕ Apoiar o Desenvolvedor</h3>
+            <p style="text-align: center; margin-bottom: 20px;">Se gosta deste simulador e das ferramentas desenvolvidas, pode apoiar o desenvolvedor com um café virtual.</p>
+            <div class="modal-menu-options">
+                <a class="modal-option-btn" href="https://paypal.me/gard3npt" target="_blank" rel="noopener noreferrer" onclick="closeModal('apoio-modal')" style="text-decoration: none;">
+                    <span class="modal-option-icon" aria-hidden="true">💙</span>
+                    <span class="modal-option-text"><strong>Contribuir no PayPal</strong><small>Abre noutro separador</small></span>
+                </a>
+            </div>
+        </div>
+    </div>
+
     <!-- Janela Modal de Suporte -->
     <div id="about-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="about-modal-title" onclick="closeModalOnOverlay(event, 'about-modal')">
         <div class="modal-content" style="text-align: center;">
             <button type="button" class="modal-close" aria-label="Fechar" onclick="closeModal('about-modal')">&times;</button>
-            <h3 id="about-modal-title" onclick="triploClique(this, abrirPainelDono)" style="justify-content: center; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; touch-action:manipulation; -webkit-tap-highlight-color:transparent;">💬 Suporte</h3>
+            <h3 id="about-modal-title" style="justify-content: center; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; touch-action:manipulation; -webkit-tap-highlight-color:transparent;">💬 Suporte</h3>
             <p style="text-align: center; margin-bottom: 20px;">Selecione uma opção:</p>
             
             <div class="modal-menu-options">
@@ -1915,7 +2002,7 @@ body { padding-bottom: 20px; }
 
             <div class="priv-card">
                 <h4>Quem é o responsável</h4>
-                <p>Para qualquer questão sobre privacidade, use o botão “Suporte”.</p>
+                <p>Para qualquer questão sobre privacidade, use “Suporte”, no menu (☰).</p>
             </div>
             <div class="priv-card">
                 <h4>Que dados recolhe este site</h4>
@@ -1928,6 +2015,10 @@ body { padding-bottom: 20px; }
             <div class="priv-card">
                 <h4>Tradução do site (Google Tradutor)</h4>
                 <p>O site está em português. Só se escolher outro idioma no botão das bandeiras é que é carregado o Google Tradutor, que pode usar cookies e ver o seu endereço IP. Se voltar ao português, deixa de ser usado.</p>
+            </div>
+            <div class="priv-card">
+                <h4>Partilhar e apoiar</h4>
+                <p>A opção “Partilhar o site” usa a função de partilha do seu dispositivo (ou copia o endereço do site) e este site não recebe nada. A opção “Apoiar o desenvolvedor” é apenas uma ligação ao PayPal, que abre noutro separador e tem as suas próprias políticas de privacidade; este site não recebe nem guarda dados de pagamento.</p>
             </div>
             <div class="priv-card">
                 <h4>Armazenamento no seu navegador</h4>
@@ -1963,7 +2054,7 @@ body { padding-bottom: 20px; }
     const CHAVE_ADS_ANTIGA = 'simulador_consentimento_ads';
 
     /* Data da última atualização do simulador (AAAA-MM-DD): alterar sempre que publicar uma nova versão */
-    const ULTIMA_ATUALIZACAO = '2026-11-11';
+    let ULTIMA_ATUALIZACAO = '2026-11-11';
 
     let cfg = { retencao: 28, base: 360, cap: 'diaria' };
     let totalsVisible = false;
@@ -2767,9 +2858,82 @@ body { padding-bottom: 20px; }
       }, 'Repor tudo');
     }
 
+    /* ===== Administrador: modo 1 = diagnóstico e ferramentas; modo 2 = data de atualização e guardar ===== */
+    let dnModo = 1, dnDataEd = '';
+    function dnFeedback(btn, txt) {
+      const antes = btn.textContent;
+      btn.textContent = txt;
+      setTimeout(function () { btn.textContent = antes; }, 2000);
+    }
+    function dnLerData(btn) {
+      const d = (document.getElementById('pdSiteData') || {}).value || dnDataEd;
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) { dnFeedback(btn, '❌ Escolha uma data válida'); return null; }
+      return d;
+    }
+    function dnDataHoje() {
+      const t = new Date();
+      dnDataEd = t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0');
+      const el = document.getElementById('pdSiteData');
+      if (el) el.value = dnDataEd;
+    }
+    function dnAplicarData(btn) {
+      const d = dnLerData(btn); if (!d) return;
+      ULTIMA_ATUALIZACAO = d;
+      const upd = document.getElementById('menuUpd');
+      if (upd) upd.textContent = textoUltimaAtualizacao();
+      dnFeedback(btn, '✅ Aplicado');
+      dnAtualizar();
+    }
+    async function dnDescarregarIndex(btn) {
+      const d = dnLerData(btn); if (!d) return;
+      try {
+        const r = await fetch(location.href.split('#')[0], { cache: 'no-store' });
+        if (!r.ok) throw 0;
+        let src = await r.text();
+        let achou = 0;
+        src = src.replace(/((?:const|let)\s+ULTIMA_ATUALIZACAO\s*=\s*')[^']*(')/, function (m, a, b) { achou++; return a + d + b; });
+        if (achou !== 1) throw 0;
+        const url = URL.createObjectURL(new Blob([src], { type: 'text/html;charset=utf-8' }));
+        const a = document.createElement('a');
+        a.href = url; a.download = 'index.html';
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+        dnFeedback(btn, '✅ Descarregado');
+      } catch (e) {
+        dnFeedback(btn, '❌ Não foi possível (abra o site pelo endereço online)');
+      }
+    }
+    function dnIrModo(n) {
+      dnModo = n;
+      const ov = document.getElementById('painelDonoOverlay');
+      if (ov) ov.querySelectorAll('.pd-modo button').forEach(function (b, i) {
+        b.classList.toggle('on', i + 1 === n);
+        if (i + 1 === n) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current');
+      });
+      const c = document.getElementById('pdCorpo');
+      if (c) { c.scrollTop = 0; dnRender(c); }
+    }
+
     function dnRender(c) {
       const pos = c.scrollTop;
-      let h = '<div class="pd-sec">Avisos</div>';
+      let h = '';
+      if (dnModo === 2) {
+        h += '<div class="pd-sec">Data de atualização do site</div>' +
+          '<div class="pd-card" style="padding:4px 12px 12px;">' +
+          '<label class="pd-lbl" for="pdSiteData">Data mostrada no menu (☰) e no rodapé</label>' +
+          '<input id="pdSiteData" class="pd-input" type="date" value="' + dnEsc(dnDataEd) + '" oninput="dnDataEd = this.value">' +
+          '</div>' +
+          '<button type="button" class="pd-btn" onclick="dnDataHoje()">📅 Usar a data de hoje</button>';
+        h += '<div class="pd-sec">Guardar alterações</div>' +
+          '<button type="button" class="pd-btn pd-azul" onclick="dnAplicarData(this)">✅ Aplicar neste ecrã</button>' +
+          '<div class="pd-nota">Mostra já a nova data, só para ver. Não fica guardada no site.</div>' +
+          '<button type="button" class="pd-btn pd-azul" onclick="dnDescarregarIndex(this)">⬇️ Descarregar index.html corrigido</button>' +
+          '<div class="pd-nota">Descarrega o index.html com esta data já escrita. Depois é só substituir o ficheiro no servidor.</div>';
+        c.innerHTML = h;
+        c.scrollTop = pos;
+        return;
+      }
+      h += '<div class="pd-sec">Avisos</div>';
       h += dnDados.avisos.length
         ? dnDados.avisos.map(function (a) { return '<div class="pd-aviso">⚠️ ' + dnEsc(a) + '</div>'; }).join('')
         : '<div class="pd-ok">✅ Sem avisos</div>';
@@ -2800,10 +2964,15 @@ body { padding-bottom: 20px; }
     }
     function montarPainelDono() {
       fecharPainelDono();
+      dnModo = 1; dnDataEd = ULTIMA_ATUALIZACAO;
       const ov = document.createElement('div');
       ov.id = 'painelDonoOverlay';
       ov.innerHTML = '<div role="dialog" aria-modal="true" aria-label="Área de controlo">' +
-        '<div class="pd-head"><strong>🛠️ Área de controlo</strong><span class="pd-x" onclick="fecharPainelDono()" aria-label="Fechar">×</span></div>' +
+        '<div class="pd-head"><span style="display:flex;align-items:center;"><strong>🛠️ Área de controlo</strong>' +
+        '<span class="pd-modo" role="group" aria-label="Modo do administrador">' +
+        '<button type="button" class="on" aria-current="true" title="1: diagnóstico e ferramentas" aria-label="Administrador 1" onclick="dnIrModo(1)">1</button>' +
+        '<button type="button" title="2: data de atualização e guardar alterações" aria-label="Administrador 2" onclick="dnIrModo(2)">2</button>' +
+        '</span></span><span class="pd-x" onclick="fecharPainelDono()" aria-label="Fechar">×</span></div>' +
         '<div class="pd-body" id="pdCorpo">A recolher diagnóstico…</div></div>';
       ov.addEventListener('click', function (e) { if (e.target === ov) fecharPainelDono(); });
       document.body.appendChild(ov);
@@ -3279,6 +3448,38 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
       const upd = document.getElementById('menuUpd');
       if (upd && typeof textoUltimaAtualizacao === 'function') upd.textContent = textoUltimaAtualizacao();
 
+      /* Partilhar: folha de partilha do sistema; se não existir, copia o endereço */
+      window.partilharSimulador = async function () {
+        const url = location.protocol === 'file:' ? location.href : location.origin + location.pathname;
+        const copiar = async function () {
+          let ok = false;
+          try { await navigator.clipboard.writeText(url); ok = true; }
+          catch (e) {
+            try {
+              const ta = document.createElement('textarea');
+              ta.value = url; ta.style.cssText = 'position:fixed; opacity:0;';
+              document.body.appendChild(ta); ta.select(); ok = document.execCommand('copy'); ta.remove();
+            } catch (x) {}
+          }
+          toast(ok ? 'Link do site copiado.' : 'Não foi possível copiar o link do site.');
+        };
+        if (navigator.share) {
+          try { await navigator.share({ title: 'Simulador de Juros (TANB & Juros Compostos)', text: 'Simulador gratuito de juros simples (TANB) e juros compostos, com retenção na fonte.', url: url }); }
+          catch (e) { if (!e || e.name !== 'AbortError') copiar(); }
+          return;
+        }
+        copiar();
+      };
+      /* Ajuda → «Como usar»: fecha a janela e leva ao guia, no fim da página */
+      window.irParaGuia = function () {
+        closeModal('ajuda-modal');
+        const g = document.querySelector('.instructions');
+        if (!g) return;
+        const calmo = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+        g.scrollIntoView({ behavior: calmo ? 'auto' : 'smooth', block: 'start' });
+        g.classList.remove('destaque'); void g.offsetWidth; g.classList.add('destaque');
+      };
+
       window.fecharMenu = function () {
         if (lista.hidden) return false;
         lista.hidden = true;
@@ -3287,13 +3488,38 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
       };
       btn.addEventListener('click', function (e) {
         e.stopPropagation();
-        if (lista.hidden) { lista.hidden = false; btn.setAttribute('aria-expanded', 'true'); }
+        if (lista.hidden) {
+          const inst = document.getElementById('menuInstalar');
+          if (inst) inst.hidden = typeof appJaInstalada === 'function' && appJaInstalada();
+          lista.hidden = false; btn.setAttribute('aria-expanded', 'true');
+        }
         else window.fecharMenu();
       });
       document.addEventListener('click', function (e) { if (!wrap.contains(e.target)) window.fecharMenu(); });
       document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape' && window.fecharMenu()) btn.focus();
       });
+    })();
+  </script>
+
+  <script>
+    /* Indicador de «há mais colunas»: visível enquanto a tabela ainda tem conteúdo à direita */
+    (function () {
+      const sc = document.querySelector('.table-scroll');
+      const fade = document.getElementById('scroll-fade');
+      if (!sc || !fade) return;
+      function atualizar() {
+        fade.classList.toggle('visivel', sc.scrollWidth - sc.clientWidth - sc.scrollLeft > 4);
+      }
+      sc.addEventListener('scroll', atualizar, { passive: true });
+      window.addEventListener('resize', atualizar);
+      if (window.ResizeObserver) {
+        const ro = new ResizeObserver(atualizar);
+        ro.observe(sc);
+        const tb = document.getElementById('calculator-table');
+        if (tb) ro.observe(tb);
+      }
+      atualizar();
     })();
   </script>
 
