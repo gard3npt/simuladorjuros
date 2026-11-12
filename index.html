@@ -1899,7 +1899,7 @@ body { padding-bottom: 20px; }
             <button class="clear-total-btn" onclick="clearAllRows()">Limpar<br>tudo</button>
         </div>
  
-        <p class="calc-note">ℹ️ Linhas TANB: juros simples, base de <span class="base-txt">360</span> dias. Linhas verdes: juros compostos com capitalização <span class="cap-txt">diária</span> (ano de 365 dias). Retenção de <span class="ret-pct">28</span>% aplicada a todas as linhas (<span class="ret-reg-txt">Portugal Continental</span>). <span class="so-impressao">TANB é a taxa anual nominal bruta, isto é, antes de impostos; a retenção na fonte é o imposto (IRS) que o banco desconta aos juros. </span>Só as linhas completas e válidas entram nos totais. Simulação meramente informativa; não substitui as condições contratuais da instituição financeira.</p>
+        <p class="calc-note">ℹ️ <span id="nota-simples">Linhas TANB: juros simples, base de <span class="base-txt">360</span> dias. </span><span id="nota-compostas">Linhas verdes: juros compostos com capitalização <span class="cap-txt">diária</span> (ano de 365 dias). </span>Retenção de <span class="ret-pct">28</span>% aplicada a todas as linhas (<span class="ret-reg-txt">Portugal Continental</span>). <span class="so-impressao">TANB é a taxa anual nominal bruta, isto é, antes de impostos; a retenção na fonte é o imposto (IRS) que o banco desconta aos juros. </span>Só as linhas completas e válidas entram nos totais. Simulação meramente informativa; não substitui as condições contratuais da instituição financeira.</p>
 
         <div class="ad-wrap" id="ad-wrap" hidden>
             <span class="ad-label">Publicidade</span>
@@ -2277,7 +2277,19 @@ body { padding-bottom: 20px; }
         byId('cfg-cap').value = cfg.cap;
     }
 
+    /* A nota só descreve os tipos de linha que existem na tabela */
+    function atualizarNota() {
+        const rows = document.querySelectorAll('#calculator-table tbody tr[data-type]');
+        let temS = false, temC = false;
+        rows.forEach(r => { if (r.getAttribute('data-type') === 'compound') temC = true; else temS = true; });
+        if (!temS && !temC) { temS = temC = true; }
+        const ns = byId('nota-simples'), nc = byId('nota-compostas');
+        if (ns) ns.hidden = !temS;
+        if (nc) nc.hidden = !temC;
+    }
+
     function atualizarRotulos() {
+        atualizarNota();
         const p = pctTxt(cfg.retencao);
         document.querySelectorAll('.ret-pct').forEach(e => { e.textContent = p; });
         document.querySelectorAll('.ret-cont').forEach(e => { e.textContent = pctTxt(RETENCAO_DEFEITO); });
@@ -3356,6 +3368,11 @@ body { padding-bottom: 20px; }
         }, { passive: true });
         window.addEventListener('resize', verificar);
         verificar();
+    })();
+
+    (function () {
+        const tb = document.querySelector('#calculator-table tbody');
+        if (tb && window.MutationObserver) new MutationObserver(atualizarNota).observe(tb, { childList: true });
     })();
 
     /* ===== Arranque ===== */
