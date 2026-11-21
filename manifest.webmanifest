@@ -5,7 +5,7 @@
   "description": "Simulador de juros para depósitos: compare TANB e juros compostos, com retenção na fonte, juros líquidos e taxa anual efetiva.",
   "lang": "pt-PT",
   "dir": "ltr",
-  "start_url": "/simuladorjuros/?source=pwa",
+  "start_url": "/simuladorjuros/",
   "scope": "/simuladorjuros/",
   "display": "standalone",
   "orientation": "any",
