@@ -1,15 +1,17 @@
 /* Service worker do Simulador de Juros.
-   Alterar CACHE_VERSION sempre que publicar uma nova versão para forçar a atualização da cache. */
-const CACHE_VERSION = 'v7';
+   Atualiza sozinho: basta substituir o index.html no site (não é preciso mexer neste ficheiro). */
+const CACHE_VERSION = 'v8';
 const CACHE_NAME = 'simulador-juros-' + CACHE_VERSION;
 const PRECACHE = [
     './',
     './index.html',
     './manifest.webmanifest',
-    './icon-192.png',
-    './icon-512.png',
-    './icon-maskable-512.png',
-    './apple-touch-icon.png'
+    './icons/icon-192.png',
+    './icons/icon-512.png',
+    './icons/icon-maskable-512.png',
+    './icons/apple-touch-icon.png',
+    './icons/favicon-32.png',
+    './icons/favicon.png'
 ];
 
 self.addEventListener('install', (event) => {
@@ -43,10 +45,12 @@ self.addEventListener('fetch', (event) => {
     /* Páginas: tenta a rede primeiro (para ver sempre a versão mais recente) e usa a cache sem ligação */
     if (req.mode === 'navigate') {
         event.respondWith(
-            fetch(req)
+            fetch(req.url, { cache: 'no-cache' })
                 .then((res) => {
-                    const copy = res.clone();
-                    caches.open(CACHE_NAME).then((c) => c.put('./index.html', copy));
+                    if (res && res.ok) {
+                        const copy = res.clone();
+                        caches.open(CACHE_NAME).then((c) => c.put('./index.html', copy));
+                    }
                     return res;
                 })
                 .catch(() => caches.match('./index.html').then((r) => r || caches.match('./')))
@@ -57,7 +61,7 @@ self.addEventListener('fetch', (event) => {
     /* Restantes ficheiros: responde da cache e atualiza em segundo plano */
     event.respondWith(
         caches.match(req).then((cached) => {
-            const network = fetch(req)
+            const network = fetch(req.url, { cache: 'no-cache' })
                 .then((res) => {
                     if (res && res.ok) {
                         const copy = res.clone();
