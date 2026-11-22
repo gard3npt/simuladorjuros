@@ -736,7 +736,7 @@ footer{
 .menu-wrap #menuBtn svg { width: 22px; height: 22px; }
 #menuLista {
     position: absolute; left: 0; top: calc(100% + 10px); z-index: 200;
-    width: 270px; padding: 6px; border-radius: 16px;
+    width: 300px; max-width: calc(100vw - 24px); padding: 6px; border-radius: 16px;
     background: rgba(15, 23, 42, 0.97); border: 1px solid rgba(255,255,255,.15);
     box-shadow: 0 16px 40px rgba(0,0,0,.45);
 }
@@ -750,8 +750,22 @@ footer{
 .menu-item .mi { width: 24px; display: inline-flex; justify-content: center; flex-shrink: 0; font-size: 16px; }
 .menu-item .mi-nome { flex: 1; }
 .menu-sep { height: 1px; background: rgba(255,255,255,.12); margin: 6px 4px; }
-.menu-upd { justify-content: center; font-size: 12px; color: #94a3b8; cursor: default; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.menu-upd { justify-content: flex-start; font-size: 11px; line-height: 1.5; padding: 0 12px; white-space: nowrap; color: #94a3b8; cursor: default; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 .menu-upd:hover { background: none; }
+.menu-rodape { margin-top: 6px; padding: 8px 0 4px; border-top: 1px solid rgba(255,255,255,.12); }
+.menu-credito { padding: 0 12px; font-size: 11px; line-height: 1.5; white-space: nowrap; color: #94a3b8; }
+.menu-logout { background: rgba(239,68,68,.16); color: #fecaca; border: 1px solid rgba(248,113,113,.55); font-weight: 800; }
+.menu-logout:hover, .menu-logout:focus-visible { background: rgba(239,68,68,.32); color: #fff; }
+.menu-item .f5 { display: none; }
+@media (hover: hover) and (pointer: fine) { .menu-item .f5 { display: inline; color: #94a3b8; font-weight: 500; } }
+.saida-app { position: fixed; inset: 0; z-index: 10000; display: none; align-items: center; justify-content: center; padding: 24px; background: #0f172a; color: #e2e8f0; }
+.saida-app.show { display: flex; }
+.saida-app .saida-c { width: 100%; max-width: 360px; text-align: center; }
+.saida-app h2 { margin: 0 0 8px; font-size: 24px; color: #fff; }
+.saida-app p { margin: 0 0 22px; line-height: 1.5; color: #cbd5e1; }
+.saida-app a, .saida-app button { display: block; width: 100%; margin-top: 10px; padding: 14px; border-radius: 14px; border: 0; font: inherit; font-weight: 800; font-size: 16px; text-align: center; text-decoration: none; cursor: pointer; }
+.saida-app a { background: #2563eb; color: #fff; }
+.saida-app button { background: rgba(255,255,255,.12); color: #fff; }
 
 /* Destaque do guia «Como usar» quando se vem do menu Ajuda */
 .instructions { scroll-margin-top: 90px; }
@@ -1749,20 +1763,30 @@ body { padding-bottom: 20px; }
                         <button type="button" role="menuitem" class="menu-item" onclick="fecharMenu(); openModal('ajuda-modal');">
                             <span class="mi" aria-hidden="true">❓</span><span class="mi-nome">Ajuda no simulador</span>
                         </button>
-                        <button type="button" role="menuitem" id="menuInstalar" class="menu-item" onclick="fecharMenu(); mostrarEstadoApp();">
-                            <span class="mi" aria-hidden="true">📲</span><span class="mi-nome">Instalar app</span>
-                        </button>
                         <button type="button" role="menuitem" class="menu-item" onclick="fecharMenu(); sendEmail('Contacto');" title="Enviar uma mensagem por e-mail">
                             <span class="mi" aria-hidden="true">✉️</span><span class="mi-nome">Contacto (E-mail)</span>
                         </button>
                         <button type="button" role="menuitem" class="menu-item" onclick="fecharMenu(); openModal('apoio-modal');">
                             <span class="mi" aria-hidden="true">☕</span><span class="mi-nome">Apoiar o Projeto</span>
                         </button>
+                        <div class="menu-sep"></div>
+                        <button type="button" role="menuitem" id="menuInstalar" class="menu-item" onclick="fecharMenu(); mostrarEstadoApp();">
+                            <span class="mi" aria-hidden="true">📲</span><span class="mi-nome">Instalar app</span>
+                        </button>
                         <button type="button" role="menuitem" class="menu-item" onclick="fecharMenu(); partilharSimulador();" title="Partilhar o endereço do site (não uma simulação)">
                             <span class="mi" aria-hidden="true">📤</span><span class="mi-nome">Partilhar o site</span>
                         </button>
+                        <button type="button" role="menuitem" class="menu-item" onclick="fecharMenu(); atualizarApp();">
+                            <span class="mi" aria-hidden="true">🔄</span><span class="mi-nome">Atualizar<span class="f5"> (F5)</span></span>
+                        </button>
                         <div class="menu-sep"></div>
+                        <button type="button" role="menuitem" class="menu-item menu-logout" onclick="fecharMenu(); sairDaApp();">
+                            <span class="mi" aria-hidden="true">🚪</span><span class="mi-nome">Logout</span>
+                        </button>
+                        <div class="menu-rodape">
+                            <div class="menu-credito">Desenvolvido por: Helder Jardim Fernandes</div>
                         <button type="button" role="menuitem" id="menuUpd" class="menu-item menu-upd" onclick="triploClique(this, function () { fecharMenu(); abrirPainelDono(); }, event)"></button>
+                        </div>
                     </div>
                 </div>
                 <div class="header-icon-box">💰</div>
@@ -2127,7 +2151,7 @@ body { padding-bottom: 20px; }
     const CHAVE_ADS_ANTIGA = 'simulador_consentimento_ads';
 
     /* Data da última atualização do simulador (AAAA-MM-DD): alterar sempre que publicar uma nova versão */
-    let ULTIMA_ATUALIZACAO = '2026-11-12';
+    let ULTIMA_ATUALIZACAO = '2026-11-22';
 
     /* Retenção na fonte por defeito (%): alterável em Administrador 2 */
     let RETENCAO_DEFEITO = 28;   /* Portugal Continental */
@@ -3633,6 +3657,27 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
         g.classList.remove('destaque'); void g.offsetWidth; g.classList.add('destaque');
       };
 
+      /* Atualizar (F5): pede a versão mais recente e recarrega */
+      window.atualizarApp = function () {
+        const recarregar = function () { location.reload(); };
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistration().then(function (r) { return r ? r.update() : null; }).then(recarregar, recarregar);
+        } else { recarregar(); }
+      };
+      /* Logout: tenta fechar a janela/app; se o navegador não deixar, mostra o ecrã de despedida */
+      window.sairDaApp = function () {
+        try { window.close(); } catch (e) {}
+        try { window.open('', '_self'); window.close(); } catch (e) {}
+        setTimeout(function () {
+          const el = document.getElementById('saidaApp');
+          if (!el) return;
+          el.classList.add('show');
+          const v = document.getElementById('saidaVoltar'); if (v) v.focus();
+        }, 300);
+      };
+      window.fecharSaidaApp = function () { const el = document.getElementById('saidaApp'); if (el) el.classList.remove('show'); };
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape') window.fecharSaidaApp(); });
+
       window.fecharMenu = function () {
         if (lista.hidden) return false;
         lista.hidden = true;
@@ -3686,5 +3731,14 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     })();
   </script>
 
+
+<div id="saidaApp" class="saida-app notranslate" translate="no" role="dialog" aria-modal="true" aria-labelledby="saidaTitulo">
+    <div class="saida-c">
+        <h2 id="saidaTitulo">Sessão terminada</h2>
+        <p>O navegador não permite que esta página se feche sozinha. Já pode fechar esta janela ou a app.</p>
+        <a href="https://gard3npt.github.io/">Abrir a página inicial</a>
+        <button type="button" id="saidaVoltar" onclick="fecharSaidaApp()">Voltar ao simulador</button>
+    </div>
+</div>
 </body>
 </html>
