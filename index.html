@@ -1734,7 +1734,7 @@ body { padding-bottom: 20px; }
 #menuLista .menu-item { min-height: 40px; padding: 5px 12px; font-size: 1.05rem; font-weight: 400; }
 #menuLista .menu-item .mi { width: 26px; }
 #menuLista .menu-item .mi svg { width: 22px; height: 22px; }
-#menuLista .menu-item.menu-upd { min-height: 0; padding: 0 12px; font-size: 11px; font-weight: 600; }
+#menuLista .menu-item.menu-upd { min-height: 0; padding: 0 12px; font-size: 11px; font-weight: 400; line-height: 1.5; }
 </style>
 </head>
 <body>
@@ -3315,7 +3315,7 @@ async function obterDataAutomatica() {
 
     function textoUltimaAtualizacao() {
         const d = new Date(dataAtualizacaoEfetiva() + 'T12:00:00');
-        return 'Última atualização: ' + d.toLocaleDateString('pt-PT', { day: 'numeric', month: 'long', year: 'numeric' });
+        return 'Atualização: ' + d.toLocaleDateString('pt-PT', { day: 'numeric', month: 'long', year: 'numeric' });
     }
 
     function atualizarDataMenu() {
@@ -3776,5 +3776,12 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
         <button type="button" id="saidaVoltar" onclick="fecharSaidaApp()">Voltar ao simulador</button>
     </div>
 </div>
+<style id="menu-letras">
+/* Menu de três linhas: mesmo tipo e tamanho de letra nos 5 sites */
+#menuLista, #menuLista * { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif !important; }
+#menuLista .menu-item:not(.menu-upd) { font-size: .9rem !important; font-weight: 400 !important; letter-spacing: normal !important; }
+#menuLista .menu-item .mi-nome { font-size: inherit !important; font-weight: inherit !important; }
+#menuLista .menu-credito, #menuLista .menu-item.menu-upd { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif !important; font-size: 11px !important; font-weight: 400 !important; line-height: 1.5 !important; letter-spacing: normal !important; text-transform: none !important; text-align: left !important; padding: 0 12px !important; margin: 0 !important; min-height: 0 !important; color: #94a3b8 !important; }
+</style>
 </body>
 </html>
