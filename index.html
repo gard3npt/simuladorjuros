@@ -1731,7 +1731,7 @@ body { padding-bottom: 20px; }
 <style id="menu-padrao">
 /* Menu padrão: cor, tamanho, fonte e ícones iguais aos da Calculadora de Juros (Mobile) */
 #menuLista { width: 290px; max-width: calc(100vw - 24px); }
-#menuLista .menu-item { min-height: 44px; padding: 6px 12px; font-size: 1.05rem; font-weight: 700; }
+#menuLista .menu-item { min-height: 40px; padding: 5px 12px; font-size: 1.05rem; font-weight: 400; }
 #menuLista .menu-item .mi { width: 26px; }
 #menuLista .menu-item .mi svg { width: 22px; height: 22px; }
 #menuLista .menu-item.menu-upd { min-height: 0; padding: 0 12px; font-size: 11px; font-weight: 600; }
@@ -1782,10 +1782,10 @@ body { padding-bottom: 20px; }
                             <span class="mi" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:#60a5fa"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg></span><span class="mi-nome">Instalar app</span>
                         </button>
                         <button type="button" role="menuitem" class="menu-item" onclick="fecharMenu(); partilharSimulador();" title="Partilhar o endereço do site (não uma simulação)">
-                            <span class="mi" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:#a78bfa"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 10.5l6.8-4M8.6 13.5l6.8 4"/></svg></span><span class="mi-nome">Partilhar o site</span>
+                            <span class="mi" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:#a78bfa"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 10.5l6.8-4M8.6 13.5l6.8 4"/></svg></span><span class="mi-nome">Partilhar</span>
                         </button>
                         <button type="button" role="menuitem" class="menu-item" onclick="fecharMenu(); atualizarApp();">
-                            <span class="mi" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:#34d399"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg></span><span class="mi-nome">Atualizar<span class="f5"> (F5)</span></span>
+                            <span class="mi" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:#34d399"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg></span><span class="mi-nome">Atualizar</span>
                         </button>
                         <div class="menu-sep"></div>
                         <button type="button" role="menuitem" class="menu-item menu-logout" onclick="fecharMenu(); sairDaApp();">
@@ -2123,7 +2123,7 @@ body { padding-bottom: 20px; }
             </div>
             <div class="priv-card">
                 <h4>Partilhar e apoiar</h4>
-                <p>A opção “Partilhar o site” usa a função de partilha do seu dispositivo (ou copia o endereço do site) e este site não recebe nada. A opção “Apoiar o Projeto” é apenas uma ligação ao PayPal, que abre noutro separador e tem as suas próprias políticas de privacidade; este site não recebe nem guarda dados de pagamento.</p>
+                <p>A opção “Partilhar” usa a função de partilha do seu dispositivo (ou copia o endereço do site) e este site não recebe nada. A opção “Apoiar o Projeto” é apenas uma ligação ao PayPal, que abre noutro separador e tem as suas próprias políticas de privacidade; este site não recebe nem guarda dados de pagamento.</p>
             </div>
             <div class="priv-card">
                 <h4>Armazenamento no seu navegador</h4>
@@ -2160,6 +2160,27 @@ body { padding-bottom: 20px; }
 
     /* Data da última atualização do simulador (AAAA-MM-DD): alterar sempre que publicar uma nova versão */
     let ULTIMA_ATUALIZACAO = '2026-11-22';
+// Normalmente false (data automática). Fica true só nas atualizações em que se escreveu uma data à mão na área de controlo.
+let DATA_MANUAL = false;
+/* A data é automática: vem da data de modificação do index.html no servidor (cabeçalho Last-Modified).
+   Se o servidor não a indicar, usa-se ULTIMA_ATUALIZACAO. Uma data aplicada na área de controlo prevalece. */
+let dataAuto = '';
+let dataForcada = DATA_MANUAL;
+function dataAtualizacaoEfetiva() { return (!dataForcada && dataAuto) ? dataAuto : ULTIMA_ATUALIZACAO; }
+function dataParaIso(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+async function obterDataAutomatica() {
+    try {
+        let d = null;
+        if (/^https?:$/.test(location.protocol)) {
+            const r = await fetch(location.href.split('#')[0], { method: 'HEAD', cache: 'no-store' });
+            const lm = r.ok ? r.headers.get('Last-Modified') : null;
+            if (lm) d = new Date(lm);
+        } else if (document.lastModified) {
+            d = new Date(document.lastModified);
+        }
+        if (d && !isNaN(d)) { dataAuto = dataParaIso(d); if (typeof atualizarDataMenu === 'function') atualizarDataMenu(); }
+    } catch (e) { /* sem data do servidor: fica a de ULTIMA_ATUALIZACAO */ }
+}
 
     /* Retenção na fonte por defeito (%): alterável em Administrador 2 */
     let RETENCAO_DEFEITO = 28;   /* Portugal Continental */
@@ -2852,8 +2873,8 @@ body { padding-bottom: 20px; }
       return so ? b + ' · ' + so : b;
     }
     function dnDataAtualizacao() {
-      const d = new Date(ULTIMA_ATUALIZACAO + 'T12:00:00');
-      return isNaN(d) ? ULTIMA_ATUALIZACAO : d.toLocaleDateString('pt-PT', { day: 'numeric', month: 'long', year: 'numeric' });
+      const d = new Date(dataAtualizacaoEfetiva() + 'T12:00:00');
+      return isNaN(d) ? dataAtualizacaoEfetiva() : d.toLocaleDateString('pt-PT', { day: 'numeric', month: 'long', year: 'numeric' });
     }
 
     /* recolhe o diagnóstico (só lê; não altera nada) */
@@ -2994,18 +3015,10 @@ body { padding-bottom: 20px; }
         location.reload();
       }, 'Repor');
     }
-    function dnReporSite() {
-      pdConfirmar('Repor o site ao estado original? Apaga tudo o que está guardado neste dispositivo (simulações, definições e cache) e recarrega a página.', async function () {
-        try { localStorage.clear(); sessionStorage.clear(); } catch (e) {}
-        dnLimparCookieTradutor();
-        await dnApagarCaches();
-        try { history.replaceState(null, ''); } catch (e) {}
-        location.reload();
-      }, 'Repor tudo');
-    }
+    
 
     /* ===== Administrador: modo 1 = diagnóstico e ferramentas; modo 2 = data de atualização, retenção e guardar ===== */
-    let dnModo = 1, dnDataEd = '', dnRetEd = '', dnRetIlEd = '';
+    let dnModo = 1, dnDataEd = '', dnRetEd = '', dnRetIlEd = '', dnDataManual = false;
     function dnFeedback(btn, txt) {
       const antes = btn.textContent;
       btn.textContent = txt;
@@ -3033,7 +3046,7 @@ body { padding-bottom: 20px; }
       const d = dnLerData(btn); if (!d) return;
       const r = dnLerRet(btn, 'pdRetDef', dnRetEd); if (r === null) return;
       const ri = dnLerRet(btn, 'pdRetIlhas', dnRetIlEd); if (ri === null) return;
-      ULTIMA_ATUALIZACAO = d;
+      if (dnDataManual) { ULTIMA_ATUALIZACAO = d; dataForcada = true; } else { ULTIMA_ATUALIZACAO = dataParaIso(new Date()); dataForcada = false; }
       RETENCAO_DEFEITO = r;
       RETENCAO_ILHAS = ri;
       cfg.retencao = r;
@@ -3056,8 +3069,12 @@ body { padding-bottom: 20px; }
         if (!r.ok) throw 0;
         let src = await r.text();
         let achou = 0;
-        src = src.replace(/((?:const|let)\s+ULTIMA_ATUALIZACAO\s*=\s*')[^']*(')/, function (m, a, b) { achou++; return a + d + b; });
+        const dEscrita = dnDataManual ? d : dataParaIso(new Date());
+        src = src.replace(/((?:const|let)\s+ULTIMA_ATUALIZACAO\s*=\s*')[^']*(')/, function (m, a, b) { achou++; return a + dEscrita + b; });
         if (achou !== 1) throw 0;
+        let achouMan = 0;
+        src = src.replace(/(let\s+DATA_MANUAL\s*=\s*)(?:true|false)(;)/, function (m, a, b) { achouMan++; return a + (dnDataManual ? 'true' : 'false') + b; });
+        if (achouMan !== 1) throw 0;
         let achouRet = 0;
         src = src.replace(/(let\s+RETENCAO_DEFEITO\s*=\s*)[0-9.]+(;)/, function (m, a, b) { achouRet++; return a + String(r) + b; });
         if (achouRet !== 1) throw 0;
@@ -3093,9 +3110,10 @@ body { padding-bottom: 20px; }
         h += '<div class="pd-sec">Data de atualização do site</div>' +
           '<div class="pd-card" style="padding:4px 12px 12px;">' +
           '<label class="pd-lbl" for="pdSiteData">Data mostrada no menu (☰) e no rodapé</label>' +
-          '<input id="pdSiteData" class="pd-input" type="date" value="' + dnEsc(dnDataEd) + '" oninput="dnDataEd = this.value">' +
+          '<input id="pdSiteData" class="pd-input" type="date" value="' + dnEsc(dnDataEd) + '" oninput="dnDataEd = this.value; dnDataManual = true">' +
           '</div>' +
-          '<button type="button" class="pd-btn" onclick="dnDataHoje()">📅 Usar a data de hoje</button>';
+          '<button type="button" class="pd-btn" onclick="dnDataHoje(); dnDataManual = false">📅 Usar a data de hoje</button>' +
+          '<div class="pd-nota">A data é automática: vem da data do ficheiro no servidor. Só escreva uma data se quiser forçá-la.</div>';
         h += '<div class="pd-sec">Taxa de retenção do Estado português</div>' +
           '<div class="pd-card" style="padding:4px 12px 12px;">' +
           '<label class="pd-lbl" for="pdRetDef">Portugal Continental (%)</label>' +
@@ -3124,16 +3142,12 @@ body { padding-bottom: 20px; }
       h += '<div class="pd-sec">Ferramentas</div>' +
         '<button type="button" class="pd-btn pd-azul" onclick="dnCopiar(this)">📋 Copiar diagnóstico</button>' +
         '<div class="pd-nota">Copia tudo isto como texto, para colar numa mensagem.</div>' +
-        '<button type="button" class="pd-btn" onclick="dnAtualizar()">🔃 Atualizar diagnóstico</button>' +
+        '<button type="button" class="pd-btn" onclick="dnAtualizar()">🔃 Repetir diagnóstico</button>' +
         '<a class="pd-btn pd-azul" style="text-decoration:none;" href="' + dnEsc(DIAGNOSTICO_PWA) + '" target="_blank" rel="noopener">🩺 Diagnóstico da app instalável</a>' +
         '<div class="pd-nota">Verifica se o site pode ser instalado como app no telemóvel (manifesto, ícones e service worker). Abre ' + dnEsc(DIAGNOSTICO_PWA) + ' num novo separador.</div>';
       h += '<div class="pd-sec">Reposição</div>' +
-        '<button type="button" class="pd-btn pd-amarelo" onclick="dnLimparCache()">🧽 Atualizar app (limpar cache)</button>' +
-        '<div class="pd-nota">Mantém as definições. Útil quando aparece uma versão antiga do site.</div>' +
         '<button type="button" class="pd-btn pd-amarelo" onclick="dnReporDefinicoes()">↩️ Repor definições</button>' +
-        '<div class="pd-nota">O idioma, o aviso de cookies e o estado da app instalada voltam ao início. As simulações mantêm-se.</div>' +
-        '<button type="button" class="pd-btn pd-vermelho" onclick="dnReporSite()">⚠️ Repor site original</button>' +
-        '<div class="pd-nota">Apaga tudo o que está guardado neste dispositivo e recarrega a página.</div>';
+        '<div class="pd-nota">O idioma, o aviso de cookies e o estado da app instalada voltam ao início. As simulações mantêm-se.</div>';
       c.innerHTML = h;
       c.scrollTop = pos;
     }
@@ -3144,7 +3158,7 @@ body { padding-bottom: 20px; }
     }
     function montarPainelDono() {
       fecharPainelDono();
-      dnModo = 1; dnDataEd = ULTIMA_ATUALIZACAO; dnRetEd = pctTxt(RETENCAO_DEFEITO); dnRetIlEd = pctTxt(RETENCAO_ILHAS);
+      dnModo = 1; dnDataManual = false; dnDataEd = dataAtualizacaoEfetiva(); dnRetEd = pctTxt(RETENCAO_DEFEITO); dnRetIlEd = pctTxt(RETENCAO_ILHAS);
       const ov = document.createElement('div');
       ov.id = 'painelDonoOverlay';
       ov.innerHTML = '<div role="dialog" aria-modal="true" aria-label="Área de controlo">' +
@@ -3300,9 +3314,15 @@ body { padding-bottom: 20px; }
     }
 
     function textoUltimaAtualizacao() {
-        const d = new Date(ULTIMA_ATUALIZACAO + 'T12:00:00');
+        const d = new Date(dataAtualizacaoEfetiva() + 'T12:00:00');
         return 'Última atualização: ' + d.toLocaleDateString('pt-PT', { day: 'numeric', month: 'long', year: 'numeric' });
     }
+
+    function atualizarDataMenu() {
+        const el = byId('menuUpd');
+        if (el) el.textContent = textoUltimaAtualizacao();
+    }
+    obterDataAutomatica();
 
     let footerToastTimer = null;
     function mostrarUltimaAtualizacao() {
@@ -3666,12 +3686,20 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
       };
 
       /* Atualizar (F5): pede a versão mais recente e recarrega */
-      window.atualizarApp = function () {
-        const recarregar = function () { location.reload(); };
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.getRegistration().then(function (r) { return r ? r.update() : null; }).then(recarregar, recarregar);
-        } else { recarregar(); }
-      };
+      window.atualizarApp = async function () {
+    /* Atualizar (igual em todos os sites): pede à rede a versão mais recente e limpa o service worker e as caches.
+       A sessão e as definições mantêm-se. Se não houver ligação, não apaga nada. */
+    try {
+        const r = await fetch(location.href.split('#')[0], { cache: 'reload' });
+        if (!r.ok) throw new Error('http ' + r.status);
+    } catch (e) {
+        window.alert('Sem ligação à internet: não foi possível atualizar. Tente de novo quando estiver ligado.');
+        return;
+    }
+    try { if ('serviceWorker' in navigator) { const rs = await navigator.serviceWorker.getRegistrations(); await Promise.all(rs.map(function (x) { return x.unregister(); })); } } catch (e) {}
+    try { if ('caches' in window) { const ks = await caches.keys(); await Promise.all(ks.filter(function (k) { return !/^caricas-fotos/.test(k); }).map(function (k) { return caches.delete(k); })); } } catch (e) {}
+    location.reload();
+}
       /* Logout: tenta fechar a janela/app; se o navegador não deixar, mostra o ecrã de despedida */
       window.sairDaApp = function () {
         try { window.close(); } catch (e) {}
